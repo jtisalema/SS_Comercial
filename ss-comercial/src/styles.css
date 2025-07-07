@@ -1,0 +1,104 @@
+/* You can add global styles to this file, and also import other style files */
+/* Este es un archivo CSS vacío */
+
+.bg-filter-glass {
+    position: absolute;
+    padding: 20px 30px 20px 30px;
+}
+
+.bg-filter-glass:before {
+    z-index: 0;
+    content: "";
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    display: block;
+    position: absolute;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: 50%;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    background-color: rgba(1, 2, 19, 0.24);
+    border-radius: inherit;
+    border-color: rgba(255, 236, 15, 1) !important;
+    padding: 0px 30px 0px 30px;
+
+}
+
+.bg-filter-glass>* {
+    z-index: 1;
+    position: relative;
+}
+
+.bg-fullscreen {
+    top: 0;
+    left: 0;
+    z-index: -1;
+    width: 100%;
+    height: 100%;
+    position: fixed;
+}
+
+@media (max-width: 575.98px) {
+    .bg-texture {
+        --texture-width-scale: 0.65;
+        --texture-height-scale: 0.65;
+        --texture-offset-x-scale: 0.5;
+        --texture-offset-y-scale: 0.1;
+    }
+}
+
+.bg-texture {
+    --texture-width-scale: 1;
+    --texture-height-scale: 1;
+    --texture-offset-x-scale: 1;
+    --texture-offset-y-scale: 1;
+}
+
+.bg-texture:before {
+    top: calc(50px * var(--texture-offset-y-scale));
+    left: calc(50% - 175px * var(--texture-offset-x-scale));
+    width: calc(420px * var(--texture-width-scale));
+    height: calc(410px * var(--texture-height-scale));
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+}
+
+.bg-texture:after,
+.bg-texture:before {
+    content: "";
+    display: block;
+    position: absolute;
+    background-image: url(./assets/images/fondos/plataforma_textura1.a33585cc.svg);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: 50%;
+}
+
+.bg-texture:after {
+    bottom: calc(-20px * (1 - var(--texture-offset-y-scale)));
+    left: calc(50% + 10px * var(--texture-offset-x-scale));
+    width: calc(622px * var(--texture-width-scale));
+    height: calc(596px * var(--texture-height-scale));
+    -webkit-transform: translate(-50%, 50%);
+    transform: translate(-50%, 50%);
+}
+
+@media (max-width: 575.98px) {
+    .bg-texture {
+        --texture-width-scale: 0.65;
+        --texture-height-scale: 0.65;
+        --texture-offset-x-scale: 0.5;
+        --texture-offset-y-scale: 0.1;
+    }
+
+    .login-logo-container {
+        width: 16.75rem;
+    }
+}
+
+.bg-img-center {
+    background-position: 50%;
+}

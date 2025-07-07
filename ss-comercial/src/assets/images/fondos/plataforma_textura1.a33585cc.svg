@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Capa_1" data-name="Capa 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 385.42 360.68">
+  <defs>
+    <style>
+      .cls-1 {
+        stroke: #ffec0f;
+        stroke-miterlimit: 10;
+        stroke-width: 2px;
+      }
+
+      .cls-1, .cls-2 {
+        fill: none;
+      }
+
+      .cls-3 {
+        fill: #ffec0f;
+      }
+    </style>
+  </defs>
+  <g id="Grupo_106" data-name="Grupo 106">
+    <rect id="Rectángulo_26" data-name="Rectángulo 26" class="cls-3" x="7.48" y="118.95" width="433.38" height="122.79" rx="61.4" ry="61.4" transform="translate(-58.08 236.09) rotate(-49.99)"/>
+    <g id="Rectángulo_27" data-name="Rectángulo 27">
+      <rect class="cls-2" x="-40.26" y="176.01" width="314.65" height="89.15" rx="44.58" ry="44.58" transform="translate(-127.15 168.43) rotate(-49.99)"/>
+      <rect class="cls-1" x="-39.26" y="177.01" width="312.65" height="87.15" rx="43.58" ry="43.58" transform="translate(-127.15 168.43) rotate(-49.99)"/>
+    </g>
+  </g>
+</svg>

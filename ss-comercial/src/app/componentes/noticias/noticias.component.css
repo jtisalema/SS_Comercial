@@ -1,0 +1,217 @@
+.carrusel-wrapper {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #d1eefa 0%, #efe3d6 100%);
+}
+
+.imagen {
+  position: absolute;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1;
+}
+
+/* Tipos */
+.imagen.fullscreen img {
+  width: 100vw;
+  height: 100vh;
+  object-fit: contain;
+}
+
+.imagen.medio {
+  width: 100vw;          /* ocupa toda la pantalla */
+  height: 100vh;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.imagen.medio img {
+  width: 50vw;          /* imagen solo mitad izquierda */
+  height: 100vh;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+
+/* ========================
+   Animaciones usando wildcard
+   ======================== */
+
+[class*="fade-"] {
+  animation: fadeIn 1s ease-in-out;
+}
+
+[class*="zoom-"] {
+  animation: zoomIn 1s ease-in-out;
+}
+
+[class*="slide-left-"] {
+  animation: slideLeftIn 1s ease-in-out;
+}
+
+[class*="slide-right-"] {
+  animation: slideRightIn 1s ease-in-out;
+}
+
+[class*="rotate-"] {
+  animation: rotateIn 1s ease-in-out;
+}
+
+[class*="blur-"] {
+  animation: blurIn 1s ease-in-out;
+}
+
+/* Keyframes */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes zoomIn {
+  from { transform: scale(0.5); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes slideLeftIn {
+  from { transform: translateX(-100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideRightIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes rotateIn {
+  from { transform: rotate(-180deg); opacity: 0; }
+  to { transform: rotate(0); opacity: 1; }
+}
+
+@keyframes blurIn {
+  from { filter: blur(20px); opacity: 0; }
+  to { filter: blur(0); opacity: 1; }
+}
+[class*="granulado-"] {
+  animation: granuladoAnim 1s ease-in-out;
+  filter: grayscale(30%) contrast(150%);
+}
+
+@keyframes granuladoAnim {
+  0%, 100% {
+    filter: grayscale(30%) contrast(150%) brightness(1) saturate(1);
+    opacity: 0.8;
+  }
+  50% {
+    filter: grayscale(50%) contrast(170%) brightness(1.1) saturate(1.2);
+    opacity: 1;
+  }
+}
+
+/* Pixelado (pixelate) simulado con escala y blur */
+[class*="pixelado-"] {
+  animation: pixeladoAnim 1s ease-in-out;
+  image-rendering: pixelated;
+}
+
+@keyframes pixeladoAnim {
+  0% {
+    filter: blur(1px);
+    transform: scale(1);
+    opacity: 0;
+  }
+  50% {
+    filter: blur(0);
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    filter: blur(0);
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Desenfoque horizontal */
+[class*="desenfoque-horizontal-"] {
+  animation: desenfoqueHorizontal 1s ease-in-out;
+}
+
+@keyframes desenfoqueHorizontal {
+  0% {
+    filter: blur(8px);
+    transform: translateX(-50px);
+    opacity: 0;
+  }
+  100% {
+    filter: blur(0);
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Desenfoque vertical */
+[class*="desenfoque-vertical-"] {
+  animation: desenfoqueVertical 1s ease-in-out;
+}
+
+@keyframes desenfoqueVertical {
+  0% {
+    filter: blur(8px);
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  100% {
+    filter: blur(0);
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Escala baja (pequeño a normal) */
+[class*="escala-baja-"] {
+  animation: escalaBaja 1s ease-in-out;
+}
+
+@keyframes escalaBaja {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Parpadeo rápido */
+[class*="parpadeo-"] {
+  animation: parpadeo 1s linear;
+}
+
+@keyframes parpadeo {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Brillo pulsante */
+[class*="brillo-"] {
+  animation: brillo 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes brillo {
+  0% {
+    filter: brightness(1);
+  }
+  100% {
+    filter: brightness(1.3);
+  }
+}

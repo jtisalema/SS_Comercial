@@ -1,0 +1,26 @@
+<ul class="navbar-nav">
+    <li class="nav-item">
+        <a class="nav-link" data-widget="pushmenu" href="#"><i class="fas fa-bars" style="color: white;"></i></a>
+    </li>
+</ul>
+
+<ul class="navbar-nav ml-auto align-items-center" style="z-index: 99999;">
+    <p class="texto-blanco">{{nombreUsuario}}</p>
+    <li class="nav-item dropdown user user-menu">
+        <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
+            <img src="./assets/dist/img/nuevoLogo.png" class="user-image img-circle" alt="Imágen de usuario">
+        </a>
+        <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-right" style="border-radius: 20px;z-index: 99999;">
+            <li class="user-header"
+                style="border-radius: 20px;background-image: url('assets/images/fondos/fondo_menu_cerrar.png');background-repeat: no-repeat;height: 100%;background-size: cover;">
+                <img src="./assets/dist/img/nuevoLogo.png" class="img-circle elevation-2" alt="Imágen de usuario">
+                <p class="texto-blanco m-0 p-0" style="font-size: 15px;">{{nombreUsuario}}</p>
+                <p class="texto-blanco m-0 p-0" style="font-size: small;">Último ingreso: {{ultimoInicioSesion}}</p>
+                <a class="btn btn-default mt-3" style="cursor: pointer;" (click)="cerrarSesion()">
+                    <i class="fas fa-sign-out-alt fa-xl ml-2" style="color: red;"></i>
+                    Cerrar Sesión
+                </a>
+            </li>
+        </ul>
+    </li>
+</ul>

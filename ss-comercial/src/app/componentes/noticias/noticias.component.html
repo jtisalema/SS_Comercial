@@ -1,0 +1,11 @@
+
+<body style="background-color: white;margin :0px !important;overflow: hidden;">
+<div class="carrusel-wrapper" [ngClass]="efectoActual" (click)="toggleFullscreen()">
+  <div
+    class="imagen"
+    [ngClass]="[imagenActual.tipo, getClaseAnimacion()]"
+  >
+    <img [src]="imagenActual.url" alt="Imagen del carrusel" />
+  </div>
+</div>
+</body>

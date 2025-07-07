@@ -1,0 +1,42 @@
+<a routerLink="/home/inicio" class="brand-link" style="color: white;">
+    <img src="./assets/image/nuevoLogo.png" alt="Seguros Suárez Logo" class="brand-image img-circle elevation-3">
+    <span class="brand-text font-weight-light color:white">{{appName}}</span>
+</a>
+
+<div class="sidebar" style="background-image: url('assets/images/fondos/fondo_menu.png');">
+    <nav class="mt-2">
+        <ul name="mainParent" class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
+            data-accordion="false">
+            <li class="nav-item">
+                <a routerLink="/home/marcas" class="nav-link" routerLinkActive="active" (click)="SetActive($event)">
+                    <i class="nav-icon fas fa-landmark mr-2" style="color: white;"> </i>
+                    <p style="color: white;">Marcas</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a routerLink="/home/modelos" class="nav-link" routerLinkActive="active" (click)="SetActive($event)">
+                    <i class="nav-icon fas fa-list-alt mr-2" style="color: white;"> </i>
+                    <p style="color: white;">Modelos</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a routerLink="/home/custodios" class="nav-link" routerLinkActive="active" (click)="SetActive($event)">
+                    <i class="nav-icon fas fa-user-alt mr-2" style="color: white;"> </i>
+                    <p style="color: white;">Custodios</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a routerLink="/home/bienes" class="nav-link" routerLinkActive="active" (click)="SetActive($event)">
+                    <i class="nav-icon fas fa-shopping-bag mr-2" style="color: white;"> </i>
+                    <p style="color: white;">Bienes</p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a routerLink="/home/inventario" class="nav-link" routerLinkActive="active" (click)="SetActive($event)">
+                    <i class="nav-icon fas fa-list-ol mr-2" style="color: white;"> </i>
+                    <p style="color: white;">Inventario</p>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</div>

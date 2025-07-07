@@ -1,0 +1,16 @@
+/* Este es un archivo CSS vacío */
+.main-footer-global {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(10px);
+    z-index: 3;
+    text-align: end;
+    font-size: 15px;
+    padding-right: 20px;
+
+    @media screen and (max-width: 768px) {
+        font-size: 10px;
+    }
+}
