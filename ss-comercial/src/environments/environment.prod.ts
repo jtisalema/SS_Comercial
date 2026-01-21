@@ -2,7 +2,7 @@ export const environment = {
   production: true,
   idPlatform:2,
   projectName: "SS-Comercial",
-  apiUrl: "https://cotizador.segurossuarez.com/apiactivos/",
+  apiUrl: "https://cotizador.segurossuarez.com/backend/public/api/",
   company: "Seguros Súarez",
   website: "https://segurossuarez.com/",
   mailAddress: "comunicaciones@segurossuarez.com",

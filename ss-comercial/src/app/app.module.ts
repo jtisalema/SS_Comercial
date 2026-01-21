@@ -6,17 +6,21 @@ import { AppComponent } from './app.component';
 import { NoticiasComponent } from './componentes/noticias/noticias.component';
 import { HomeModule } from './home/home.module';
 import { PaginaNoEncontradaComponent } from './pagina-no-encontrada/pagina-no-encontrada.component';
+import { HttpClientModule } from '@angular/common/http';
+import { LoginComponent } from './login/login.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     NoticiasComponent,
-    PaginaNoEncontradaComponent
+    PaginaNoEncontradaComponent,
+    LoginComponent
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
-    HomeModule
+    HomeModule,
+    HttpClientModule
   ],
   providers: [],
   bootstrap: [AppComponent]

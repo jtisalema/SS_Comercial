@@ -9,7 +9,7 @@ import { HeaderComponent } from './header/header.component';
 import { PersonalComponent } from './personal/personal.component';
 import { PresupuestoComponent } from './presupuesto/presupuesto.component';
 import { ComunicadosComponent } from './comunicados/comunicados.component';
-
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [
@@ -23,7 +23,9 @@ import { ComunicadosComponent } from './comunicados/comunicados.component';
   ],
   imports: [
     CommonModule,
-    HomeRoutingModule
+    HomeRoutingModule,
+    FormsModule,
+    ReactiveFormsModule
   ]
 })
 export class HomeModule { }

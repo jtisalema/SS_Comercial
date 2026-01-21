@@ -1,8 +1,11 @@
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { Component, ElementRef, Renderer2, ViewChild } from '@angular/core';
 import { LoadingService } from 'src/app/services/loading.service';
 import { ssempleados } from 'src/app/models/ss-empleados';
 import * as SpanishLanguage from 'src/assets/Spanish.json';
 import { ToastrService } from 'src/app/services/toastr.service';
+import { PersonalService } from 'src/app/services/personal.service';
+
+declare var $: any;
 
 @Component({
   selector: 'app-personal',
@@ -11,24 +14,28 @@ import { ToastrService } from 'src/app/services/toastr.service';
 })
 export class PersonalComponent {
   @ViewChild('dataTablePersonal', { static: false }) tablePersonal!: ElementRef;
+
     constructor(private loadingService: LoadingService,
-      private toastrService:ToastrService
+      private toastrService:ToastrService, private personalService:PersonalService,
+      private el: ElementRef,
+      private renderer: Renderer2,
     ) { }
   //variables
   isEditing: boolean = false;
-  lstPersonal:ssempleados[]=[];
+  lstPersonal:any[]=[];
   dtOptions: any;
   dataTable: any;
 
   ngOnInit(): void {
-
+    this.CargarListadoPersonal();
+    const body = this.el.nativeElement.ownerDocument.body;
+    this.renderer.setStyle(body, 'overflow', '');
   }
+
   async CargarListadoPersonal() {
     try {
       this.loadingService.showLoading();
-
-      //this.lstCustodios = await this.custodiosService.obtenerCustodios();
-
+      this.lstPersonal = await this.personalService.obtenerEmpleados();
       if (this.lstPersonal.length > 0)
       this.dtOptions = {
         data: this.lstPersonal,
@@ -37,15 +44,18 @@ export class PersonalComponent {
           ...this.GetSpanishLanguage()
         },
         columns: [
-          { title: 'Id.', data: 'idCustodio' },
-          { title: 'Sucursal', data: 'sucursal.descripcionSucursal' },
-          { title: 'Identificación', data: 'identificacion' },
-          { title: 'Apellidos y Nombres', data: 'nombreApellidoCustodio' },
+          { title: 'Cédula', data: 'cedula' },
+          { title: 'Nombre', data: 'nombre' },
+          { title: 'Apellido', data: 'apellido' },
+          { title: 'Teléfono', data: 'telefono' },
+          { title: 'Email', data: 'email' },
+          { title: 'Sucursal', data: 'sucursal' },
+          { title: 'Departamento', data: 'nombre_departamento' },
           {
             targets: -2,
             searchable: false,
             render: function (data: any, type: any, full: any, meta: any) {
-              return `<button type="button" class="btn btn-primary btn-sm" onclick="EditarCustodio(${full.idCustodio})"><i class="fas fa-edit"></i></button>`;
+              return `<button type="button" class="btn btn-primary btn-sm" onclick="EditarCustodio(${full.cedula})"><i class="fas fa-edit"></i></button>`;
             },
             className: 'text-center btn-acciones-column'
           },
@@ -54,7 +64,7 @@ export class PersonalComponent {
             orderable: false,
             searchable: false,
             render: function (data: any, type: any, full: any, meta: any) {
-              return `<button type="button" class="btn btn-danger btn-sm" onclick="EliminarCustodio(${full.idCustodio})"><i class="fas fa-trash-alt"></i></button>`;
+              return `<button type="button" class="btn btn-danger btn-sm" onclick="EliminarCustodio(${full.cedula})"><i class="fas fa-trash-alt"></i></button>`;
             },
             className: 'text-center btn-acciones-column'
           }
@@ -71,13 +81,14 @@ export class PersonalComponent {
         autoWidth: false,
         scrollX: true,
       };
+      console.log('this.tablePersonal',this.tablePersonal);
       this.dataTable = $(this.tablePersonal.nativeElement);
       this.dataTable.DataTable(this.dtOptions);
     } catch (error) {
       if (error instanceof Error) {
-        this.toastrService.error('Error al obtener los custodios', error.message);
+        this.toastrService.error('Error al obtener datos del personal', error.message);
       } else {
-        this.toastrService.error('Error al obtener los custodios', 'Solicitar soporte al departamento de TI.');
+        this.toastrService.error('Error al obtener datos del personal ', 'Solicitar soporte al departamento de TI.');
       }
     } finally {
       this.loadingService.hideLoading();

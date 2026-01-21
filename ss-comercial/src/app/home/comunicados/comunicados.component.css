@@ -1,0 +1,27 @@
+.upload-box {
+    border: 2px dashed #999;
+    padding: 5px 5px;
+    border-radius: 5px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.3s;
+    min-height: 5px;
+}
+
+.upload-box:hover {
+    border-color: #007bff;
+}
+
+.upload-label {
+    display: block;
+    cursor: pointer;
+    color: #555;
+}
+
+.upload-box input[type="file"] {
+    display: none;
+}
+
+.is-invalid {
+    border-color: #dc3545 !important;
+}
