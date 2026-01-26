@@ -1,1 +1,53 @@
-<p>login works!</p>
+<div class="login-box">
+    <div class="login-logo">
+        <img src="./assets/images/fondos/nuevoLogo.png" alt="logo" class="img-fluid" style="max-width: 75%;">
+    </div>
+    <!-- /.login-logo -->
+    <div>
+        <div>
+            <p class="login-box-msg text-white pb-4">Ingrese sus credenciales</p>
+
+            <form [formGroup]="loginForm" class="mb-5" (ngSubmit)="iniciarSesion()">
+                <div class="input-group mb-4">
+                    <input type="email" [ngClass]="{
+                             'is-invalid': loginForm.get('username')?.errors && loginForm.get('username')?.touched
+                           }" class="form-control" formControlName="username" placeholder="Nombre de usuario" />
+                    <div class="input-group-append">
+                        <div class="input-group-text" style="background-color: transparent;color: white;">
+                            <span class="fas fa-user"></span>
+                        </div>
+                    </div>
+                    <div class="invalid-feedback" style="color: white;"
+                        *ngIf="loginForm.get('username')?.hasError('required') && loginForm.get('username')?.touched">
+                        El nombre de usuario es obligatorio
+                    </div>
+                </div>
+                <div class="input-group mb-4">
+                    <input type="password" [ngClass]="{
+                             'is-invalid': loginForm.get('password')?.errors && loginForm.get('password')?.touched
+                           }" class="form-control" formControlName="password" placeholder="Contraseña" />
+                    <div class="input-group-append">
+                        <div class="input-group-text" style="background-color: transparent;color: white;">
+                            <span class="fas fa-lock"></span>
+                        </div>
+                    </div>
+                    <br />
+                    <div class="invalid-feedback" style="color: white;"
+                        *ngIf="loginForm.get('password')?.hasError('required') && loginForm.get('password')?.touched">
+                        La contraseña es obligatorio
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-block text-white" style="background-color: #00bcea;">
+                            Iniciar Sesión
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="lockscreen-footer text-center text-white custom-footer">
+        <span style='width:100%;text-align:end' [innerHTML]="copyright"></span>
+    </div>
+</div>
