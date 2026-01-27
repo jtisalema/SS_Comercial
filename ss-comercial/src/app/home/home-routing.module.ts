@@ -5,6 +5,7 @@ import { InicioComponent } from './inicio/inicio.component';
 import { PersonalComponent } from './personal/personal.component';
 import { PresupuestoComponent } from './presupuesto/presupuesto.component';
 import { ComunicadosComponent } from './comunicados/comunicados.component';
+import { ChlingresoComponent } from './chlingreso/chlingreso.component';
 
 const homeRoutes: Routes = [
   {
@@ -14,6 +15,7 @@ const homeRoutes: Routes = [
       { path: 'personal', component: PersonalComponent },
       { path: 'presupuesto', component: PresupuestoComponent },
       { path: 'comunicados', component: ComunicadosComponent },
+      { path: 'checkList/ingreso', component: ChlingresoComponent }
     ]
   }
 ];

@@ -1,0 +1,392 @@
+<div class="content-wrapper"
+    style="background-image: url('assets/images/fondos/plataforma_fondo2.png');background-repeat: no-repeat;height: 100%;background-size: cover;">
+    <br>
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card card-primary card-outline">
+                        <div class="card-header d-flex align-items-center">
+
+                            <h3 class="card-title mb-0">
+                                <i class="fas fa-user-alt me-2"></i>
+                                CheckList Ingreso
+                            </h3>
+
+                            <select id="emision1" class="form-control" style="width: 180px; margin-left: 12px;"
+                                disabled>
+                                <option value="1" selected>Nuevo</option>
+                                <option value="2">Renovación</option>
+                                <option value="3">Movimiento</option>
+                            </select>
+
+                        </div>
+                        <div class="card-body">
+                            <form [formGroup]="ingresoForm" (ngSubmit)="OnSubmit()">
+                                <div class="row mb-3">
+                                    <!-- ASEGURADORA -->
+                                    <div class="col-md-4">
+                                        <label for="aseguradora" class="form-label">Aseguradora</label>
+                                        <select id="aseguradora" class="form-control" formControlName="aseguradora">
+                                            <option value="" disabled selected>Seleccione la aseguradora</option>
+                                            <option *ngFor="let a of lstAseguradoras" [value]="a.id">
+                                                {{ a.nombre }}
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <!-- SUCURSAL ASEGURADORA -->
+                                    <div class="col-md-4">
+                                        <label for="sucursalAseguradora" class="form-label">Sucursal Aseguradora</label>
+                                        <input id="sucursalAseguradora" type="text" class="form-control"
+                                            formControlName="sucursalAseguradora" placeholder="Ingrese la sucursal">
+                                    </div>
+                                    <!-- RAMO -->
+<div class="form-group col-md-12">
+  <label for="ramo">Ramo(s)</label>
+
+  <!-- <ng-select
+    [items]="lstRamos"
+    formControlName="ramo"
+    bindLabel="nombre"
+    bindValue="id"
+    [multiple]="true"
+    placeholder="Seleccione uno o más ramos"
+    class="ng-select-custom"
+    style="font-size: 13px;">
+  </ng-select> -->
+
+  <div *ngIf="ingresoForm.get('ramo')?.touched && ingresoForm.get('ramo')?.invalid">
+    <label style="color: red;">
+      <small>* Campo obligatorio</small>
+    </label>
+  </div>
+</div>
+                                </div>
+                                <div class="card mb-4 p-3 position-relative">
+                                    <h6 class="card-title titulo-sobre-borde">Titular Asegurado</h6>
+                                    <div class="row mb-3">
+                                        <div class="col-md-3">
+                                            <label for="identificacion" class="form-label">Identificación</label>
+                                            <input id="identificacion" type="text" class="form-control"
+                                                placeholder="Ingrese la identificación">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="cliente" class="form-label">Cliente</label>
+                                            <input id="cliente" type="text" class="form-control"
+                                                placeholder="Ingrese el cliente">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="direccion" class="form-label">Dirección</label>
+                                            <input id="direccion" type="text" class="form-control"
+                                                placeholder="Ingrese la dirección">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="ciudad" class="form-label">Ciudad</label>
+                                            <input id="ciudad" type="text" class="form-control"
+                                                placeholder="Ingrese la ciudad">
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-4">
+                                            <label for="subagente" class="form-label">Subagente</label>
+                                            <input id="subagente" type="text" class="form-control"
+                                                placeholder="Ingrese el subagente">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="grupoContratante" class="form-label">Grupo Contratante</label>
+                                            <select id="grupoContratante" class="form-control"
+                                                formControlName="grupoContratante">
+                                                <option value="" disabled selected>Seleccione el grupo contratante
+                                                </option>
+                                                <option *ngFor="let g of lstGruposContratante" [value]="g.id">
+                                                    {{ g.nombre }}
+                                                </option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="subarea" class="form-label">Subarea</label>
+                                            <input id="subarea" type="text" class="form-control"
+                                                placeholder="Ingrese la subarea">
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-4">
+                                            <label for="sucursalDB" class="form-label">Sucursal DB</label>
+                                            <select id="sucursalDB" class="form-control" formControlName="sucursalDB">
+                                                <option value="" disabled selected>Seleccione la sucursal</option>
+                                                <option *ngFor="let s of lstSucursalesDB" [value]="s.id">
+                                                    {{ s.nombre }}
+                                                </option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="comision" class="form-label">% Comisión</label>
+                                            <input id="comision" type="text" class="form-control"
+                                                placeholder="Ingrese el porcentaje de comisión">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="tasa" class="form-label">Tasa</label>
+                                            <input id="tasa" type="text" class="form-control"
+                                                placeholder="Ingrese la tasa">
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-3">
+                                            <label for="formaPago" class="form-label">HUR</label>
+                                            <input id="formaPago" type="text" class="form-control"
+                                                placeholder="Ingrese la forma de pago">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="formaPago" class="form-label">Comisión Prima Riesgo</label>
+                                            <input id="formaPago" type="text" class="form-control"
+                                                placeholder="Ingrese la forma de pago">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="formaPago" class="form-label">Comisión Prima Neta</label>
+                                            <input id="formaPago" type="text" class="form-control"
+                                                placeholder="Ingrese la forma de pago">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="formaPago" class="form-label">Comisión Broker</label>
+                                            <input id="formaPago" type="text" class="form-control"
+                                                placeholder="Ingrese la forma de pago">
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-4">
+                                            <label for="formaPago" class="form-label">Forma de Pago</label>
+                                            <select id="formaPago" class="form-control" formControlName="formaPago">
+                                                <option value="" disabled selected>Seleccione forma de pago</option>
+                                                <option value="0">Contado</option>
+                                                <option value="1">Crédito</option>
+                                                <option value="2">Tarjeta de Crédito</option>
+                                                <option value="3">Débito Bancario</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Pagador/Factura</label>
+                                            <div
+                                                style="font-size: 13px; text-align: center; font-weight: bold; padding-top: 5px;">
+
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input" type="radio"
+                                                        formControlName="pagador" id="propio" value="0">
+                                                    <label class="form-check-label" for="propio">Propio</label>
+                                                </div>
+
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input" type="radio"
+                                                        formControlName="pagador" id="otro" value="1">
+                                                    <label class="form-check-label" for="otro">Otro</label>
+                                                </div>
+
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input" type="radio"
+                                                        formControlName="pagador" id="segurosSuarez" value="2">
+                                                    <label class="form-check-label" for="segurosSuarez">Seguros
+                                                        Suarez</label>
+                                                </div>
+
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label for="identificacion2" class="form-label">Identificación</label>
+                                            <input id="identificacion2" type="text" class="form-control"
+                                                placeholder="Ingrese la identificación">
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-2">
+                                            <label for="formaPago" class="form-label">Número Cuotas</label>
+                                            <input id="formaPago" type="number" class="form-control" placeholder="1">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label for="fechaPagoCobro" class="form-label">Fecha Pago/Cobro</label>
+                                            <input id="fechaPagoCobro" type="date" class="form-control">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card mb-4 p-3 position-relative">
+                                    <h6 class="card-title titulo-sobre-borde">Contactos</h6>
+                                    <div class="row">
+                                        <div class="col d-flex justify-content-end">
+                                            <button type="button" class="btn btn-primary"
+                                                (click)="AbrirModalContacto(false)">
+                                                <span class="me-1">+</span> Agregar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="card-body" *ngIf="lstContactos.length > 0">
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered tabla-lstContactos">
+                                                <thead>
+                                                    <tr>
+                                                        <th>#</th>
+                                                        <th><i class="fas fa-id-card"></i> CI/RUC</th>
+                                                        <th><i class="fas fa-user"></i> Cargo</th>
+                                                        <th><i class="fas fa-user"></i> Nombre</th>
+                                                        <th><i class="fas fa-users"></i> Fecha Nacimiento</th>
+                                                        <th><i class="fas fa-percent"></i> Email</th>
+                                                        <th><i class="fas fa-cog"></i> Regalo</th>
+                                                        <th><i class="fas fa-cog"></i> Contacto</th>
+                                                        <th><i class="fas fa-cog"></i> Usuario Web</th>
+                                                        <th><i class="fas fa-cog"></i> Acción</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr *ngFor="let con of lstContactos; let i = index">
+                                                        <td>{{ i + 1 }}</td>
+                                                        <td>{{ con.identificacion }}</td>
+                                                        <td>{{ con.cargo }}</td>
+                                                        <td>{{ con.nombre }}</td>
+                                                        <td>{{ con.fechaNacimiento }}</td>
+                                                        <td>{{ con.email }}</td>
+                                                        <td>{{ con.regalo }}</td>
+                                                        <td>{{ con.tipoContacto }}</td>
+                                                        <td>{{ con.usuarioWeb}}</td>
+                                                        <td>
+                                                            <button type="button"
+                                                                class="btn btn-outline-primary btn-sm mr-2"
+                                                                title="editar" (click)="editarContacto(i)">
+                                                                <i class="fas fa-edit"></i>
+                                                            </button>
+                                                            <button type="button" class="btn btn-outline-danger btn-sm"
+                                                                (click)="eliminarContacto(i)" title="eliminar">
+                                                                <i class="fas fa-trash-alt"></i>
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+    </section>
+    <div class="modal fade" id="contactoModal">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">{{ isEditing ? 'Actualizar contacto' : 'Agregar contacto' }}</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form [formGroup]="contactoForm" (ngSubmit)="guardarContacto()">
+
+                    <div class="modal-body">
+                        <div class="card-body">
+
+                            <!-- ROW 1 -->
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Identificación</label>
+                                    <input type="text" class="form-control" placeholder="Ingrese identificación"
+                                        formControlName="identificacion"
+                                        [ngClass]="{'is-invalid': contactoForm.get('identificacion')?.invalid && contactoForm.get('identificacion')?.touched}">
+                                    <div class="invalid-feedback">Campo obligatorio</div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">Cargo</label>
+                                    <input type="text" class="form-control" placeholder="Ej: Gerente, Asistente"
+                                        formControlName="cargo"
+                                        [ngClass]="{'is-invalid': contactoForm.get('cargo')?.invalid && contactoForm.get('cargo')?.touched}">
+                                    <div class="invalid-feedback">Campo obligatorio</div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">Nombres y Apellidos</label>
+                                    <input type="text" class="form-control" placeholder="Nombre completo"
+                                        formControlName="nombre"
+                                        [ngClass]="{'is-invalid': contactoForm.get('nombre')?.invalid && contactoForm.get('nombre')?.touched}">
+                                    <div class="invalid-feedback">Campo obligatorio</div>
+                                </div>
+                            </div>
+
+                            <!-- ROW 2 -->
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Fecha de Nacimiento</label>
+                                    <input type="date" class="form-control" placeholder="Seleccione fecha"
+                                        formControlName="fechaNacimiento"
+                                        [ngClass]="{'is-invalid': contactoForm.get('fechaNacimiento')?.invalid && contactoForm.get('fechaNacimiento')?.touched}">
+                                    <div class="invalid-feedback">Campo obligatorio</div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-control" placeholder="correo@ejemplo.com"
+                                        formControlName="email"
+                                        [ngClass]="{'is-invalid': contactoForm.get('email')?.invalid && contactoForm.get('email')?.touched}">
+                                    <div class="invalid-feedback">Email inválido</div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">Regalo</label>
+                                    <select class="form-control" formControlName="regalo"
+                                        [ngClass]="{'is-invalid': contactoForm.get('regalo')?.invalid && contactoForm.get('regalo')?.touched}">
+                                        <option value="" disabled selected>Seleccione una opción</option>
+                                        <option value="NO">No</option>
+                                        <option value="SI">Sí</option>
+                                    </select>
+                                    <div class="invalid-feedback">Campo obligatorio</div>
+                                </div>
+                            </div>
+
+                            <!-- ROW 3 -->
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Tipo de Contacto</label>
+                                    <select class="form-control" formControlName="tipoContacto"
+                                        [ngClass]="{'is-invalid': contactoForm.get('tipoContacto')?.invalid && contactoForm.get('tipoContacto')?.touched}">
+                                        <option value="" disabled selected>Seleccione tipo de contacto</option>
+                                        <option value="ENVIO POLIZAS">Envío de Pólizas *</option>
+                                        <option value="COBRO PRIMAS">Cobro de primas *</option>
+                                        <option value="ENVIO FACTURAS">Envío de Facturas *</option>
+                                        <option value="GERENTE">Gerente *</option>
+                                        <option value="ASISTENTE">Asistente</option>
+                                        <option value="FINANCIERO">Financiero</option>
+                                        <option value="GESTOR COBRO">Gestor de Cobro (solo en fianzas)</option>
+                                    </select>
+                                    <div class="invalid-feedback">Campo obligatorio</div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">Usuario Web</label>
+                                    <select class="form-control" formControlName="usuarioWeb"
+                                        [ngClass]="{'is-invalid': contactoForm.get('usuarioWeb')?.invalid && contactoForm.get('usuarioWeb')?.touched}">
+                                        <option value="" disabled selected>Seleccione una opción</option>
+                                        <option value="NO">No</option>
+                                        <option value="SI">Sí</option>
+                                    </select>
+                                    <div class="invalid-feedback">Campo obligatorio</div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- FOOTER -->
+                    <div class="modal-footer text-end">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save me-2"></i>
+                            {{ isEditing ? 'Actualizar' : 'Guardar' }}
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

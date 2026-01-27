@@ -10,6 +10,7 @@ import { PersonalComponent } from './personal/personal.component';
 import { PresupuestoComponent } from './presupuesto/presupuesto.component';
 import { ComunicadosComponent } from './comunicados/comunicados.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { ChlingresoComponent } from './chlingreso/chlingreso.component';
 
 @NgModule({
   declarations: [
@@ -19,7 +20,8 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
     HeaderComponent,
     PersonalComponent,
     PresupuestoComponent,
-    ComunicadosComponent
+    ComunicadosComponent,
+    ChlingresoComponent
   ],
   imports: [
     CommonModule,

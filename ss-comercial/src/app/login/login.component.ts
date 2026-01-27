@@ -66,8 +66,7 @@ export class LoginComponent implements OnInit {
           const token = response.access_token;
           this.authService.setToken(token);
         }
-        window.location.href = 'personal';
-        console.log('response', response);
+        window.location.href = 'home/inicio';
         //
       } else {
         //this.appComponent.validateAllFormFields(this.loginForm);

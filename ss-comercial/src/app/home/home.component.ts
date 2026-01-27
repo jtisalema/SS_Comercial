@@ -1,10 +1,11 @@
 import { Component, ElementRef, Renderer2 } from '@angular/core';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-home',
   host: { 'class': 'wrapper' },
   templateUrl: './home.component.html',
-  styleUrls: ['./home.component.css']
+  styleUrls: ['./home.component.css'],
 })
 export class HomeComponent {
   copyright: any;
@@ -13,7 +14,7 @@ export class HomeComponent {
 
 
   ngOnInit() {
-    this.copyright = 'environment.copyright';
+    this.copyright = environment.copyright;
     const body = this.el.nativeElement.ownerDocument.body;
   }
   SetActive(targetElement: HTMLElement) {
