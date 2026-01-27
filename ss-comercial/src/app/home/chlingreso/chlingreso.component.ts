@@ -47,7 +47,7 @@ export class ChlingresoComponent {
       tipo: ['', Validators.required],
       aseguradora: ['', Validators.required],
       sucursalAseguradora: ['', Validators.required],
-      ramo: ['', Validators.required],
+      ramo: [[], Validators.required],
       identificacion: ['', Validators.required],
       cliente: ['', Validators.required],
       direccion: ['', Validators.required],

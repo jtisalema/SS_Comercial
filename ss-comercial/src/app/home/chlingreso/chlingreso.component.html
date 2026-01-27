@@ -34,32 +34,29 @@
                                             </option>
                                         </select>
                                     </div>
-                                    <!-- SUCURSAL ASEGURADORA -->
-                                    <div class="col-md-4">
-                                        <label for="sucursalAseguradora" class="form-label">Sucursal Aseguradora</label>
-                                        <input id="sucursalAseguradora" type="text" class="form-control"
-                                            formControlName="sucursalAseguradora" placeholder="Ingrese la sucursal">
-                                    </div>
-                                    <!-- RAMO -->
-<div class="form-group col-md-12">
-  <label for="ramo">Ramo(s)</label>
+<!-- SUCURSAL ASEGURADORA -->
+<div class="col-md-4">
+  <label for="sucursalAseguradora" class="form-label">Sucursal Aseguradora</label>
+  <input id="sucursalAseguradora" type="text" class="form-control"
+         formControlName="sucursalAseguradora" placeholder="Ingrese la sucursal">
+</div>
 
-  <!-- <ng-select
+<!-- RAMOS -->
+<div class="col-md-4">
+  <label for="ramo" class="form-label">Ramo</label>
+  <ng-select
     [items]="lstRamos"
     formControlName="ramo"
     bindLabel="nombre"
     bindValue="id"
     [multiple]="true"
     placeholder="Seleccione uno o más ramos"
-    class="ng-select-custom"
-    style="font-size: 13px;">
-  </ng-select> -->
-
-  <div *ngIf="ingresoForm.get('ramo')?.touched && ingresoForm.get('ramo')?.invalid">
-    <label style="color: red;">
-      <small>* Campo obligatorio</small>
-    </label>
-  </div>
+    [clearable]="true"
+    [closeOnSelect]="false"
+    [searchable]="true"
+    class="ng-select-bootstrap"
+  >
+  </ng-select>
 </div>
                                 </div>
                                 <div class="card mb-4 p-3 position-relative">

@@ -11,6 +11,7 @@ import { PresupuestoComponent } from './presupuesto/presupuesto.component';
 import { ComunicadosComponent } from './comunicados/comunicados.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ChlingresoComponent } from './chlingreso/chlingreso.component';
+import { NgSelectModule } from '@ng-select/ng-select';
 
 @NgModule({
   declarations: [
@@ -27,7 +28,8 @@ import { ChlingresoComponent } from './chlingreso/chlingreso.component';
     CommonModule,
     HomeRoutingModule,
     FormsModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    NgSelectModule
   ]
 })
 export class HomeModule { }

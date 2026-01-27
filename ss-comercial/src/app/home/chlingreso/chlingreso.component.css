@@ -52,3 +52,37 @@ form input::placeholder {
     font-size: 15px;
     font-weight: bold;
 }
+.ng-select-bootstrap {
+  width: 100%;
+  border-radius: 0.25rem;
+  border: 1px solid #ced4da;
+  min-height: 38px;
+  font-size: 13px;
+  background-color: #fff;
+}
+
+.ng-select-bootstrap .ng-value-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  min-height: 38px;
+  padding: 0.25rem 0.5rem;
+}
+
+.ng-select-bootstrap .ng-value {
+  background-color: #e9ecef;
+  color: #495057;
+  border-radius: 0.25rem;
+  padding: 2px 6px;
+  margin-right: 3px;
+  font-size: 13px;
+}
+
+.ng-select-bootstrap .ng-placeholder {
+  color: #6c757d;
+}
+
+.ng-select-bootstrap .ng-input input {
+  font-size: 13px;
+  padding: 0;
+}
