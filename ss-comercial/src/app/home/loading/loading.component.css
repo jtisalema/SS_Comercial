@@ -1,0 +1,22 @@
+.loading-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(57, 110, 161, 0.5);
+    z-index: 999999;
+}
+
+.img-fluid {
+    max-width: 50%;
+}
+
+@media (min-width: 768px) {
+    .img-fluid {
+        max-width: 20%;
+    }
+}

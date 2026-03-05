@@ -12,7 +12,8 @@ import { ComunicadosComponent } from './comunicados/comunicados.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ChlingresoComponent } from './chlingreso/chlingreso.component';
 import { NgSelectModule } from '@ng-select/ng-select';
-
+import { NgxDropzoneModule } from 'ngx-dropzone';
+import { ChlseguimientoComponent } from './chlseguimiento/chlseguimiento.component';
 @NgModule({
   declarations: [
     HomeComponent,
@@ -22,14 +23,16 @@ import { NgSelectModule } from '@ng-select/ng-select';
     PersonalComponent,
     PresupuestoComponent,
     ComunicadosComponent,
-    ChlingresoComponent
+    ChlingresoComponent,
+    ChlseguimientoComponent
   ],
   imports: [
     CommonModule,
     HomeRoutingModule,
     FormsModule,
     ReactiveFormsModule,
-    NgSelectModule
+    NgSelectModule,
+    NgxDropzoneModule
   ]
 })
 export class HomeModule { }

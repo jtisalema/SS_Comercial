@@ -1,0 +1,157 @@
+<div class="content-wrapper"
+    style="background-image: url('assets/images/fondos/plataforma_fondo2.png');background-repeat: no-repeat;height: 100%;background-size: cover;">
+    <br>
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-primary card-outline">
+                        <div class="card-header">
+                            <h3 class="card-title" style="padding-top: 5px;">
+                                <i class="fas fa-user-alt mr-2"></i>
+                                Ingresos
+                            </h3>
+                            <button #btnActualizaCustodio type="button" hidden data-toggle="modal">
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <table #dataTableIngresos class="table table-bordered table-striped"
+                                style="width: 100%;font-size: 11px;text-align: center;">
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <div class="modal fade" id="custodioModal">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">actualizar</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <!-- <form [formGroup]="custodioForm" (ngSubmit)="OnSubmit()">
+                    <div class="modal-body">
+                        <div class="card-body row">
+                            <div class="col-lg-12 form-group">
+                                <div class="row align-items-center">
+                                    <label for="idSucursal"
+                                        class="col-lg-3 col-md-4 col-sm-12 col-form-label">Sucursal:</label>
+                                    <div class="col-lg-9 col-md-8 col-sm-12">
+                                        <input type="text" class="form-control" placeholder="Seleccione la sucursal"
+                                            [formControl]="sucursalControl" (input)="FilterSucursal()"
+                                            (focus)="visualizarOpciones = true;" (blur)="HideOptions()"
+                                            [ngClass]="{ 'is-invalid': custodioForm.get('idSucursal')!.errors && custodioForm.get('idSucursal')!.touched }">
+                                        <ul *ngIf="visualizarOpciones" class="list-group">
+                                            <li class="list-group-item" *ngFor="let sucursal of lstSucursalesFiltradas"
+                                                (mousedown)="SelectSucursal(sucursal)">
+                                                {{sucursal.descripcionSucursal}}
+                                            </li>
+                                        </ul>
+                                        <div class="invalid-feedback"
+                                            *ngIf="custodioForm.get('idSucursal')!.errors && custodioForm.get('idSucursal')!.touched">
+                                            Debe seleccionar la sucusal del activo
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-12 form-group">
+                                <div class="row align-items-center">
+                                    <label for="identificacion"
+                                        class="col-lg-3 col-md-4 col-sm-12 col-form-label">Identificación:</label>
+                                    <div class="col-lg-9 col-md-8 col-sm-12">
+                                        <input type="text"
+                                            [ngClass]="{ 'is-invalid': custodioForm.get('identificacion')!.errors && custodioForm.get('identificacion')!.touched }"
+                                            class="form-control" placeholder="Número de identificación"
+                                            formControlName="identificacion">
+                                        <div class="invalid-feedback"
+                                            *ngIf="custodioForm.get('identificacion')!.errors && custodioForm.get('identificacion')!.touched">
+                                            El número de identificación es obligatorio
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-12 form-group">
+                                <div class="row align-items-center">
+                                    <label for="nombreApellidoCustodio"
+                                        class="col-lg-3 col-md-4 col-sm-12 col-form-label">Nombre del custodio:</label>
+                                    <div class="col-lg-9 col-md-8 col-sm-12">
+                                        <input type="text"
+                                            [ngClass]="{ 'is-invalid': custodioForm.get('nombreApellidoCustodio')!.errors && custodioForm.get('nombreApellidoCustodio')!.touched }"
+                                            class="form-control" placeholder="Apellido y nombre del custodio"
+                                            formControlName="nombreApellidoCustodio">
+                                        <div class="invalid-feedback"
+                                            *ngIf="custodioForm.get('nombreApellidoCustodio')!.errors && custodioForm.get('nombreApellidoCustodio')!.touched">
+                                            El nombre del custodio es obligatorio
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer text-end">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save mr-2"></i>
+                            {{ isEditing ? 'Actualizar' : 'Guardar' }}
+                        </button>
+                    </div>
+                </form> -->
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="contactoModal">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title text-center w-100" style="font-size: medium;">Movimientos del registro N°
+                        {{registroSeleccionado}}</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="card-body">
+                        <div *ngIf="lstMovimientosRegistro.length > 0">
+                            <table class="table table-hover table-bordered w-100 text-center align-middle"
+                                style="font-size: small;">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>#</th>
+                                        <th><i class="fas fa-flag mr-2"></i>Estado</th>
+                                        <th><i class="fas fa-calendar-alt mr-2"></i>F.Movimiento</th>
+                                        <th><i class="fas fa-user-tie mr-2"></i>Ejecutivo Asignado</th>
+                                        <th><i class="fas fa-comment-dots mr-2"></i>Observación</th>
+                                        <th><i class="fas fa-user-tie mr-2"></i>F.Estimada</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr *ngFor="let mov of lstMovimientosRegistro; let i = index">
+                                        <td>{{ i + 1 }}</td>
+                                        <td class="text-start">{{ mov.nombreEstado }}</td>
+                                        <td class="text-start">{{ mov.fechaMovimiento }}</td>
+                                        <td class="text-start">{{ mov.nombreEjecutivo ||'-' }}
+                                        </td>
+                                        <td class="text-start">
+                                            {{ mov.observacion || '-' }}
+                                        </td>
+                                        <td class="text-start">{{ mov.fechaEstimada || '-' }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div *ngIf="lstMovimientosRegistro.length === 0" class="text-center text-muted p-4">
+                            <i class="fas fa-folder-open fa-2x mb-2"></i>
+                            <p class="mb-0">No se encontraron movimientos para este registro.</p>
+                        </div>
+                        <div  class="text-center">
+                            <p class="mb-0">Tiempo Transcurrido: <span style="color:red;font-weight: bold;">{{tiempoOcupado??'-'}}</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

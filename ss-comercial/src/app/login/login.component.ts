@@ -44,8 +44,6 @@ export class LoginComponent implements OnInit {
   }
 
   async iniciarSesion() {
-    console.log(this.loginForm.value.username);
-    console.log(this.loginForm.value.password);
     let swalInstance: any;
 
     try {
@@ -65,8 +63,10 @@ export class LoginComponent implements OnInit {
         if (response.access_token) {
           const token = response.access_token;
           this.authService.setToken(token);
+                  window.location.href = 'home/inicio';
+        }else{
+          this.toastrService.error('Error al iniciar sesión', response.message);
         }
-        window.location.href = 'home/inicio';
         //
       } else {
         //this.appComponent.validateAllFormFields(this.loginForm);

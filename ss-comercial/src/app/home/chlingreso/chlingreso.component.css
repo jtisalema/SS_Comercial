@@ -86,3 +86,15 @@ form input::placeholder {
   font-size: 13px;
   padding: 0;
 }
+ngx-dropzone-preview {
+  width: 70px !important;
+  height: 70px !important;
+  min-width: 70px !important;
+  min-height: 70px !important;
+}
+
+ngx-dropzone-preview img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+}

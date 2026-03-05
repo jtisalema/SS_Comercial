@@ -24,7 +24,7 @@ export class HomeComponent {
 
   SetInactive() {
     const menu = document.getElementsByName('mainParent')[0];
-    const allMenuOpenTag = menu.getElementsByClassName('menu-open') as HTMLCollectionOf<Element>;
+    const allMenuOpenTag = menu?.getElementsByClassName('menu-open') as HTMLCollectionOf<Element>;
     for (let i = 0; i < allMenuOpenTag.length; i--) {
       const temp = allMenuOpenTag[i] as HTMLElement;
       this.RemoveClass(temp);

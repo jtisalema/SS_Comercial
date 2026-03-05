@@ -9,6 +9,7 @@ import { PaginaNoEncontradaComponent } from './pagina-no-encontrada/pagina-no-en
 import { HttpClientModule } from '@angular/common/http';
 import { LoginComponent } from './login/login.component';
 import { ReactiveFormsModule } from '@angular/forms';
+import { LoadingComponent } from './home/loading/loading.component';
 
 @NgModule({
   declarations: [
@@ -16,6 +17,7 @@ import { ReactiveFormsModule } from '@angular/forms';
     NoticiasComponent,
     PaginaNoEncontradaComponent,
     LoginComponent,
+    LoadingComponent
   ],
   imports: [
     BrowserModule,

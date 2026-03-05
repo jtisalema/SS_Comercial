@@ -6,6 +6,7 @@ import { PersonalComponent } from './personal/personal.component';
 import { PresupuestoComponent } from './presupuesto/presupuesto.component';
 import { ComunicadosComponent } from './comunicados/comunicados.component';
 import { ChlingresoComponent } from './chlingreso/chlingreso.component';
+import { ChlseguimientoComponent } from './chlseguimiento/chlseguimiento.component';
 
 const homeRoutes: Routes = [
   {
@@ -15,7 +16,9 @@ const homeRoutes: Routes = [
       { path: 'personal', component: PersonalComponent },
       { path: 'presupuesto', component: PresupuestoComponent },
       { path: 'comunicados', component: ComunicadosComponent },
-      { path: 'checkList/ingreso', component: ChlingresoComponent }
+      { path: 'checkList/ingreso', component: ChlingresoComponent },
+      { path: 'checkList/ingreso/:id', component: ChlingresoComponent },
+      { path: 'checkList/seguimiento', component: ChlseguimientoComponent }
     ]
   }
 ];
