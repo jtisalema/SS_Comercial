@@ -9,7 +9,7 @@
                         <div class="card-header d-flex align-items-center">
 
                             <h3 class="card-title mb-0" style="font-weight: bold;">
-                                <i class="fas fa-user-alt me-2" ></i>
+                                <i class="fas fa-user-alt me-2"></i>
                                 CheckList Ingreso
                             </h3>
 
@@ -339,7 +339,7 @@
                                                 <span class="input-group-text bg-light">
                                                     <i class="fas fa-percentage text-info"></i>
                                                 </span>
-                                                <input id="comision" type="text" class="form-control"
+                                                <input id="comision" type="number" min="0" class="form-control"
                                                     placeholder="Ingrese el porcentaje de comisión"
                                                     formControlName="comision">
                                             </div>
@@ -360,8 +360,8 @@
                                                 <span class="input-group-text bg-light">
                                                     <i class="fas fa-dollar-sign text-info"></i>
                                                 </span>
-                                                <input id="tasa" type="text" class="form-control"
-                                                    placeholder="Ingrese la tasa" formControlName="tasa">
+                                                <input id="tasa" type="number" class="form-control"
+                                                    placeholder="Ingrese la tasa" formControlName="tasa" min="0">
                                             </div>
 
                                             <small class="text-danger"
@@ -398,20 +398,48 @@
 
                                     </div>
 
-                                    <div class="row mb-3">
+                                    <div class="row mb-4">
+                                        <!-- Tipo comision de prima -->
+                                        <div class="col-md-4">
+                                            <label for="tipoPrima" class="form-label">
+                                                Tipo de Prima
+                                            </label>
 
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light">
+                                                    <i class="fas fa-user-tie text-info"></i>
+                                                </span>
+                                                <select id="tipoPrima" class="form-control" formControlName="tipoPrima">
+                                                    <option value="" disabled selected>Seleccione el tipo de prima
+                                                    </option>
+                                                    <option value="1">Prima Neta</option>
+                                                    <option value="2">Prima Riesgo</option>
+                                                </select>
+                                            </div>
+
+                                            <small class="text-danger"
+                                                *ngIf="ingresoForm.get('tipoPrima')?.touched && ingresoForm.get('tipoPrima')?.hasError('required')">
+                                                Debe seleccionar un ejecutivo
+                                            </small>
+                                        </div>
                                         <!-- HUR -->
-                                        <div class="col-md-3">
+                                        <div class="col-md-4">
                                             <label for="hur" class="form-label">
-                                                HUR
+                                                {{
+                                                ingresoForm.value.tipoPrima == 1
+                                                ? 'HUR Prima Neta'
+                                                : ingresoForm.value.tipoPrima == 2
+                                                ? 'HUR Prima Riesgo'
+                                                : 'HUR'
+                                                }}
                                             </label>
 
                                             <div class="input-group">
                                                 <span class="input-group-text bg-light">
                                                     <i class="fas fa-file-invoice-dollar text-info"></i>
                                                 </span>
-                                                <input id="hur" type="text" class="form-control" formControlName="hur"
-                                                    placeholder="Ingrese el valor de HUR">
+                                                <input id="hur" type="number" min="0" class="form-control"
+                                                    formControlName="hur" placeholder="Ingrese el valor de HUR">
                                             </div>
 
                                             <small class="text-danger"
@@ -421,7 +449,7 @@
                                         </div>
 
                                         <!-- COMISIÓN PRIMA RIESGO -->
-                                        <div class="col-md-3">
+                                        <div class="col-md-3" hidden>
                                             <label for="primaRiesgo" class="form-label">
                                                 Comisión Prima Riesgo
                                             </label>
@@ -442,7 +470,7 @@
                                         </div>
 
                                         <!-- COMISIÓN PRIMA NETA -->
-                                        <div class="col-md-3">
+                                        <div class="col-md-3" hidden>
                                             <label for="primaNeta" class="form-label">
                                                 Comisión Prima Neta
                                             </label>
@@ -463,16 +491,21 @@
                                         </div>
 
                                         <!-- COMISIÓN BROKER -->
-                                        <div class="col-md-3">
-                                            <label for="comisionBroker" class="form-label">
-                                                Comisión Broker
+                                        <div class="col-md-4">
+                                            <label for="hur" class="form-label">
+                                                {{
+                                                ingresoForm.value.tipoPrima == 1
+                                                ? 'Comisión Broker Prima Neta'
+                                                : ingresoForm.value.tipoPrima == 2
+                                                ? 'Comisión Broker Prima Riesgo'
+                                                : 'Comisión Broker'
+                                                }}
                                             </label>
-
                                             <div class="input-group">
                                                 <span class="input-group-text bg-light">
                                                     <i class="fas fa-handshake text-info"></i>
                                                 </span>
-                                                <input id="comisionBroker" type="text" class="form-control"
+                                                <input id="comisionBroker" type="number" min="0" class="form-control"
                                                     formControlName="comisionBroker"
                                                     placeholder="Ingrese la comisión para el broker">
                                             </div>
@@ -500,10 +533,9 @@
                                                 <select id="formaPago" class="form-control" formControlName="formaPago"
                                                     (change)="onChangeFormaPago($event)">
                                                     <option value="" disabled selected>Seleccione forma de pago</option>
-                                                    <option value="1">Contado/Transferencia</option>
-                                                    <option value="2">Crédito</option>
-                                                    <option value="3">Tarjeta de Crédito</option>
-                                                    <option value="4">Débito Bancario</option>
+                                                    <option *ngFor="let forma of lstFormaPago" [value]="forma.id">
+                                                        {{ forma.nombre }}
+                                                    </option>
                                                 </select>
                                             </div>
 
@@ -589,14 +621,14 @@
 
                                         <!-- Número de Cuotas -->
                                         <div class="col-md-2" *ngIf="ingresoForm.value.formaPago != 1">
-                                            <label for="cuotas" class="form-label">Número Cuotas</label>
+                                            <label for="cuotas" class="form-label"># Cuotas</label>
 
                                             <div class="input-group">
                                                 <span class="input-group-text bg-light">
                                                     <i class="fas fa-list-ol text-info"></i>
                                                 </span>
-                                                <input id="cuotas" type="number" min="1" class="form-control" placeholder="1"
-                                                    formControlName="cuotas">
+                                                <input id="cuotas" type="number" min="1" class="form-control"
+                                                    placeholder="1" formControlName="cuotas">
                                             </div>
 
                                             <small class="text-danger"
@@ -604,7 +636,19 @@
                                                 Debe ingresar el número de cuotas
                                             </small>
                                         </div>
-
+                                        <!----->
+                                        <div class="col-md-2"
+                                            *ngIf="ingresoForm.value.formaPago != 1 && this.ingresoForm.value.subArea==5">
+                                            <label for="cuotas" class="form-label"># Días</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light">
+                                                    <i class="fas fa-list-ol text-info"></i>
+                                                </span>
+                                                <input id="cuotas" type="number" min="0" class="form-control"
+                                                    placeholder="0" (change)="calcularFechaPago()"
+                                                    formControlName="numeroDias">
+                                            </div>
+                                        </div>
                                         <!-- Fecha Pago / Cobro -->
                                         <div class="col-md-2" *ngIf="ingresoForm.value.formaPago != 1">
                                             <label for="fechaPagoCobro" class="form-label">Fecha Pago/Cobro</label>
@@ -625,7 +669,8 @@
 
                                         <!-- Adjuntar comprobante -->
                                         <div class="col-md-4" *ngIf="ingresoForm.value.formaPago == 1">
-                                            <label class="form-label">Adjuntar comprobante (opcional)</label>
+                                            <label class="form-label">Adjuntar comprobante<span
+                                                    *ngIf="ingresoForm.value.subArea != 5">(opcional)</span></label>
 
                                             <ngx-dropzone class="custom-dropzone" (change)="onSelect($event)"
                                                 accept="image/jpeg,image/jpg,image/png,image/gif,application/pdf"
@@ -647,7 +692,10 @@
                                                     </ngx-dropzone-label>
                                                 </ngx-dropzone-preview>
                                             </ngx-dropzone>
-
+                                            <small class="d-block mt-1"
+                                                *ngIf="ingresoForm.value.subArea == 5 && this.files.length < 1">
+                                                <em style="color: red;">El comprobante de pago es Obligatorio</em>
+                                            </small>
                                             <small class="d-block mt-1">
                                                 <em>Tamaño máximo por archivo 4MB</em>
                                             </small>
@@ -742,6 +790,65 @@
                                     </div>
 
                                 </div>
+                                <div class="row">
+
+                                    <!-- AP -->
+                                    <div class="card mb-4 p-3 position-relative col-md-4" *ngIf="existeRamo(54)">
+                                        <h6 class="card-title titulo-sobre-borde">Texto Accidentes Personales</h6>
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <textarea class="form-control w-100" rows="4" style="resize: none;"
+                                                    formControlName="textoAP"></textarea>
+
+                                                <!-- VALIDACIÓN -->
+                                                <small class="text-danger"
+                                                    *ngIf="ingresoForm.get('textoAP')?.touched && ingresoForm.get('textoAP')?.errors?.['required']">
+                                                    Este campo es obligatorio.
+                                                </small>
+
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- RC -->
+                                    <div class="card mb-4 p-3 position-relative col-md-4" *ngIf="existeRamo(8)">
+                                        <h6 class="card-title titulo-sobre-borde">Texto Responsabilidad Civil</h6>
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <textarea class="form-control w-100" rows="4" style="resize: none;"
+                                                    formControlName="textoRC"></textarea>
+
+                                                <!-- VALIDACIÓN -->
+                                                <small class="text-danger"
+                                                    *ngIf="ingresoForm.get('textoRC')?.touched && ingresoForm.get('textoRC')?.errors?.['required']">
+                                                    Este campo es obligatorio.
+                                                </small>
+
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- TRC -->
+                                    <div class="card mb-4 p-3 position-relative col-md-4" *ngIf="existeRamo(14)">
+                                        <h6 class="card-title titulo-sobre-borde">Texto Todo Riesgo Construcción</h6>
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <textarea class="form-control w-100" rows="4" style="resize: none;"
+                                                    formControlName="textoTRC"></textarea>
+
+                                                <!-- VALIDACIÓN -->
+                                                <small class="text-danger"
+                                                    *ngIf="ingresoForm.get('textoTRC')?.touched && ingresoForm.get('textoTRC')?.errors?.['required']">
+                                                    Este campo es obligatorio.
+                                                </small>
+
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+
                                 <div class="card mb-4 p-3 position-relative">
                                     <h6 class="card-title titulo-sobre-borde">Contactos</h6>
                                     <div class="row">
@@ -766,6 +873,7 @@
                                                         <th><i class="fas fa-at"></i> Email</th>
                                                         <th><i class="fas fa-gift"></i> Regalo</th>
                                                         <th><i class="fas fa-address-book"></i> Contacto</th>
+                                                        <th><i class="fas fa-address-book"></i> Telefonos</th>
                                                         <th><i class="fas fa-web-awesome"></i> Usuario Web</th>
                                                         <th><i class="fas fa-cog"></i> Acción</th>
                                                     </tr>
@@ -780,6 +888,7 @@
                                                         <td>{{ con.email }}</td>
                                                         <td>{{ con.regalo == 1 ? 'SI' : 'NO' }}</td>
                                                         <td>{{ con.nombreContacto }}</td>
+                                                        <td>{{ formatearTelefonos(con) }}</td>
                                                         <td>{{ con.usuarioWeb == 1 ? 'SI' : 'NO' }}</td>
                                                         <td>
                                                             <button type="button"
@@ -884,7 +993,13 @@
                                                             </ngx-dropzone-label>
                                                         </ngx-dropzone-preview>
                                                     </ngx-dropzone>
-
+                                                    <small class="text-muted d-block mt-2"
+                                                        *ngIf="this.ingresoForm.value.id">
+                                                        <span (click)="descargarZip()"
+                                                            style="color: blue; text-decoration: underline; cursor: pointer;">
+                                                            <strong>Descargar .zip</strong>
+                                                        </span>
+                                                    </small>
                                                     <small class="text-muted d-block mt-2">
                                                         Tamaño máximo por archivo: <strong>4MB</strong>
                                                     </small>
@@ -933,172 +1048,231 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h4 class="modal-title">{{ isEditing ? 'Actualizar contacto' : 'Agregar contacto' }}</h4>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <span>&times;</span>
                     </button>
                 </div>
                 <form [formGroup]="contactoForm" (ngSubmit)="false">
+                    <div *ngIf="lstContactosSugeridos?.length" class="mt-2 d-flex align-items-center flex-wrap">
 
-<div class="modal-body">
-    <div class="card-body">
+                        <!-- Label alineado -->
+                        <label class="form-label fw-bold mr-2 mb-0 d-flex align-items-center"
+                            style="padding-left: 10px;">
+                            Contactos sugeridos:
+                        </label>
+                        <!-- Burbujas -->
+                        <span *ngFor="let item of lstContactosSugeridos"
+                            class="badge rounded-pill px-3 py-2 me-2 mb-1 sugerido-chip"
+                            style="background-color:#e3f2fd; color:#0d6efd; border:1px solid #90caf9; cursor:pointer; transition: all 0.2s ease;"
+                            (click)="burbujaSeleccionada(item)">
+                            {{ item.nombre }}
+                        </span>
 
-        <!-- ROW 1 -->
-        <div class="row mb-3">
+                    </div>
+                    <div class="modal-body">
+                        <div class="card-body">
 
-            <!-- Identificación -->
-            <div class="col-md-3">
-                <label class="form-label">Identificación</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-light">
-                        <i class="fas fa-id-card text-info"></i>
-                    </span>
-                    <input type="text"
-                           class="form-control"
-                           placeholder="Ingrese identificación"
-                           formControlName="identificacion"
-                           (keyup.enter)="consultarInformacionContacto()"
-                           (keydown.Tab)="consultarInformacionContacto()"
-                           (input)="onChangeIdentificacionContacto()"
-                           [ngClass]="{'is-invalid': contactoForm.get('identificacion')?.invalid && contactoForm.get('identificacion')?.touched}">
-                </div>
-                <div class="invalid-feedback">Campo obligatorio</div>
-            </div>
-            <!-- Nombres y Apellidos -->
-            <div class="col-md-5">
-                <label class="form-label">Nombres y Apellidos</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-light">
-                        <i class="fas fa-user text-info"></i>
-                    </span>
-                    <input type="text"
-                           class="form-control"
-                           placeholder="Nombre completo"
-                           formControlName="nombre"
-                           [ngClass]="{'is-invalid': contactoForm.get('nombre')?.invalid && contactoForm.get('nombre')?.touched}">
-                </div>
-                <div class="invalid-feedback">Campo obligatorio</div>
-            </div>
-            <!-- Cargo -->
-            <div class="col-md-4">
-                <label class="form-label">Cargo</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-light">
-                        <i class="fas fa-briefcase text-info"></i>
-                    </span>
-                    <input type="text"
-                           class="form-control"
-                           placeholder="Ej: Gerente, Asistente"
-                           formControlName="cargo"
-                           [ngClass]="{'is-invalid': contactoForm.get('cargo')?.invalid && contactoForm.get('cargo')?.touched}">
-                </div>
-                <div class="invalid-feedback">Campo obligatorio</div>
-            </div>
+                            <!-- ROW 1 -->
+                            <div class="row mb-3">
+
+                                <!-- Identificación -->
+                                <div class="col-md-3">
+                                    <label class="form-label">Identificación</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light">
+                                            <i class="fas fa-id-card text-info"></i>
+                                        </span>
+                                        <input type="text" class="form-control" placeholder="Ingrese identificación"
+                                            formControlName="identificacion"
+                                            (keyup.enter)="consultarInformacionContacto()"
+                                            (keydown.Tab)="consultarInformacionContacto()"
+                                            (input)="onChangeIdentificacionContacto()"
+                                            [ngClass]="{'is-invalid': contactoForm.get('identificacion')?.invalid && contactoForm.get('identificacion')?.touched}">
+                                    </div>
+                                    <div class="invalid-feedback">Campo obligatorio</div>
+                                </div>
+                                <!-- Nombres y Apellidos -->
+                                <div class="col-md-5">
+                                    <label class="form-label">Nombres y Apellidos</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light">
+                                            <i class="fas fa-user text-info"></i>
+                                        </span>
+                                        <input type="text" class="form-control" placeholder="Nombre completo"
+                                            formControlName="nombre"
+                                            [ngClass]="{'is-invalid': contactoForm.get('nombre')?.invalid && contactoForm.get('nombre')?.touched}">
+                                    </div>
+                                    <div class="invalid-feedback">Campo obligatorio</div>
+                                </div>
+                                <!-- Cargo -->
+                                <div class="col-md-4">
+                                    <label class="form-label">Cargo</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light">
+                                            <i class="fas fa-briefcase text-info"></i>
+                                        </span>
+                                        <input type="text" class="form-control" placeholder="Ej: Gerente, Asistente"
+                                            formControlName="cargo"
+                                            [ngClass]="{'is-invalid': contactoForm.get('cargo')?.invalid && contactoForm.get('cargo')?.touched}">
+                                    </div>
+                                    <div class="invalid-feedback">Campo obligatorio</div>
+                                </div>
 
 
 
-        </div>
+                            </div>
+                            <!-- ROW TELÉFONOS -->
+                            <div class="row mb-3">
 
-        <!-- ROW 2 -->
-        <div class="row mb-3">
+                                <!-- Celular -->
+                                <div class="col-md-4">
+                                    <label class="form-label">Celular</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light">
+                                            <i class="fas fa-mobile-alt text-info"></i>
+                                        </span>
+                                        <input type="text" class="form-control" placeholder="Ingrese celular"
+                                            formControlName="celular"
+                                            [ngClass]="{'is-invalid': contactoForm.get('celular')?.invalid && contactoForm.get('celular')?.touched}">
+                                    </div>
+                                    <div class="invalid-feedback">Campo obligatorio</div>
+                                    <div class="text-danger mt-1"
+                                        *ngIf="contactoForm.errors?.['telefonoRequerido'] && contactoForm.touched">
+                                        Debe ingresar al menos un teléfono
+                                    </div>
+                                </div>
 
-            <!-- Fecha de Nacimiento -->
-            <div class="col-md-4">
-                <label class="form-label">Fecha de Nacimiento</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-light">
-                        <i class="fas fa-calendar-alt text-info"></i>
-                    </span>
-                    <input type="date"
-                           class="form-control"
-                           placeholder="Seleccione fecha"
-                           formControlName="fechaNacimiento"
-                           [ngClass]="{'is-invalid': contactoForm.get('fechaNacimiento')?.invalid && contactoForm.get('fechaNacimiento')?.touched}">
-                </div>
-                <div class="invalid-feedback">Campo obligatorio</div>
-            </div>
+                                <!-- Teléfono Trabajo -->
+                                <div class="col-md-4">
+                                    <label class="form-label">Teléfono Trabajo</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light">
+                                            <i class="fas fa-phone text-info"></i>
+                                        </span>
+                                        <input type="text" class="form-control" placeholder="Ingrese teléfono trabajo"
+                                            formControlName="telefonoTrabajo"
+                                            [ngClass]="{'is-invalid': contactoForm.get('telefonoTrabajo')?.invalid && contactoForm.get('telefonoTrabajo')?.touched}">
+                                    </div>
+                                    <div class="text-danger mt-1"
+                                        *ngIf="contactoForm.errors?.['telefonoRequerido'] && contactoForm.touched">
+                                        Debe ingresar al menos un teléfono
+                                    </div>
+                                    <div class="invalid-feedback">Campo obligatorio</div>
+                                </div>
 
-            <!-- Email -->
-            <div class="col-md-4">
-                <label class="form-label">Email</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-light">
-                        <i class="fas fa-envelope text-info"></i>
-                    </span>
-                    <input type="email"
-                           class="form-control"
-                           placeholder="correo@ejemplo.com"
-                           formControlName="email"
-                           [ngClass]="{'is-invalid': contactoForm.get('email')?.invalid && contactoForm.get('email')?.touched}">
-                </div>
-                <div class="invalid-feedback">Email inválido</div>
-            </div>
+                                <!-- Teléfono Convencional -->
+                                <div class="col-md-4">
+                                    <label class="form-label">Teléfono Convencional</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light">
+                                            <i class="fas fa-phone-alt text-info"></i>
+                                        </span>
+                                        <input type="text" class="form-control"
+                                            placeholder="Ingrese teléfono convencional"
+                                            formControlName="telefonoConvencional"
+                                            [ngClass]="{'is-invalid': contactoForm.get('telefonoConvencional')?.invalid && contactoForm.get('telefonoConvencional')?.touched}">
+                                    </div>
+                                    <div class="invalid-feedback">Campo obligatorio</div>
+                                    <div class="text-danger mt-1"
+                                        *ngIf="contactoForm.errors?.['telefonoRequerido'] && contactoForm.touched">
+                                        Debe ingresar al menos un teléfono
+                                    </div>
+                                </div>
 
-            <!-- Regalo -->
-            <div class="col-md-4">
-                <label class="form-label">Regalo</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-light">
-                        <i class="fas fa-gift text-info"></i>
-                    </span>
-                    <select class="form-control"
-                            formControlName="regalo"
-                            [ngClass]="{'is-invalid': contactoForm.get('regalo')?.invalid && contactoForm.get('regalo')?.touched}">
-                        <option value="" disabled selected>Seleccione una opción</option>
-                        <option value="0">No</option>
-                        <option value="1">Sí</option>
-                    </select>
-                </div>
-                <div class="invalid-feedback">Campo obligatorio</div>
-            </div>
+                            </div>
+                            <!-- ROW 2 -->
+                            <div class="row mb-3">
 
-        </div>
+                                <!-- Fecha de Nacimiento -->
+                                <div class="col-md-4">
+                                    <label class="form-label">Fecha de Nacimiento</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light">
+                                            <i class="fas fa-calendar-alt text-info"></i>
+                                        </span>
+                                        <input type="date" class="form-control" placeholder="Seleccione fecha"
+                                            formControlName="fechaNacimiento"
+                                            [ngClass]="{'is-invalid': contactoForm.get('fechaNacimiento')?.invalid && contactoForm.get('fechaNacimiento')?.touched}">
+                                    </div>
+                                    <div class="invalid-feedback">Campo obligatorio</div>
+                                </div>
 
-        <!-- ROW 3 -->
-        <div class="row mb-3">
+                                <!-- Email -->
+                                <div class="col-md-4">
+                                    <label class="form-label">Email</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light">
+                                            <i class="fas fa-envelope text-info"></i>
+                                        </span>
+                                        <input type="email" class="form-control" placeholder="correo@ejemplo.com"
+                                            formControlName="email"
+                                            [ngClass]="{'is-invalid': contactoForm.get('email')?.invalid && contactoForm.get('email')?.touched}">
+                                    </div>
+                                    <div class="invalid-feedback">Email inválido</div>
+                                </div>
 
-            <!-- Tipo de Contacto -->
-            <div class="col-md-4">
-                <label class="form-label">
-                    Tipo de Contacto <span style="color:red">*</span>
-                </label>
-                <div class="input-group">
-                    <span class="input-group-text bg-light">
-                        <i class="fas fa-address-book text-info"></i>
-                    </span>
-                    <select class="form-control"
-                            formControlName="tipoContacto"
-                            [ngClass]="{'is-invalid': contactoForm.get('tipoContacto')?.invalid && contactoForm.get('tipoContacto')?.touched}">
-                        <option value="" disabled selected>Seleccione tipo de contacto</option>
-                        <option *ngFor="let t of lstTipoContacto" [value]="t.id">
-                            {{ t.nombre }}<span *ngIf="t.obligatorio === 1"> *</span>
-                        </option>
-                    </select>
-                </div>
-                <div class="invalid-feedback">Campo obligatorio</div>
-            </div>
+                                <!-- Regalo -->
+                                <div class="col-md-4">
+                                    <label class="form-label">Regalo</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light">
+                                            <i class="fas fa-gift text-info"></i>
+                                        </span>
+                                        <select formControlName="regalo" class="form-control">
+                                            <option *ngFor="let item of lstTipoRegalo" [value]="item.id">
+                                                {{ item.nombre }}
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="invalid-feedback">Campo obligatorio</div>
+                                </div>
 
-            <!-- Usuario Web -->
-            <div class="col-md-4">
-                <label class="form-label">Usuario Web</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-light">
-                        <i class="fas fa-globe text-info"></i>
-                    </span>
-                    <select class="form-control"
-                            formControlName="usuarioWeb"
-                            [ngClass]="{'is-invalid': contactoForm.get('usuarioWeb')?.invalid && contactoForm.get('usuarioWeb')?.touched}">
-                        <option value="" disabled selected>Seleccione una opción</option>
-                        <option value="0">No</option>
-                        <option value="1">Sí</option>
-                    </select>
-                </div>
-                <div class="invalid-feedback">Campo obligatorio</div>
-            </div>
+                            </div>
 
-        </div>
+                            <!-- ROW 3 -->
+                            <div class="row mb-3">
 
-    </div>
-</div>
+                                <!-- Tipo de Contacto -->
+                                <div class="col-md-4">
+                                    <label class="form-label">
+                                        Tipo de Contacto <span style="color:red">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light">
+                                            <i class="fas fa-address-book text-info"></i>
+                                        </span>
+                                        <select class="form-control" formControlName="tipoContacto"
+                                            [ngClass]="{'is-invalid': contactoForm.get('tipoContacto')?.invalid && contactoForm.get('tipoContacto')?.touched}">
+                                            <option value="" disabled selected>Seleccione tipo de contacto</option>
+                                            <option *ngFor="let t of lstTipoContacto" [value]="t.id">
+                                                {{ t.nombre }}<span *ngIf="t.obligatorio === 1"> *</span>
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="invalid-feedback">Campo obligatorio</div>
+                                </div>
+
+                                <!-- Usuario Web -->
+                                <div class="col-md-4">
+                                    <label class="form-label">Usuario Web</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light">
+                                            <i class="fas fa-globe text-info"></i>
+                                        </span>
+                                        <select class="form-control" formControlName="usuarioWeb"
+                                            [ngClass]="{'is-invalid': contactoForm.get('usuarioWeb')?.invalid && contactoForm.get('usuarioWeb')?.touched}">
+                                            <option value="" disabled selected>Seleccione una opción</option>
+                                            <option value="0">No</option>
+                                            <option value="1">Sí</option>
+                                        </select>
+                                    </div>
+                                    <div class="invalid-feedback">Campo obligatorio</div>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
 
                     <!-- FOOTER -->
                     <div class="modal-footer text-end">
@@ -1122,9 +1296,8 @@
                         Correciones por Realizar
                         <i class="fas fa-edit fa-lg ml-2"></i>
                     </h4>
-                    <button type="button" class="close position-absolute" style="right: 15px;" data-dismiss="modal"
-                        aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <span>&times;</span>
                     </button>
                 </div>
 

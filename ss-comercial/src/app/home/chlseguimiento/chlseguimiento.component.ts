@@ -61,22 +61,22 @@ export class ChlseguimientoComponent {
       );
       const self = this;
 
-this.dtOptions = {
-  data: this.lstIngresos,
-  info: false,
-  pageLength: 7,
-  lengthChange: false,
-  language: {
-    ...this.GetSpanishLanguage()
-  },
+      this.dtOptions = {
+        data: this.lstIngresos,
+        info: false,
+        pageLength: 7,
+        lengthChange: false,
+        language: {
+          ...this.GetSpanishLanguage()
+        },
 
-  // ✅ Checkbox al lado del buscador
-  initComplete: function () {
-    if (!self.esEjecutivo) return;
+        // ✅ Checkbox al lado del buscador
+        initComplete: function () {
+          if (!self.esEjecutivo) return;
 
-    const api = this.api();
+          const api = this.api();
 
-    const checkbox = `
+          const checkbox = `
       <div class="form-check form-check-inline me-3" style="margin-bottom:0;">
         <input 
           class="form-check-input" 
@@ -95,75 +95,75 @@ this.dtOptions = {
       </div>
     `;
 
-    $('.dataTables_filter').prepend(checkbox);
+          $('.dataTables_filter').prepend(checkbox);
 
-    $('#chkEstadoFiltro').on('change', function () {
-      api.draw();
-    });
+          $('#chkEstadoFiltro').on('change', function () {
+            api.draw();
+          });
 
-    setTimeout(() => {
-      api.draw();
-    }, 0);
-  },
+          setTimeout(() => {
+            api.draw();
+          }, 0);
+        },
 
-  columns: [
+        columns: [
 
-    // N°
-    { 
-      title: '<i class="fas fa-hashtag me-1"></i> N°',
-      data: 'id' 
-    },
+          // N°
+          {
+            title: '<i class="fas fa-hashtag me-1"></i> N°',
+            data: 'id'
+          },
 
-    // Prioridad
-    {
-      title: '<i class="fas fa-exclamation-circle me-1 text-danger"></i> Prioridad',
-      data: 'prioridad',
-      className: 'text-center',
-      render: function (data: string) {
+          // Prioridad
+          {
+            title: '<i class="fas fa-exclamation-circle me-1 text-danger"></i> Prioridad',
+            data: 'prioridad',
+            className: 'text-center',
+            render: function (data: string) {
 
-        let clase = 'badge bg-secondary';
+              let clase = 'badge bg-secondary';
 
-        if (data === 'ALTA') {
-          clase = 'badge bg-danger';
-        } else if (data === 'MEDIA') {
-          clase = 'badge bg-warning';
-        } else if (data === 'BAJA') {
-          clase = 'badge bg-success';
-        }
+              if (data === 'ALTA') {
+                clase = 'badge bg-danger';
+              } else if (data === 'MEDIA') {
+                clase = 'badge bg-warning';
+              } else if (data === 'BAJA') {
+                clase = 'badge bg-success';
+              }
 
-        return `<span class="${clase} px-2 py-1" style="font-size:10px">${data}</span>`;
-      }
-    },
+              return `<span class="${clase} px-2 py-1" style="font-size:10px">${data}</span>`;
+            }
+          },
 
-    // Opciones
-{
-  title: '<i class="fas fa-cogs me-1"></i> Opción',
-  searchable: false,
-  render: (data: any, type: any, full: any, meta: any) => {
+          // Opciones
+          {
+            title: '<i class="fas fa-cogs me-1"></i> Opción',
+            searchable: false,
+            render: (data: any, type: any, full: any, meta: any) => {
 
-    let botones = '';
+              let botones = '';
 
-    if ((full.idEstado == 1 || full.idEstado == 2) && this.esEjecutivo) {
-      botones += `
+              if ((full.idEstado == 1 || full.idEstado == 2) && this.esEjecutivo) {
+                botones += `
         <button title="Revisar" type="button"
           class="btn btn-primary btn-sm"
           onclick="revisarIngreso(${full.id})">
           <i class="fas fa-edit"></i>
         </button>
       `;
-    }
+              }
 
-    if (full.idEstado == 3 && !this.esEjecutivo) {
-      botones += `
+              if (full.idEstado == 3 && !this.esEjecutivo) {
+                botones += `
         <button title="Revisar" type="button"
           class="btn btn-primary btn-sm"
           onclick="revisarIngreso(${full.id})">
           <i class="fas fa-edit"></i>
         </button>
       `;
-    }
+              }
 
-    botones += `
+              botones += `
       <button title="Seguimiento" type="button"
         class="btn btn-success btn-sm"
         onclick="abrirModalHistorialMovimientos(${full.id})">
@@ -171,96 +171,96 @@ this.dtOptions = {
       </button>
     `;
 
-    if (full.idEstado == 1 && !this.esEjecutivo) {
-      botones += `
+              if (full.idEstado == 1 && !this.esEjecutivo) {
+                botones += `
         <button title="Corregir" type="button"
           class="btn btn-warning btn-sm"
           onclick="revisarIngreso(${full.id})">
           <i class="fas fa-edit"></i>
         </button>
       `;
-    }
+              }
 
-    if (full.idEstado == 2 && this.esEjecutivo) {
-      botones += `
+              if (full.idEstado == 2 && this.esEjecutivo) {
+                botones += `
         <button title="Estimar" type="button"
           class="btn btn-info btn-sm"
           onclick="estimarEntrega(${full.id})">
           <i class="fas fa-flag"></i>
         </button>
       `;
-    }
+              }
 
-    // Flex container centrado con espacio entre botones
-    return `<div class="d-flex justify-content-center flex-nowrap" style="gap: 5px;">${botones}</div>`;
-  }
-},
+              // Flex container centrado con espacio entre botones
+              return `<div class="d-flex justify-content-center flex-nowrap" style="gap: 5px;">${botones}</div>`;
+            }
+          },
 
-    // Estado
-    {
-      title: '<i class="fas fa-info-circle me-1"></i> Estado',
-      data: 'estado',
-      render: function (data: any) {
-        return `<strong>${data}</strong>`;
-      }
-    },
+          // Estado
+          {
+            title: '<i class="fas fa-info-circle me-1"></i> Estado',
+            data: 'estado',
+            render: function (data: any) {
+              return `<strong>${data}</strong>`;
+            }
+          },
 
-    // Fecha Registro
-    {
-      title: '<i class="fas fa-calendar-alt me-1"></i> F. Registro',
-      data: 'fechaRegistro'
-    },
+          // Fecha Registro
+          {
+            title: '<i class="fas fa-calendar-alt me-1"></i> F. Registro',
+            data: 'fechaRegistro'
+          },
 
-    // Fecha Entrega
-    {
-      title: '<i class="fas fa-clock me-1"></i> F. Entrega',
-      data: 'fechaMaxima',
-      render: function (data: any, type: any, row: any) {
-        const estado = Number(row.idEstado);
-        if ([2, 4].includes(estado)) {
-          return data ?? '';
-        }
-        return '-';
-      }
-    },
+          // Fecha Entrega
+          {
+            title: '<i class="fas fa-clock me-1"></i> F. Entrega',
+            data: 'fechaMaxima',
+            render: function (data: any, type: any, row: any) {
+              const estado = Number(row.idEstado);
+              if ([2, 4].includes(estado)) {
+                return data ?? '';
+              }
+              return '-';
+            }
+          },
 
-    // Cliente
-    {
-      title: '<i class="fas fa-user me-1"></i> Cliente',
-      data: 'cliente'
-    },
+          // Cliente
+          {
+            title: '<i class="fas fa-user me-1"></i> Cliente',
+            data: 'cliente'
+          },
 
-    // Ramos
-    {
-      title: '<i class="fas fa-layer-group me-1"></i> Ramos',
-      data: 'lstRamos'
-    },
+          // Ramos
+          {
+            title: '<i class="fas fa-layer-group me-1"></i> Ramos',
+            data: 'lstRamos'
+          },
 
-    // Aseguradora
-    {
-      title: '<i class="fas fa-building me-1"></i> Aseguradora',
-      data: 'aseguradora'
-    },
+          // Aseguradora
+          {
+            title: '<i class="fas fa-building me-1"></i> Aseguradora',
+            data: 'aseguradora'
+          },
 
-    // Solicitante
-    {
-      title: '<i class="fas fa-user-tie me-1"></i> Solicitante',
-      data: 'solicitante'
-    },
+          // Solicitante
+          {
+            title: '<i class="fas fa-user-tie me-1"></i> Solicitante',
+            data: 'solicitante'
+          },
 
-    // Ejecutivo
-    {
-      title: '<i class="fas fa-briefcase me-1"></i> Ejecutivo',
-      data: 'ejecutivo'
-    }
+          // Ejecutivo
+          {
+            title: '<i class="fas fa-briefcase me-1"></i> Ejecutivo',
+            data: 'ejecutivo'
+          }
 
-  ],
+        ],
 
-  order: [[0, 'desc']],
-  responsive: false,
-  autoWidth: false,
-  scrollX: true,
-};
+        order: [[0, 'desc']],
+        responsive: false,
+        autoWidth: false,
+        scrollX: true,
+      };
       this.dataTable = $(this.tableIngresos.nativeElement);
       this.dataTable.DataTable(this.dtOptions);
       this.loadingService.hideLoading();
@@ -392,7 +392,7 @@ this.dtOptions = {
     });
     Swal.showLoading();
   }
-  
+
   closeDialog() {
     Swal.hideLoading();
     Swal.close();

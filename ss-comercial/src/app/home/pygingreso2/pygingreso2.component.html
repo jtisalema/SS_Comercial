@@ -1,0 +1,550 @@
+<div class="content-wrapper"
+    style="background-image: url('assets/images/fondos/plataforma_fondo2.png');background-repeat: no-repeat;height: 100%;background-size: cover;">
+    <br>
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card card-primary card-outline">
+                        <div class="card-header d-flex align-items-center">
+
+                            <h3 class="card-title mb-0" style="font-weight: bold;">
+                                <i class="fas fa-user-alt me-2"></i>
+                                PYG Ingreso 2
+                            </h3>
+
+                        </div>
+                        <div class="card-body">
+                            <form [formGroup]="ingresoForm">
+                                <div class="card mb-4 p-3 position-relative">
+                                    <h6 class="card-title titulo-sobre-borde">Información del Cliente</h6>
+                                    <div class="row mb-3">
+
+                                        <!-- CLIENTE -->
+                                        <div class="col-md-4">
+                                            <label for="identificacion" class="form-label">
+                                                Cliente
+                                            </label>
+
+                                            <ng-select [items]="clientes" bindLabel="NOMBRES" bindValue="ID"
+                                                [typeahead]="clientesInput$" [loading]="loadingClientes"
+                                                [minTermLength]="3" placeholder="Ingrese el nombre del cliente"
+                                                formControlName="cliente"
+                                                (change)="onClienteChange($event)"
+                                                [class.is-invalid]="ingresoForm.get('cliente')?.touched && ingresoForm.get('cliente')?.invalid">
+
+                                                <ng-template ng-option-tmp let-item="item">
+                                                    {{item.NOMBRES}}
+                                                </ng-template>
+
+                                            </ng-select>
+
+                                            <small class="text-danger"
+                                                *ngIf="ingresoForm.get('cliente')?.touched && ingresoForm.get('cliente')?.hasError('required')">
+                                                Debe seleccionar un cliente
+                                            </small>
+                                        </div>
+
+
+                                        <!-- RAMO -->
+                                        <div class="col-md-4">
+                                            <label for="ramo" class="form-label">
+                                                Ramo
+                                            </label>
+
+                                            <ng-select [items]="lstRamos" formControlName="ramo" bindLabel="nmRamo"
+                                                bindValue="cdRamo" placeholder="Seleccione un ramo" [clearable]="true"
+                                                [searchable]="true"
+                                                [class.is-invalid]="ingresoForm.get('ramo')?.touched && ingresoForm.get('ramo')?.invalid">
+                                            </ng-select>
+
+                                            <small class="text-danger"
+                                                *ngIf="ingresoForm.get('ramo')?.touched && ingresoForm.get('ramo')?.hasError('required')">
+                                                Debe seleccionar el ramo
+                                            </small>
+                                        </div>
+
+
+                                        <!-- INICIO VIGENCIA -->
+                                        <div class="col-md-2">
+                                            <label for="inicioVigencia" class="form-label">
+                                                Inicio Vigencia
+                                            </label>
+
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light">
+                                                    <i class="fas fa-calendar text-info"></i>
+                                                </span>
+
+                                                <input id="inicioVigencia" type="date" class="form-control"
+                                                    formControlName="inicioVigencia"
+                                                    [class.is-invalid]="ingresoForm.get('inicioVigencia')?.touched && ingresoForm.get('inicioVigencia')?.invalid">
+                                            </div>
+
+                                            <small class="text-danger"
+                                                *ngIf="ingresoForm.get('inicioVigencia')?.touched && ingresoForm.get('inicioVigencia')?.hasError('required')">
+                                                Debe ingresar la fecha de inicio
+                                            </small>
+                                        </div>
+
+
+                                        <!-- FIN VIGENCIA -->
+                                        <div class="col-md-2">
+                                            <label for="finVigencia" class="form-label">
+                                                Fin Vigencia
+                                            </label>
+
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light">
+                                                    <i class="fas fa-calendar text-info"></i>
+                                                </span>
+
+                                                <input id="finVigencia" type="date" class="form-control"
+                                                    formControlName="finVigencia"
+                                                    [class.is-invalid]="ingresoForm.get('finVigencia')?.touched && ingresoForm.get('finVigencia')?.invalid">
+                                            </div>
+
+                                            <small class="text-danger"
+                                                *ngIf="ingresoForm.get('finVigencia')?.touched && ingresoForm.get('finVigencia')?.hasError('required')">
+                                                Debe ingresar la fecha de fin
+                                            </small>
+
+                                            <small class="text-danger"
+                                                *ngIf="ingresoForm.errors?.['fechaInvalida'] && ingresoForm.get('finVigencia')?.touched">
+                                                La fecha fin debe ser mayor que la fecha inicio
+                                            </small>
+                                        </div>
+
+                                    </div>
+
+                                    <div class="row mb-3">
+                                        <!-- PRIMA MENSUAL -->
+                                        <div class="col-md-3">
+                                            <label class="form-label">Prima Mensual</label>
+
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light">
+                                                    <i class="fas fa-dollar-sign text-success"></i>
+                                                </span>
+
+                                                <input type="number" class="form-control" formControlName="primaMensual"
+                                                    (change)="changePrimaMensual()" min="0" step="0.01" placeholder="0"
+                                                    [class.is-invalid]="ingresoForm.get('primaMensual')?.touched && ingresoForm.get('primaMensual')?.invalid">
+                                            </div>
+
+                                            <small class="text-danger"
+                                                *ngIf="ingresoForm.get('primaMensual')?.touched && ingresoForm.get('primaMensual')?.hasError('required')">
+                                                Debe ingresar la prima mensual
+                                            </small>
+
+                                            <small class="text-danger"
+                                                *ngIf="ingresoForm.get('primaMensual')?.touched && ingresoForm.get('primaMensual')?.hasError('min')">
+                                                La prima debe ser mayor a 0
+                                            </small>
+                                        </div>
+
+                                        <!-- CLIENTE -->
+                                        <div class="col-md-3">
+                                            <label for="cliente" class="form-label">
+                                                Prima Anual
+                                            </label>
+
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light">
+                                                    <i class="fas fa-dollar-sign text-success"></i>
+                                                </span>
+                                                <input id="cliente" type="number" class="form-control"
+                                                    placeholder="0" formControlName="primaAnual" readonly>
+                                            </div>
+                                        </div>
+
+                                        <!-- DIRECCIÓN -->
+                                        <!-- PORCENTAJE COMISION -->
+                                        <div class="col-md-2">
+                                            <label for="porcentajeComision" class="form-label">
+                                                % Comisión
+                                            </label>
+
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light">
+                                                    <i class="fas fa-percent text-info"></i>
+                                                </span>
+
+                                                <input id="porcentajeComision" type="number" class="form-control"
+                                                    formControlName="porcentajeComision" min="0" max="100" step="0.01"placeholder="0"
+                                                    (change)="changePorcentaje()"
+                                                    [class.is-invalid]="ingresoForm.get('porcentajeComision')?.touched && ingresoForm.get('porcentajeComision')?.invalid">
+                                            </div>
+
+                                            <small class="text-danger"
+                                                *ngIf="ingresoForm.get('porcentajeComision')?.touched && ingresoForm.get('porcentajeComision')?.hasError('required')">
+                                                Debe ingresar el porcentaje
+                                            </small>
+
+                                            <small class="text-danger"
+                                                *ngIf="ingresoForm.get('porcentajeComision')?.hasError('min')">
+                                                El porcentaje no puede ser menor a 0
+                                            </small>
+
+                                            <small class="text-danger"
+                                                *ngIf="ingresoForm.get('porcentajeComision')?.hasError('max')">
+                                                El porcentaje no puede ser mayor a 100
+                                            </small>
+                                        </div>
+
+                                        <!-- CIUDAD -->
+                                        <div class="col-md-2">
+                                            <label for="ciudad" class="form-label">
+                                                Comisión Mensual
+                                            </label>
+
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light">
+                                                    <i class="fas fa-dollar-sign text-success"></i>
+                                                </span>
+                                                <input id="ciudad" type="number" class="form-control" readonly
+                                                    formControlName="comision"placeholder="0">
+                                            </div>
+                                        </div>
+                                        <!-- CIUDAD -->
+                                        <div class="col-md-2">
+                                            <label for="ciudad" class="form-label">
+                                                Comisión Anual
+                                            </label>
+
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light">
+                                                    <i class="fas fa-dollar-sign text-success"></i>
+                                                </span>
+                                                <input id="ciudad" type="number" class="form-control" readonly
+                                                    formControlName="comisionAnual" placeholder="0" >
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- GASTOS -->
+                                    <form [formGroup]="gastoForm">
+                                        <div class="card mb-4 p-3 position-relative">
+                                            <h6 class="card-title titulo-sobre-borde">Detalle Gastos</h6>
+
+                                            <div class="row">
+
+                                                <!-- IZQUIERDA (FORMULARIO) -->
+                                                <div class="col-md-5">
+
+                                                    <div class="mb-3">
+                                                        <div class="input-group">
+                                                            <span class="input-group-text bg-light">
+                                                                <i class="fas fa-file-alt text-info"></i>
+                                                            </span>
+
+                                                            <input type="text" class="form-control"
+                                                                placeholder="Ingrese la descripción del gasto"
+                                                                formControlName="descripcion"
+                                                                [ngClass]="{'is-invalid': gastoForm.get('descripcion')?.touched && gastoForm.get('descripcion')?.invalid}">
+                                                        </div>
+
+                                                        <div class="invalid-feedback d-block"
+                                                            *ngIf="gastoForm.get('descripcion')?.touched && gastoForm.get('descripcion')?.errors?.['required']">
+                                                            La descripción es obligatoria
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <div class="input-group">
+                                                            <span class="input-group-text bg-light">
+                                                                <i class="fas fa-dollar-sign text-success"></i>
+                                                            </span>
+
+                                                            <input type="number" class="form-control"
+                                                                placeholder="Ingrese el valor" formControlName="valor"
+                                                                min="0"
+                                                                [ngClass]="{'is-invalid': gastoForm.get('valor')?.touched && gastoForm.get('valor')?.invalid}">
+                                                        </div>
+
+                                                        <div class="invalid-feedback d-block"
+                                                            *ngIf="gastoForm.get('valor')?.touched && gastoForm.get('valor')?.errors?.['required']">
+                                                            El valor es obligatorio
+                                                        </div>
+
+                                                        <div class="invalid-feedback d-block"
+                                                            *ngIf="gastoForm.get('valor')?.errors?.['min']">
+                                                            El valor debe ser mayor a 0
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="d-flex gap-2 justify-content-end"
+                                                        *ngIf="gastoForm.valid">
+
+                                                        <button type="button" class="btn btn-primary"
+                                                            (click)="agregarGasto()" *ngIf="!esEdicion">
+                                                            + Ingresar
+                                                        </button>
+
+                                                        <div *ngIf="esEdicion">
+
+                                                            <button type="button" class="btn btn-success"
+                                                                (click)="actualizarGasto()" *ngIf="esEdicion">
+                                                                Actualizar
+                                                            </button>&nbsp;
+
+                                                            <button type="button" class="btn btn-danger"
+                                                                (click)="cancelarActualizar()" *ngIf="esEdicion">
+                                                                Cancelar
+                                                            </button>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                </div>
+                                                <div class="col-md-1"></div>
+
+                                                <!-- DERECHA (TABLA) -->
+                                                <div class="col-md-6">
+
+                                                    <div class="table-responsive">
+
+                                                        <table class="table table-bordered tabla-lstContactos"
+                                                            style="font-size:10px;text-align:center;">
+
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>#</th>
+                                                                    <th>Descripción</th>
+                                                                    <th>Valor</th>
+                                                                    <th>Acción</th>
+                                                                </tr>
+                                                            </thead>
+
+                                                            <tbody>
+
+                                                                <tr *ngIf="lstGastos.length === 0">
+                                                                    <td colspan="4" class="text-muted">
+                                                                        No hay gastos agregados
+                                                                    </td>
+                                                                </tr>
+
+                                                                <tr *ngFor="let con of lstGastos; let i = index">
+                                                                    <td>{{ i + 1 }}</td>
+                                                                    <td>{{ con.descripcion }}</td>
+                                                                    <td>{{ con.valor | currency:'USD':'symbol':'1.2-2'
+                                                                        }}
+                                                                    </td>
+                                                                    <td>
+
+                                                                        <button class="btn btn-outline-primary btn-sm"
+                                                                            (click)="editarGasto(i)">
+                                                                            <i class="fas fa-edit"></i>
+                                                                        </button>
+
+                                                                        <button class="btn btn-outline-danger btn-sm"
+                                                                            (click)="eliminarGasto(i)">
+                                                                            <i class="fas fa-trash-alt"></i>
+                                                                        </button>
+
+                                                                    </td>
+                                                                </tr>
+
+                                                            </tbody>
+
+                                                            <tfoot *ngIf="lstGastos.length > 0">
+                                                                <tr>
+                                                                    <td colspan="2"><strong>Total</strong></td>
+                                                                    <td>
+                                                                        <strong>
+                                                                            {{ totalGastos |
+                                                                            currency:'USD':'symbol':'1.2-2'
+                                                                            }}
+                                                                        </strong>
+                                                                    </td>
+                                                                    <td></td>
+                                                                </tr>
+                                                            </tfoot>
+
+                                                        </table>
+
+                                                    </div>
+
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </form>
+                                    <div class="d-flex gap-2 justify-content-end">
+                                        <button type="button" class="btn btn-primary" (click)="guardarIngresoGastos()" *ngIf="!editarIngresoGasto">
+                                            Agregar
+                                        </button>
+                                        <button type="button" class="btn btn-primary" (click)="actualizarIngresoGasto()" *ngIf="editarIngresoGasto">
+                                            Actualizar
+                                        </button>
+                                        <button type="button" class="btn btn-danger" (click)="cancelarActualizarIG()" *ngIf="editarIngresoGasto">
+                                            Cancelar
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                            <div>
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <div class="card mb-4 p-3 position-relative"
+                                            *ngIf="lstIngresosGastos.length > 0">
+                                            <h6 class="card-title titulo-sobre-borde-centrado">Detalles Gastos por Ramo</h6>
+
+                                            <div class="row">
+
+<div class="col-md-6 mb-3" *ngFor="let ing of lstIngresosGastos; let i = index" style="font-size:12px;">
+  <div class="card shadow-sm border-0 h-100 p-3">
+
+    <!-- Contenedor flex para título + botones -->
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h6 class="card-title titulo-sobre-borde-2 mb-0 text-info"  style="font-size: 12px;">
+        {{ ing.nombreRamo }}
+      </h6>
+
+      <!-- Botones al lado derecho -->
+      <div class="btn-group btn-group-sm" role="group">
+        <button type="button" class="btn btn-outline-danger" (click)="eliminarIngreso(i)">
+          <i class="fas fa-times"></i>
+        </button>
+        <button type="button" class="btn btn-outline-primary" (click)="editarIngreso(i)">
+          <i class="fas fa-pencil-alt"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Información principal -->
+    <div class="row g-2 mb-2" style="font-size: 10px;">
+      <div class="col-6 d-flex justify-content-between">
+        <span class="text-muted">Inicio Vigencia:</span>
+        <strong>{{ ing.inicioVigencia }}</strong>
+      </div>
+      <div class="col-6 d-flex justify-content-between">
+        <span class="text-muted">Fin Vigencia:</span>
+        <strong>{{ ing.finVigencia }}</strong>
+      </div>
+      <div class="col-6 d-flex justify-content-between">
+        <span class="text-muted">Prima Mensual:</span>
+        <strong class="text-success">{{ ing.primaMensual | currency }}</strong>
+      </div>
+      <div class="col-6 d-flex justify-content-between">
+        <span class="text-muted">Comisión Mensual:</span>
+        <strong class="text-info">{{ ing.comision | currency }}</strong>
+      </div>
+      <div class="col-6 d-flex justify-content-between">
+        <span class="text-muted">Prima Anual:</span>
+        <strong class="text-success">{{ ing.primaAnual | currency }}</strong>
+      </div>
+      <div class="col-6 d-flex justify-content-between">
+        <span class="text-muted">Comisión Anual:</span>
+        <strong class="text-info">{{ ing.comisionAnual | currency }}</strong>
+      </div>
+    </div>
+
+    <!-- Tabla de gastos -->
+    <div class="table-responsive">
+      <table class="table table-sm table-hover align-middle mb-0 table-bordered tabla-gastos" style="font-size: 10px;">
+        <thead class="table-primary text-center" style="font-size: 10px;">
+          <tr>
+            <th>Descripción</th>
+            <th>Valor</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let gasto of ing.gastos" style="text-align: center;font-size: 10px;">
+            <td>{{ gasto.descripcion }}</td>
+            <td>{{ gasto.valor | currency }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card mb-4 p-3 position-relative"
+                                            *ngIf="lstIngresosGastos.length > 0">
+                                            <h6 class="card-title titulo-sobre-borde-centrado">PYG</h6>
+                                            <div class="table-responsive">
+                                                <div class="table-responsive">
+                                                    <table
+                                                        class="table table-sm table-bordered table-hover tabla-resumen align-middle"
+                                                        style="font-size: 10px;">
+
+                                                        <tbody style="font-size: 10px;">
+                                                            <tr class="fila-ingreso"
+                                                                *ngFor="let ingresos of lstIngresosGastos">
+                                                                <td>
+                                                                    <i class="bi bi-cash-stack text-success me-1"></i>
+                                                                    Ingreso Anual <strong>{{ ingresos.nombreRamo }}</strong>
+                                                                </td>
+                                                                <td class="text-end fw-semibold text-success" style="font-weight: bold;">
+                                                                    {{ ingresos.comisionAnual | currency }}
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+
+                                                        <tfoot style="font-size: 10px;">
+
+                                                            <tr class="fila-total-ingresos" style="font-size: 10px;">
+                                                                <td><strong>Total Ingresos</strong></td>
+                                                                <td class="text-end fw-bold text-success" style="font-weight: bold;">
+                                                                    {{ totalIngresos | currency }}
+                                                                </td>
+                                                            </tr>
+
+                                                            <tr class="fila-gastos" style="font-size: 10px;">
+                                                                <td><strong>Total Gastos</strong></td>
+                                                                <td class="text-end fw-bold text-danger" style="font-weight: bold;">
+                                                                    {{ totalGastos | currency }}
+                                                                </td>
+                                                            </tr>
+
+                                                            <tr class="fila-retorno" style="font-size: 10px;"
+                                                                *ngFor="let ingresos of lstIngresosGastos">
+                                                                <td>
+                                                                    Retorno <strong>{{ ingresos.nombreRamo }}</strong>
+                                                                </td>
+                                                                <td class="text-end fw-semibold text-primary" style="font-weight: bold;">
+                                                                    {{ 0 | currency }}
+                                                                </td>
+                                                            </tr>
+
+                                                            <tr class="fila-porcentaje" style="font-size: 10px;">
+                                                                <td>% Inversión</td>
+                                                                <td class="text-end fw-bold text-warning" style="font-weight: bold;">
+                                                                    {{ calcularPorcentajeGastos() | number:'1.2-2' }} %
+                                                                </td>
+                                                            </tr>
+
+                                                            <tr class="fila-total-general" style="font-size: 10px;">
+                                                                <td><strong>Total Final</strong></td>
+                                                                <td class="text-end fw-bold text-dark" style="font-weight: bold;">
+                                                                    {{ totalFinal | currency }}
+                                                                </td>
+                                                            </tr>
+
+                                                        </tfoot>
+
+                                                    </table>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+</div>

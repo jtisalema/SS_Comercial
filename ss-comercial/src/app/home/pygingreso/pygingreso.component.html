@@ -1,0 +1,484 @@
+<div class="content-wrapper"
+    style="background-image: url('assets/images/fondos/plataforma_fondo2.png');background-repeat: no-repeat;height: 100%;background-size: cover;">
+    <br>
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card card-primary card-outline">
+                        <div class="card-header d-flex align-items-center">
+
+                            <h3 class="card-title mb-0" style="font-weight: bold;">
+                                <i class="fas fa-user-alt me-2"></i>
+                                PYG Ingreso
+                            </h3>
+
+                        </div>
+                        <div class="card-body">
+                            <form [formGroup]="ingresoForm">
+                                <div class="card mb-4 p-3 position-relative">
+                                    <h6 class="card-title titulo-sobre-borde">Información del Cliente</h6>
+                                    <div class="row mb-3">
+
+                                        <!-- IDENTIFICACIÓN -->
+                                        <div class="col-md-3">
+                                            <label for="identificacion" class="form-label">
+                                                Cliente
+                                            </label>
+
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light">
+                                                    <i class="fas fa-id-card text-info"></i>
+                                                </span>
+                                                <input id="identificacion" type="text" class="form-control"
+                                                    placeholder="Ingrese el Cliente">
+                                            </div>
+
+                                        </div>
+
+                                        <!-- CLIENTE -->
+                                        <div class="col-md-3">
+                                            <label for="cliente" class="form-label">
+                                                Ramo
+                                            </label>
+
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light">
+                                                    <i class="fas fa-user text-info"></i>
+                                                </span>
+                                                <input id="cliente" type="text" class="form-control"
+                                                    placeholder="Ingrese el ramo">
+                                            </div>
+                                        </div>
+
+                                        <!-- DIRECCIÓN -->
+                                        <div class="col-md-3">
+                                            <label for="direccion" class="form-label">
+                                                Inicio Vigencia
+                                            </label>
+
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light">
+                                                    <i class="fas fa-map-marker-alt text-info"></i>
+                                                </span>
+                                                <input id="direccion" type="date" class="form-control">
+                                            </div>
+
+                                        </div>
+
+                                        <!-- CIUDAD -->
+                                        <div class="col-md-3">
+                                            <label for="ciudad" class="form-label">
+                                                Fin Vigencia
+                                            </label>
+
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light">
+                                                    <i class="fas fa-city text-info"></i>
+                                                </span>
+                                                <input id="ciudad" type="date" class="form-control">
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                                    <div class="row mb-3">
+
+                                        <!-- IDENTIFICACIÓN -->
+                                        <div class="col-md-3">
+                                            <label class="form-label">Prima Mensual</label>
+
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light">
+                                                    <i class="fas fa-id-card text-info"></i>
+                                                </span>
+
+                                                <input type="number" class="form-control" formControlName="primaMensual"
+                                                    (change)="changePrimaMensual()">
+                                            </div>
+                                        </div>
+
+                                        <!-- CLIENTE -->
+                                        <div class="col-md-3">
+                                            <label for="cliente" class="form-label">
+                                                Prima Anual
+                                            </label>
+
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light">
+                                                    <i class="fas fa-user text-info"></i>
+                                                </span>
+                                                <input id="cliente" type="number" class="form-control"
+                                                    placeholder="Ingrese el ramo" formControlName="primaAnual" readonly>
+                                            </div>
+                                        </div>
+
+                                        <!-- DIRECCIÓN -->
+                                        <div class="col-md-3">
+                                            <label for="direccion" class="form-label">
+                                                % Comision
+                                            </label>
+
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light">
+                                                    <i class="fas fa-map-marker-alt text-info"></i>
+                                                </span>
+                                                <input id="direccion" type="number" class="form-control"
+                                                    formControlName="porcentajeComision" (change)="changePorcentaje()">
+                                            </div>
+
+                                        </div>
+
+                                        <!-- CIUDAD -->
+                                        <div class="col-md-3">
+                                            <label for="ciudad" class="form-label">
+                                                Comisión
+                                            </label>
+
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light">
+                                                    <i class="fas fa-city text-info"></i>
+                                                </span>
+                                                <input id="ciudad" type="number" class="form-control" readonly
+                                                    formControlName="comision">
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <!-- GASTOS -->
+                                <form [formGroup]="gastoForm">
+                                    <div class="card mb-4 p-3 position-relative">
+                                        <h6 class="card-title titulo-sobre-borde">Detalle Gastos</h6>
+
+                                        <div class="row">
+
+                                            <!-- IZQUIERDA (FORMULARIO) -->
+                                            <div class="col-md-5">
+
+                                                <div class="mb-3">
+                                                    <div class="input-group">
+                                                        <span class="input-group-text bg-light">
+                                                            <i class="fas fa-file-alt text-info"></i>
+                                                        </span>
+
+                                                        <input type="text" class="form-control"
+                                                            placeholder="Ingrese la descripción del gasto"
+                                                            formControlName="descripcion"
+                                                            [ngClass]="{'is-invalid': gastoForm.get('descripcion')?.touched && gastoForm.get('descripcion')?.invalid}">
+                                                    </div>
+
+                                                    <div class="invalid-feedback d-block"
+                                                        *ngIf="gastoForm.get('descripcion')?.touched && gastoForm.get('descripcion')?.errors?.['required']">
+                                                        La descripción es obligatoria
+                                                    </div>
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <div class="input-group">
+                                                        <span class="input-group-text bg-light">
+                                                            <i class="fas fa-dollar-sign text-success"></i>
+                                                        </span>
+
+                                                        <input type="number" class="form-control"
+                                                            placeholder="Ingrese el valor" formControlName="valor"
+                                                            min="0"
+                                                            [ngClass]="{'is-invalid': gastoForm.get('valor')?.touched && gastoForm.get('valor')?.invalid}">
+                                                    </div>
+
+                                                    <div class="invalid-feedback d-block"
+                                                        *ngIf="gastoForm.get('valor')?.touched && gastoForm.get('valor')?.errors?.['required']">
+                                                        El valor es obligatorio
+                                                    </div>
+
+                                                    <div class="invalid-feedback d-block"
+                                                        *ngIf="gastoForm.get('valor')?.errors?.['min']">
+                                                        El valor debe ser mayor a 0
+                                                    </div>
+                                                </div>
+
+                                                <div class="d-flex gap-2 justify-content-end" *ngIf="gastoForm.valid">
+
+                                                    <button type="button" class="btn btn-primary"
+                                                        (click)="agregarGasto()" *ngIf="!esEdicion">
+                                                        + Agregar
+                                                    </button>
+
+                                                    <div *ngIf="esEdicion">
+
+                                                        <button type="button" class="btn btn-success"
+                                                            (click)="actualizarGasto()" *ngIf="esEdicion">
+                                                            Actualizar
+                                                        </button>&nbsp;
+
+                                                        <button type="button" class="btn btn-danger"
+                                                            (click)="cancelarActualizar()" *ngIf="esEdicion">
+                                                            Cancelar
+                                                        </button>
+
+                                                    </div>
+
+                                                </div>
+
+                                            </div>
+                                            <div class="col-md-1"></div>
+
+                                            <!-- DERECHA (TABLA) -->
+                                            <div class="col-md-6">
+
+                                                <div class="table-responsive">
+
+                                                    <table class="table table-bordered tabla-lstContactos"
+                                                        style="font-size:10px;text-align:center;">
+
+                                                        <thead>
+                                                            <tr>
+                                                                <th>#</th>
+                                                                <th>Descripción</th>
+                                                                <th>Valor</th>
+                                                                <th>Acción</th>
+                                                            </tr>
+                                                        </thead>
+
+                                                        <tbody>
+
+                                                            <tr *ngIf="lstGastos.length === 0">
+                                                                <td colspan="4" class="text-muted">
+                                                                    No hay gastos agregados
+                                                                </td>
+                                                            </tr>
+
+                                                            <tr *ngFor="let con of lstGastos; let i = index">
+                                                                <td>{{ i + 1 }}</td>
+                                                                <td>{{ con.descripcion }}</td>
+                                                                <td>{{ con.valor | currency:'USD':'symbol':'1.2-2' }}
+                                                                </td>
+                                                                <td>
+
+                                                                    <button class="btn btn-outline-primary btn-sm"
+                                                                        (click)="editarGasto(i)">
+                                                                        <i class="fas fa-edit"></i>
+                                                                    </button>
+
+                                                                    <button class="btn btn-outline-danger btn-sm"
+                                                                        (click)="eliminarGasto(i)">
+                                                                        <i class="fas fa-trash-alt"></i>
+                                                                    </button>
+
+                                                                </td>
+                                                            </tr>
+
+                                                        </tbody>
+
+                                                        <tfoot *ngIf="lstGastos.length > 0">
+                                                            <tr>
+                                                                <td colspan="2"><strong>Total</strong></td>
+                                                                <td>
+                                                                    <strong>
+                                                                        {{ totalGastos | currency:'USD':'symbol':'1.2-2'
+                                                                        }}
+                                                                    </strong>
+                                                                </td>
+                                                                <td></td>
+                                                            </tr>
+                                                        </tfoot>
+
+                                                    </table>
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </form>
+                                <!-- pyg -->
+                                <form [formGroup]="pygForm">
+                                    <div class="card mb-4 p-3 position-relative">
+                                        <h6 class="card-title titulo-sobre-borde">Presupuesto y Gasto</h6>
+
+                                        <div class="row">
+
+                                            <!-- IZQUIERDA (FORMULARIO) -->
+                                            <div class="col-md-5">
+
+                                                <div class="mb-3">
+                                                    <div class="input-group">
+                                                        <span class="input-group-text bg-light">
+                                                            <i class="fas fa-file-alt text-info"></i>
+                                                        </span>
+
+                                                        <input type="text" class="form-control"
+                                                            placeholder="Ingrese la descripción del ingreso"
+                                                            formControlName="descripcion"
+                                                            [ngClass]="{'is-invalid': pygForm.get('descripcion')?.touched && pygForm.get('descripcion')?.invalid}">
+                                                    </div>
+
+                                                    <div class="invalid-feedback d-block"
+                                                        *ngIf="pygForm.get('descripcion')?.touched && pygForm.get('descripcion')?.errors?.['required']">
+                                                        La descripción es obligatoria
+                                                    </div>
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <div class="input-group">
+                                                        <span class="input-group-text bg-light">
+                                                            <i class="fas fa-dollar-sign text-success"></i>
+                                                        </span>
+
+                                                        <input type="number" class="form-control"
+                                                            placeholder="Ingrese el valor" formControlName="valor"
+                                                            min="0"
+                                                            [ngClass]="{'is-invalid': pygForm.get('valor')?.touched && pygForm.get('valor')?.invalid}">
+                                                    </div>
+
+                                                    <div class="invalid-feedback d-block"
+                                                        *ngIf="pygForm.get('valor')?.touched && pygForm.get('valor')?.errors?.['required']">
+                                                        El valor es obligatorio
+                                                    </div>
+
+                                                    <div class="invalid-feedback d-block"
+                                                        *ngIf="pygForm.get('valor')?.errors?.['min']">
+                                                        El valor debe ser mayor a 0
+                                                    </div>
+                                                </div>
+
+                                                <div class="d-flex gap-2 justify-content-end" *ngIf="ingresoForm.valid">
+
+                                                    <button type="button" class="btn btn-primary" (click)="agregarPYG()"
+                                                        *ngIf="!esEdicionPYG">
+                                                        + Agregar
+                                                    </button>
+
+                                                    <div *ngIf="esEdicionPYG">
+
+                                                        <button type="button" class="btn btn-success"
+                                                            (click)="actualizarPYG()">
+                                                            Actualizar
+                                                        </button>
+
+                                                        <button type="button" class="btn btn-danger"
+                                                            (click)="cancelarActualizarPYG()">
+                                                            Cancelar
+                                                        </button>
+
+                                                    </div>
+
+                                                </div>
+
+                                            </div>
+
+                                            <div class="col-md-1"></div>
+
+                                            <!-- DERECHA (TABLA) -->
+                                            <div class="col-md-6">
+
+                                                <div class="table-responsive">
+
+                                                    <table class="table table-bordered tabla-lstContactos"
+                                                        style="font-size:10px;text-align:center;">
+
+                                                        <thead>
+                                                            <tr>
+                                                                <th>#</th>
+                                                                <th>Descripción</th>
+                                                                <th>Valor</th>
+                                                                <th>Acción</th>
+                                                            </tr>
+                                                        </thead>
+
+                                                        <tbody>
+
+                                                            <tr *ngIf="lstPYG.length === 0">
+                                                                <td colspan="4" class="text-muted">
+                                                                    No hay ingresos agregados
+                                                                </td>
+                                                            </tr>
+
+                                                            <tr *ngFor="let con of lstPYG; let i = index">
+                                                                <td>{{ i + 1 }}</td>
+                                                                <td>{{ con.descripcion }}</td>
+                                                                <td>{{ con.valor | currency:'USD':'symbol':'1.2-2' }}
+                                                                </td>
+                                                                <td>
+
+                                                                    <button class="btn btn-outline-primary btn-sm"
+                                                                        (click)="editarPYG(i)">
+                                                                        <i class="fas fa-edit"></i>
+                                                                    </button>
+
+                                                                    <button class="btn btn-outline-danger btn-sm"
+                                                                        (click)="eliminarPYG(i)">
+                                                                        <i class="fas fa-trash-alt"></i>
+                                                                    </button>
+
+                                                                </td>
+                                                            </tr>
+
+                                                        </tbody>
+
+                                                        <tfoot *ngIf="lstPYG.length > 0">
+
+                                                            <tr style="color: blue;">
+                                                                <td colspan="2"><strong>Ingreso Total</strong></td>
+                                                                <td>
+                                                                    <strong>{{ totalIngreso |
+                                                                        currency:'USD':'symbol':'1.2-2' }}</strong>
+                                                                </td>
+                                                                <td></td>
+                                                            </tr>
+
+                                                            <tr style="color: red;">
+                                                                <td colspan="2"><strong>Gasto Total</strong></td>
+                                                                <td>
+                                                                    <strong>{{ totalGastos |
+                                                                        currency:'USD':'symbol':'1.2-2' }}</strong>
+                                                                </td>
+                                                                <td></td>
+                                                            </tr>
+
+                                                            <tr style="color: green;">
+                                                                <td colspan="2"><strong>% Inversión</strong></td>
+                                                                <td>
+                                                                    <strong>{{ porcentajeInversion }}%</strong>
+                                                                </td>
+                                                                <td></td>
+                                                            </tr>
+
+                                                            <tr>
+                                                                <td colspan="2"><strong>Total</strong></td>
+                                                                <td>
+                                                                    <strong>{{ totalPYG |
+                                                                        currency:'USD':'symbol':'1.2-2' }}</strong>
+                                                                </td>
+                                                                <td></td>
+                                                            </tr>
+
+                                                        </tfoot>
+
+                                                    </table>
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </form>
+                            </form>
+                            <div class="d-flex gap-2 justify-content-end">
+
+                                <button type="button" class="btn btn-primary">
+                                    Guardar
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+    </section>
+</div>

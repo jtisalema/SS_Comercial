@@ -56,7 +56,9 @@ export class AuthService {
       return null;
     }
   }
-
+  getToken() {
+    return localStorage.getItem('Access-Token')
+  }
   handleError(error: HttpErrorResponse) {
     console.error('HTTP Error:', error);
     return throwError(() => error);

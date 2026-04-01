@@ -58,9 +58,9 @@ export class ChecklistService {
     const URL_API = environment.apiUrl + "consulta-ced2";
     return this.httpClient.post(URL_API, inforPersona).pipe(catchError(this.handleError));
   }
-  public obtenerRequisitosbySubarea(id: any) {
-    const URL_API = environment.apiUrl + "obtenerRequisitosbySubarea/" + id;
-    return this.httpClient.get(URL_API).pipe(catchError(this.handleError));
+  public obtenerRequisitosbySubarea(datos:any) {
+    const URL_API = environment.apiUrl + "obtenerRequisitosbySubarea";
+    return this.httpClient.post(URL_API,datos).pipe(catchError(this.handleError));
   }
   public obtenerTipoContactobySubarea(id: any) {
     const URL_API = environment.apiUrl + "obtenerTipoContactobySubarea/" + id;
@@ -142,6 +142,10 @@ export class ChecklistService {
   public obtenerMovimientosRegistro(id: any) {
     const URL_API = environment.apiUrl + "obtenerMovimientosRegistro/" + id;
     return this.httpClient.get(URL_API).pipe(catchError(this.handleError));
+  }
+  async descargarRequisitosZip(id: any) {
+    const URL_API = environment.apiUrl + "descargarRequisitosZip/" + id;
+    return this.httpClient.get(URL_API, { responseType: 'blob' }).pipe(catchError(this.handleError));
   }
 
   async descargarArchivosCheckList(url: string) {

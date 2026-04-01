@@ -14,6 +14,12 @@ import { ChlingresoComponent } from './chlingreso/chlingreso.component';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { NgxDropzoneModule } from 'ngx-dropzone';
 import { ChlseguimientoComponent } from './chlseguimiento/chlseguimiento.component';
+import { PygingresoComponent } from './pygingreso/pygingreso.component';
+import { PygingresoComponent2 } from './pygingreso2/pygingreso2.component';
+import { AcuerdoservicioComponent } from './acuerdoservicio/acuerdoservicio.component';
+import { AcuerdoseguimientoComponent } from './acuerdoseguimiento/acuerdoseguimiento.component';
+import { ReqasegIngresoComponent } from './reqaseg-ingreso/reqaseg-ingreso.component';
+import { ReqasegSeguimientoComponent } from './reqaseg-seguimiento/reqaseg-seguimiento.component';
 @NgModule({
   declarations: [
     HomeComponent,
@@ -24,7 +30,13 @@ import { ChlseguimientoComponent } from './chlseguimiento/chlseguimiento.compone
     PresupuestoComponent,
     ComunicadosComponent,
     ChlingresoComponent,
-    ChlseguimientoComponent
+    ChlseguimientoComponent,
+    PygingresoComponent,
+    PygingresoComponent2,
+    AcuerdoservicioComponent,
+    AcuerdoseguimientoComponent,
+    ReqasegIngresoComponent,
+    ReqasegSeguimientoComponent
   ],
   imports: [
     CommonModule,

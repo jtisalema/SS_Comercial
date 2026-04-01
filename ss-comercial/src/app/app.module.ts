@@ -17,7 +17,7 @@ import { LoadingComponent } from './home/loading/loading.component';
     NoticiasComponent,
     PaginaNoEncontradaComponent,
     LoginComponent,
-    LoadingComponent
+    LoadingComponent,
   ],
   imports: [
     BrowserModule,

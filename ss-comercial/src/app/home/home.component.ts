@@ -22,15 +22,18 @@ export class HomeComponent {
     this.AddClass(targetElement);
   }
 
-  SetInactive() {
-    const menu = document.getElementsByName('mainParent')[0];
-    const allMenuOpenTag = menu?.getElementsByClassName('menu-open') as HTMLCollectionOf<Element>;
-    for (let i = 0; i < allMenuOpenTag.length; i--) {
-      const temp = allMenuOpenTag[i] as HTMLElement;
-      this.RemoveClass(temp);
-      i++;
-    }
+SetInactive() {
+  const menu = document.getElementsByName('mainParent')[0];
+
+  if (!menu) return;
+
+  const allMenuOpenTag = menu.getElementsByClassName('menu-open') as HTMLCollectionOf<Element>;
+
+  for (let i = 0; i < allMenuOpenTag.length; i++) {
+    const temp = allMenuOpenTag[i] as HTMLElement;
+    this.RemoveClass(temp);
   }
+}
 
   private RemoveClass(menuOpenTag: HTMLElement) {
     (menuOpenTag.childNodes[0] as HTMLElement).classList.remove('active');

@@ -52,6 +52,24 @@ form input::placeholder {
     font-size: 15px;
     font-weight: bold;
 }
+.titulo-sobre-borde-2 {
+    background-color: white; /* Fondo blanco para que sobresalga del card */
+    padding: 0 10px; /* Espaciado horizontal */
+    font-size: 15px;
+    font-weight: bold;
+    display: inline-block;    /* Para que no tome todo el ancho */
+    margin: 0;                /* Quitar margen */
+}
+.titulo-sobre-borde-centrado {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 0 10px;
+    font-size: 15px;
+    font-weight: bold;
+}
 .ng-select-bootstrap {
   width: 100%;
   border-radius: 0.25rem;
@@ -98,7 +116,39 @@ ngx-dropzone-preview img {
   height: 100% !important;
   object-fit: cover;
 }
-.sugerido-chip:hover {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  transform: translateY(-2px);
+
+.tabla-resumen td{
+  padding:6px 10px;
+}
+
+/* filas ingresos */
+.fila-ingreso{
+  background:#f8fff9;
+}
+
+/* total ingresos */
+.fila-total-ingresos{
+  background:#e8f5e9;
+  font-size:13px;
+}
+
+/* gastos */
+.fila-gastos{
+  background:#fff3f3;
+}
+
+/* retorno */
+.fila-retorno{
+  background:#f5f9ff;
+}
+
+/* porcentaje */
+.fila-porcentaje{
+  background:#fff8e1;
+}
+
+/* total final */
+.fila-total-general{
+  background:#eceff1;
+  font-size:14px;
 }

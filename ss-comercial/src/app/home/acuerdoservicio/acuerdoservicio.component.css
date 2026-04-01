@@ -52,6 +52,16 @@ form input::placeholder {
     font-size: 15px;
     font-weight: bold;
 }
+.titulo-sobre-borde-medio {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 0 10px;
+    font-size: 15px;
+    font-weight: bold;
+}
 .ng-select-bootstrap {
   width: 100%;
   border-radius: 0.25rem;
@@ -101,4 +111,14 @@ ngx-dropzone-preview img {
 .sugerido-chip:hover {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   transform: translateY(-2px);
+}
+.icono-flecha::before {
+    content: "\f077"; /* flecha arriba */
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+}
+
+/* Cuando está abierto */
+.card-title:not(.collapsed) .icono-flecha::before {
+    content: "\f078"; /* flecha abajo */
 }
