@@ -285,7 +285,6 @@ export class ChlseguimientoComponent {
     } else {
       this.router.navigate(['/home/checkList/ingreso', idIngreso]);
     }
-
   }
   registroSeleccionado: any = '';
   tiempoOcupado: any = '';

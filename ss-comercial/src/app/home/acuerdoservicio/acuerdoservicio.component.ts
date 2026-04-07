@@ -29,19 +29,23 @@ export class AcuerdoservicioComponent {
   lstContactos: any[] = [];
   lstResponsables: any[] = [];
   lstBeneficios: any[] = [];
+  lstValoresAgregados: any[] = [];
+  lstAseguradoras:any[]=[];
   lstSLAS: any[] = [];
   ingresoForm!: FormGroup;
   contactoForm!: FormGroup;
   slasForm!: FormGroup;
   beneficiosForm!: FormGroup;
+  agregadosForm!: FormGroup;
   esEdicionContacto: boolean = false;
   esEdicionBeneficio: boolean = false;
+  esEdicionValor: boolean = false;
   esEdicionSLA: boolean = false;
   userCurrent: any;
   clientes: any[] = [];
   clientesInput$ = new Subject<string>();
   loadingClientes = false;
-
+  idIngreso: any;
   constructor(private fb: FormBuilder,
     private loadingService: LoadingService,
     private toastrService: ToastrService,
@@ -57,8 +61,16 @@ export class AcuerdoservicioComponent {
     this.userCurrent = await this.authService.getUserInfor();
   }
   ngOnInit(): void {
+
+    if (this.route.snapshot.paramMap.get("id")) {
+      this.idIngreso = this.route.snapshot.paramMap.get("id");
+    }
+
     this.obtenerUsuario();
     this.InicializarInformacionForm();
+    if (this.idIngreso) {
+      this.cargarDatosAcuerdo();
+    }
   }
   InicializarInformacionForm() {
     this.ingresoForm = this.fb.group({
@@ -74,6 +86,7 @@ export class AcuerdoservicioComponent {
       ciudad: ['', Validators.required],
       telefono: ['', Validators.required],
       contacto: ['', Validators.required],
+      aseguradora: [null],
       inicioVigencia: [new Date().toISOString().substring(0, 10), Validators.required],
       finVigencia: [
         new Date(new Date().setFullYear(new Date().getFullYear() + 1))
@@ -83,7 +96,7 @@ export class AcuerdoservicioComponent {
       ]
     });
     this.slasForm = this.fb.group({
-      idSla: [''],
+      id: [''],
       actividad: ['', Validators.required],
       sla: ['', Validators.required],
       consideraciones: ['', [Validators.required, Validators.email]]
@@ -95,6 +108,12 @@ export class AcuerdoservicioComponent {
       nombre: ['', Validators.required],
       correo: ['', [Validators.required, Validators.email]],
       celular: ['', Validators.required]
+    });
+    this.agregadosForm = this.fb.group({
+      nombreValor: ['', Validators.required],
+      cantidadValor: ['', Validators.required],
+      detalleValor: ['', Validators.required],
+      fechaCumplimiento: ['', Validators.required]
     });
     this.beneficiosForm = this.fb.group({
       nombreBeneficio: ['', Validators.required],
@@ -108,6 +127,7 @@ export class AcuerdoservicioComponent {
       this.lstBeneficios = res.beneficios;
       this.lstSLAS = res.slas;
       this.lstResponsables = res.responsables;
+
     }, (error: any) => {
       this.loadingService.hideLoading();
       this.toastrService.error('ERROR', 'No se pudo obtener los contactos!');
@@ -126,6 +146,11 @@ export class AcuerdoservicioComponent {
     setTimeout(() => {
       this.loadingService.hideLoading();
     }, 1500);
+        this.checklistService.obtenerAseguradoras().subscribe((res: any) => {
+      this.lstAseguradoras = res.resultado;
+    }, (error: any) => {
+      this.toastrService.error('ERROR', 'No se pudo obtener la información de Aseguradoras!');
+    });
   }
   agregarContacto() {
     if (this.contactoForm.valid) {
@@ -166,7 +191,7 @@ export class AcuerdoservicioComponent {
     if (this.slasForm.valid) {
       this.lstContactos.push(this.slasForm.value);
       this.slasForm.patchValue({
-        idCargo: '',
+        id: '',
         actividad: null,
         sla: null,
         consideraciones: null
@@ -191,8 +216,14 @@ export class AcuerdoservicioComponent {
   editarSLA(index: number) {
     this.indexSLA = index;
     this.esEdicionSLA = true;
-    let editcontacto = this.lstSLAS[index];
-    this.slasForm.setValue(editcontacto);
+    let editSLA = this.lstSLAS[index];
+    let sla ={
+      id: editSLA.id,
+      actividad: editSLA.actividad,
+      sla: editSLA.sla,
+      consideraciones: editSLA.consideraciones
+    }
+    this.slasForm.setValue(sla);
   }
   eliminarSLA(index: number) {
     this.lstSLAS.splice(index, 1);
@@ -201,7 +232,7 @@ export class AcuerdoservicioComponent {
     this.esEdicionSLA = false;
     this.lstSLAS[this.indexSLA] = this.slasForm.value;
     this.slasForm.patchValue({
-      idCargo: '',
+      id: '',
       actividad: null,
       sla: null,
       consideraciones: null
@@ -214,7 +245,7 @@ export class AcuerdoservicioComponent {
   cancelarSLA() {
     this.esEdicionSLA = false;
     this.slasForm.patchValue({
-      idCargo: '',
+      id: '',
       actividad: null,
       sla: null,
       consideraciones: null
@@ -226,7 +257,14 @@ export class AcuerdoservicioComponent {
     this.indexContacto = index;
     this.esEdicionContacto = true;
     let editcontacto = this.lstContactos[index];
-    this.contactoForm.setValue(editcontacto);
+    let contacto = {
+        idCargo: editcontacto.idCargo,
+        nombreCargo: editcontacto.nombreCargo,
+        nombre: editcontacto.nombre,
+        correo: editcontacto.correo,
+        celular: editcontacto.celular
+    }
+    this.contactoForm.setValue(contacto);
   }
   eliminarContacto(index: number) {
     this.lstContactos.splice(index, 1);
@@ -288,7 +326,7 @@ export class AcuerdoservicioComponent {
         responsable: responsable,
         idResponsable: responsable.id,
         idIngreso: this.ingresoForm.value.idIngreso,
-        nombreCliente: this.clienteSeleccionado.cliente,
+        nombreCliente: this.ingresoForm.value.cliente,
         ruc: this.ingresoForm.value.ruc,
         direccion: this.ingresoForm.value.direccion,
         ciudad: this.ingresoForm.value.ciudad,
@@ -297,9 +335,11 @@ export class AcuerdoservicioComponent {
         lstContactos: this.lstContactos,
         lstBeneficios: this.lstBeneficios,
         lstSLAS: this.lstSLAS,
+        lstValoresAgregados: this.lstValoresAgregados,
         inicioVigencia: this.ingresoForm.value.inicioVigencia,
         finVigencia: this.ingresoForm.value.finVigencia,
-        idUsuario: this.userCurrent.id
+        idUsuario: this.userCurrent.id,
+        aseguradora:this.ingresoForm.value.aseguradora
       }
       let formD = new FormData();
       formD.append('datosIngreso', JSON.stringify(formAcuerdos));
@@ -311,6 +351,11 @@ export class AcuerdoservicioComponent {
         });
         this.toastrService.success('Correcto!', 'Acuerdo de servicio generado correctamente!');
         const url = 'https://cotizador.segurossuarez.com/backend/storage/app/files/modeloAcuerdoServicio_generado.docx';
+        Swal.fire({
+          title: "Correcto!",
+          text: "Para completar el proceso debe subir el documento firmado!",
+          icon: "success"
+        });
         window.open(url, '_blank');
         this.loadingService.hideLoading();
       }, (error: any) => {
@@ -472,13 +517,11 @@ export class AcuerdoservicioComponent {
         this.openDialogEnviar();
         const file = result.value;
 
-        console.log('Archivo listo:', file);
-
         const formData = new FormData();
         formData.append('archivo', file);
-        formData.append('idIngreso', '22');// this.ingresoForm.value.idIngreso);
+        formData.append('idIngreso', this.ingresoForm.value.idIngreso);// this.ingresoForm.value.idIngreso);
         this.acuerdoservicioService.completarAcuerdoServicio(formData).subscribe((res: any) => {
-          console.log('res', res);
+
           setTimeout(() => {
             this.closeDialog();
             Swal.fire({
@@ -492,7 +535,7 @@ export class AcuerdoservicioComponent {
               showCloseButton: false
             }).then((result) => {
               if (result.isConfirmed) {
-                window.location.reload();
+                this.router.navigate(['/home/acserv/seguimiento']);
               }
             });
           }, 1500);
@@ -506,7 +549,7 @@ export class AcuerdoservicioComponent {
   openDialogEnviar() {
     Swal.fire({
       title: 'Espere!',
-      text: 'Enviando...',
+      text: 'Subiendo...',
       imageWidth: 400,
       imageHeight: 250,
       imageUrl: 'assets/images/enviando.gif',
@@ -521,5 +564,90 @@ export class AcuerdoservicioComponent {
   closeDialog() {
     Swal.hideLoading();
     Swal.close();
+  }
+  async cargarDatosAcuerdo() {
+    this.loadingService.showLoading();
+    let res = await this.acuerdoservicioService.obtenerDatosAcuerdobyId(this.idIngreso);
+    if(res.data){
+      let datos = res.data;
+    this.ingresoForm.patchValue({
+      idIngreso: datos.id,
+      idEstado: datos.idEstado,
+      idResponsable: datos.idResponsable,
+      cliente: datos.cliente,
+      ruc: datos.ruc,
+      direccion: datos.direccion,
+      ciudad: datos.ciudad,
+      telefono: datos.telefono,
+      contacto: datos.contactoPrincipal,
+      inicioVigencia: datos.inicioVigencia,
+      finVigencia: datos.finVigencia,
+      aseguradora: datos.idAseguradora
+    });
+    this.lstContactos = datos.contactos;
+    this.lstSLAS = datos.slas;
+
+    this.lstContactos.forEach((element:any) => {
+      let nombreCargo = this.lstCargos.find((x: any) => x.id == element.cargo)?.nombre;
+      element.nombreCargo = nombreCargo;
+      element.idCargo = element.cargo;
+    });
+    this.lstBeneficios = datos.beneficios;
+    this.lstValoresAgregados = datos.valoresAgregados;
+    }else{
+      this.toastrService.error('ERROR', 'No se pudo obtener la información del acuerdo!');
+    }
+
+  }
+  //valores agregados
+    agregarValor() {
+    if (this.agregadosForm.valid) {
+      let valorAgregado = {
+        nombreValor: this.agregadosForm.value.nombreValor,
+        detalleValor: this.agregadosForm.value.detalleValor,
+        cantidadValor: this.agregadosForm.value.cantidadValor,
+        fechaCumplimiento: this.agregadosForm.value.fechaCumplimiento,
+      }
+      this.lstValoresAgregados.push(valorAgregado);
+      this.agregadosForm.reset();
+    } else {
+      this.agregadosForm.markAllAsTouched();
+
+      Object.keys(this.agregadosForm.controls).forEach(key => {
+        const control = this.agregadosForm.get(key);
+
+        if (control?.invalid) {
+          console.log(`Campo inválido: ${key}`, control.errors);
+        }
+      });
+      this.appComponent.validateAllFormFields(this.agregadosForm);
+      this.toastrService.error(
+        'Error al agregar el valor agregado',
+        'No se llenaron todos los campos necesarios.'
+      );
+    }
+  }
+  actualizarValor() {
+    this.esEdicionValor = false;
+    this.lstValoresAgregados[this.indexAgregado] = this.agregadosForm.value;
+    this.agregadosForm.reset();
+    this.toastrService.success(
+      'Correcto!',
+      'Valor Agregado actualizado correctamente.'
+    );
+  }
+  cancelarValor() {
+    this.esEdicionValor = false;
+    this.agregadosForm.reset();
+  }
+  indexAgregado: any;
+  editarValor(index: any) {
+    this.indexAgregado = index;
+    this.esEdicionValor = true;
+    let editValor = this.lstValoresAgregados[index];
+    this.agregadosForm.setValue(editValor);
+  }
+  eliminarValor(index: any) {
+    this.lstValoresAgregados.splice(index, 1);
   }
 }

@@ -505,7 +505,7 @@ export class ChlingresoComponent {
             this.lstContactosSugeridos = [];
             if (res.resultado[0]?.informacionContactos.length > 0) {
               res.resultado[0]?.informacionContactos?.forEach((element: any) => {
-                console.log('element',element);
+                console.log('element', element);
                 let emailIndividual = '';
                 let celularIndividual = '';
                 let telefonoTrabajoIndividual = '';
@@ -546,12 +546,12 @@ export class ChlingresoComponent {
                   telefonoTrabajo: telefonoTrabajoIndividual,
                   telefonoConvencional: telefonoConvencionalIndividual,
                 }
-                console.log('contactoSugerido',contactoSugerido);
+                console.log('contactoSugerido', contactoSugerido);
                 this.lstContactosSugeridos.push(contactoSugerido);
               });
             }
 
-            console.log('this.lstContactosSugeridos',this.lstContactosSugeridos);
+            console.log('this.lstContactosSugeridos', this.lstContactosSugeridos);
           } else {
             //si no hay datos consulto en el databook
             let formD = new FormData();
@@ -703,6 +703,10 @@ export class ChlingresoComponent {
           { id: 2, nombre: 'Crédito' }
         ];
       }
+      if (Number((event.target as HTMLSelectElement).value) == 3) {
+        this.ingresoForm.get('fechaRecepcionFactura')?.setValidators([]);
+        this.ingresoForm.get('fechaRecepcionFactura')?.updateValueAndValidity();
+      }
     }
 
 
@@ -808,10 +812,10 @@ export class ChlingresoComponent {
     this.lstRequisitos = [];
     const value = (event.target as HTMLSelectElement).value;
     let formD = new FormData();
-    formD.append('idSubarea',this.ingresoForm.value.subArea);
-    formD.append('idAseguradora',this.ingresoForm.value.aseguradora);
+    formD.append('idSubarea', this.ingresoForm.value.subArea);
+    formD.append('idAseguradora', this.ingresoForm.value.aseguradora);
     this.checklistService.obtenerRequisitosbySubarea(formD).subscribe((res: any) => {
-      console.log('res',res);
+      console.log('res', res);
       this.lstRequisitos = res.data;
       console.log('this.lstRequisitos', this.lstRequisitos);
       console.log('this.ingresoForm.value.subArea', this.ingresoForm.value.subArea);
@@ -823,6 +827,10 @@ export class ChlingresoComponent {
   }
   onChangeSubareaManual(id: Number) {
     //si es fianzas se habilita tasa y se pone obligatorio
+    if (id == 5) {
+      this.ingresoForm.get('fechaRecepcionFactura')?.setValidators([]);
+      this.ingresoForm.get('fechaRecepcionFactura')?.updateValueAndValidity();
+    }
     if (id == 5) {
       this.ingresoForm.patchValue({
         tasa: '',
@@ -989,8 +997,8 @@ export class ChlingresoComponent {
     this.lstRequisitos = [];
     const value = id;
     let formD = new FormData();
-    formD.append('idSubarea',this.ingresoForm.value.subArea);
-    formD.append('idAseguradora',this.ingresoForm.value.aseguradora);
+    formD.append('idSubarea', this.ingresoForm.value.subArea);
+    formD.append('idAseguradora', this.ingresoForm.value.aseguradora);
     this.checklistService.obtenerRequisitosbySubarea(formD).subscribe((res: any) => {
       this.lstRequisitos = res.data;
     }, (error: any) => {
@@ -1808,16 +1816,16 @@ export class ChlingresoComponent {
     return campos;
   }
 
-  burbujaSeleccionada(item:any){
+  burbujaSeleccionada(item: any) {
     console.log(item);
     this.contactoForm.patchValue({
       cargo: item.cargo,
       nombre: item.nombre,
       email: item.email,
       //
-      celular: item.celular??'',
-      telefonoTrabajo: item.telefonoTrabajo??'',
-      telefonoConvencional: item.telefonoConvencional??'',
+      celular: item.celular ?? '',
+      telefonoTrabajo: item.telefonoTrabajo ?? '',
+      telefonoConvencional: item.telefonoConvencional ?? '',
     });
   }
 }

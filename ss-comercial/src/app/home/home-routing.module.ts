@@ -31,6 +31,7 @@ const homeRoutes: Routes = [
       { path: 'pyg/ingreso2', component: PygingresoComponent2 },
       { path: 'pyg/seguimiento', component: ChlseguimientoComponent },
       { path: 'acserv/ingreso', component: AcuerdoservicioComponent },
+      { path: 'acserv/ingreso/:id', component: AcuerdoservicioComponent },
       { path: 'acserv/seguimiento', component: AcuerdoseguimientoComponent }
     ]
   }
