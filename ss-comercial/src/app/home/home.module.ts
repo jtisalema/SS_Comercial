@@ -20,6 +20,7 @@ import { AcuerdoservicioComponent } from './acuerdoservicio/acuerdoservicio.comp
 import { AcuerdoseguimientoComponent } from './acuerdoseguimiento/acuerdoseguimiento.component';
 import { ReqasegIngresoComponent } from './reqaseg-ingreso/reqaseg-ingreso.component';
 import { ReqasegSeguimientoComponent } from './reqaseg-seguimiento/reqaseg-seguimiento.component';
+import { AcuerdosegbeneficioComponent } from './acuerdosegbeneficio/acuerdosegbeneficio.component';
 @NgModule({
   declarations: [
     HomeComponent,
@@ -36,7 +37,8 @@ import { ReqasegSeguimientoComponent } from './reqaseg-seguimiento/reqaseg-segui
     AcuerdoservicioComponent,
     AcuerdoseguimientoComponent,
     ReqasegIngresoComponent,
-    ReqasegSeguimientoComponent
+    ReqasegSeguimientoComponent,
+    AcuerdosegbeneficioComponent
   ],
   imports: [
     CommonModule,

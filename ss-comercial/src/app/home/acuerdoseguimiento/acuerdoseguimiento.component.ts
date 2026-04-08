@@ -30,14 +30,18 @@ export class AcuerdoseguimientoComponent {
     this.consultarIngresos();
     (window as any).revisarAcuerdo = this.revisarAcuerdo.bind(this);
     (window as any).verDocumento = this.verDocumento.bind(this);
+    (window as any).seguimientoBeneficios = this.seguimientoBeneficios.bind(this);
   }
   revisarAcuerdo(idAcuerdo: any) {
     this.router.navigate(['/home/acserv/ingreso', idAcuerdo]);
   }
-  verDocumento(id:any) {
+  verDocumento(id: any) {
     let archivoFirmado = this.lstAcuerdos.find((x: any) => x.id == id)?.archivoFirmado;
     const url = `https://cotizador.segurossuarez.com/backend/storage/app/acuerdosServicio/${id}/${archivoFirmado}`;
     window.open(url, '_blank');
+  }
+  seguimientoBeneficios(id: any){
+    this.router.navigate(['/home/acserv/seguimiento/beneficios/', id]);
   }
   consultarIngresos() {
     this.loadingService.showLoading();
@@ -101,13 +105,21 @@ export class AcuerdoseguimientoComponent {
       `;
               }
 
-              if (full.idEstado == 2) {
+              if (full.idEstado == 1) {
                 // Botón ver documento
                 botones += `
         <button title="Ver documento" type="button"
           class="btn btn-success btn-sm"
           onclick="verDocumento(${full.id})">
           <i class="fas fa-file-alt"></i>
+        </button>
+      `;
+
+                botones += `
+        <button title="Seguimiento" type="button"
+          class="btn btn-warning btn-sm"
+          onclick="seguimientoBeneficios(${full.id})">
+          <i class="fas fa-search"></i>
         </button>
       `;
               }
