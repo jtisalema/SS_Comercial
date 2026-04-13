@@ -1,0 +1,470 @@
+<div class="content-wrapper"
+    style="background-image: url('assets/images/fondos/plataforma_fondo2.png');background-repeat: no-repeat;height: 100%;background-size: cover;">
+
+    <br>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+
+                    <div class="card card-primary card-outline">
+
+                        <!-- HEADER -->
+                        <div class="card-header">
+                            <h3 class="card-title" style="padding-top: 5px;">
+                                <i class="fas fa-user-alt mr-2"></i>
+                                Seguimiento
+                            </h3>
+                        </div>
+
+                        <!-- BODY -->
+                        <div class="card-body">
+
+                            <!-- INFO CLIENTE -->
+                            <div class="row info-box-mini shadow-sm rounded mx-1 mb-3">
+
+                                <div class="col-md-4 col-6 item">
+                                    <span class="label">Cliente:</span>
+                                    <span class="value"> {{datosAcuerdo?.cliente}} </span>
+                                </div>
+
+                                <div class="col-md-2 col-6 item">
+                                    <span class="label">Inicio Vigencia:</span>
+                                    <span class="value">
+                                        {{datosAcuerdo?.inicioVigencia | date:'dd/MM/yyyy'}}
+                                    </span>
+                                </div>
+
+                                <div class="col-md-2 col-6 item">
+                                    <span class="label">Fin Vigencia:</span>
+                                    <span class="value">
+                                        {{datosAcuerdo?.finVigencia | date:'dd/MM/yyyy'}}
+                                    </span>
+                                </div>
+
+                                <div class="col-md-2 col-6 item">
+                                    <span class="label">Responsable:</span>
+                                    <span class="value">
+                                        {{datosAcuerdo?.responsable?.nombre}}
+                                    </span>
+                                </div>
+
+                            </div>
+
+                            <!-- Beneficios -->
+                            <div class="beneficios-header mb-3" *ngIf="lstValoresAgregados.length > 0">
+                                <span class="titulo-beneficios">
+                                    Beneficios para el cliente
+                                </span>
+                            </div>
+
+                            <!-- TABLA -->
+                            <div class="row">
+                                <div class="col-md-12">
+
+                                    <p-treeTable [value]="lstBeneficios" class="custom-tree">
+
+                                        <!-- HEADER -->
+                                        <ng-template pTemplate="header">
+                                            <tr>
+                                                <th style="width: 25%;">Nombre</th>
+                                                <th style="width: 40%;">Detalle</th>
+                                                <th style="width: 10%;" class="text-center">Fec.Max.Cumpl.</th>
+                                                <th style="width: 10%;" class="text-center">Cantidad</th>
+                                                <th style="width: 15%;" class="text-right">Valor</th>
+                                                <th style="width: 10%;" class="text-center">Acciones</th>
+                                            </tr>
+                                        </ng-template>
+
+                                        <!-- BODY -->
+                                        <ng-template pTemplate="body" let-rowNode let-rowData="rowData">
+                                            <tr style="font-size: 12px;" [ngClass]="{
+                'row-hijo': rowNode.level > 0,
+                'row-padre': rowNode.level === 0
+            }">
+
+                                                <!-- NOMBRE -->
+                                                <td>
+                                                    <p-treeTableToggler [rowNode]="rowNode"></p-treeTableToggler>
+                                                    <span class="nombre">
+                                                        {{ rowData?.nombreBeneficio }}
+                                                    </span>
+                                                </td>
+
+                                                <!-- DETALLE -->
+                                                <td class="detalle">
+                                                    {{ rowData?.detalleBeneficio }}
+                                                </td>
+                                                <!-- fecha maximo para el cumplimiento -->
+                                                <td class="text-center cantidad" style="color: red;">
+                                                    {{ rowData?.fechaCumplimiento }}
+                                                </td>
+                                                <!-- CANTIDAD -->
+                                                <td class="text-center cantidad">
+                                                    {{ rowData?.cantidadBeneficio }}
+                                                </td>
+
+                                                <!-- VALOR -->
+                                                <td class="text-right valor">
+                                                    {{ rowData?.valorBeneficio | currency:'USD':'symbol':'1.2-2' }}
+                                                </td>
+
+                                                <!-- ACCIONES -->
+                                                <td class="acciones">
+
+                                                    <!-- PADRES → AGREGAR -->
+                                                    <button *ngIf="rowNode?.level == 0" class="btn-add"
+                                                        pTooltip="Agregar hijo" tooltipPosition="top"
+                                                        (click)="agregarHijo(rowNode)">
+
+                                                        <i class="fas fa-plus"></i>
+
+                                                    </button>
+
+                                                    <!-- HIJOS → ELIMINAR -->
+                                                    <button *ngIf="rowNode.level > 0" class="btn-delete"
+                                                        pTooltip="Eliminar" tooltipPosition="top"
+                                                        (click)="eliminarNodo(rowNode)">
+
+                                                        <i class="fas fa-trash"></i>
+
+                                                    </button>
+
+                                                </td>
+
+                                            </tr>
+                                            <tr *ngIf="rowNode.level > 0 && esUltimoHijo(rowNode)" class="fila-total">
+
+                                                <td colspan="3" class="label-total">
+                                                    TOTAL
+                                                </td>
+
+                                                <td class="text-center cantidad-total">
+                                                    {{ getTotales(getPadre(rowNode)).cantidad }}
+                                                </td>
+
+                                                <td class="text-right valor-total">
+                                                    {{ getTotales(getPadre(rowNode)).valor |
+                                                    currency:'USD':'symbol':'1.2-2' }}
+                                                </td>
+
+                                                <td></td>
+
+                                            </tr>
+                                        </ng-template>
+
+                                    </p-treeTable>
+
+                                </div>
+                            </div>
+                            <div *ngIf="lstValoresAgregados.length>0">
+                                <br>
+                            </div>
+                            <!-- Valores Agregados -->
+                            <div class="beneficios-header mb-3" *ngIf="lstValoresAgregados.length > 0">
+                                <span class="titulo-beneficios">
+                                    Valores agregados para el cliente
+                                </span>
+                            </div>
+
+                            <!-- TABLA -->
+                            <div class="row" *ngIf="lstValoresAgregados.length>0">
+                                <div class="col-md-12">
+
+                                    <p-treeTable [value]="lstValoresAgregados" class="custom-tree">
+
+                                        <!-- HEADER -->
+                                        <ng-template pTemplate="header">
+                                            <tr>
+                                                <th style="width: 25%;">Nombre</th>
+                                                <th style="width: 40%;">Detalle</th>
+                                                <th style="width: 10%;" class="text-center">Cantidad</th>
+                                                <th style="width: 15%;" class="text-right">Valor</th>
+                                                <th style="width: 10%;" class="text-center">Acciones</th>
+                                            </tr>
+                                        </ng-template>
+
+                                        <!-- BODY -->
+                                        <ng-template pTemplate="body" let-rowNode let-rowData="rowData">
+                                            <tr style="font-size: 12px;">
+
+                                                <!-- NOMBRE -->
+                                                <td>
+                                                    <p-treeTableToggler [rowNode]="rowNode"></p-treeTableToggler>
+                                                    <span class="nombre">
+                                                        {{ rowData?.nombreValor }}
+                                                    </span>
+                                                </td>
+
+                                                <!-- DETALLE -->
+                                                <td class="detalle">
+                                                    {{ rowData?.detalleValor }}
+                                                </td>
+
+                                                <!-- CANTIDAD -->
+                                                <td class="text-center cantidad">
+                                                    {{ rowData?.cantidadValor }}
+                                                </td>
+
+                                                <!-- VALOR -->
+                                                <td class="text-right valor">
+                                                    {{ (rowData?.valor || 0) | currency:'USD':'symbol':'1.2-2' }}
+                                                </td>
+
+                                                <!-- ACCIONES -->
+                                                <td class="acciones">
+
+                                                    <button *ngIf="rowNode?.level == 0" class="btn-add"
+                                                        pTooltip="Agregar hijo" tooltipPosition="top"
+                                                        alt="agregar detalle" (click)="agregarHijoVA(rowNode)">
+                                                        <i class="fas fa-plus"></i>
+
+                                                    </button>
+                                                    <!-- HIJOS → ELIMINAR -->
+                                                    <button *ngIf="rowNode.level > 0" class="btn-delete"
+                                                        pTooltip="Eliminar" tooltipPosition="top"
+                                                        (click)="eliminarNodoVA(rowNode)">
+
+                                                        <i class="fas fa-trash"></i>
+
+                                                    </button>
+                                                </td>
+
+                                            </tr>
+                                        </ng-template>
+
+                                    </p-treeTable>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+    <div class="modal fade" id="beneficioModal">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" style="font-size: 15px;font-weight: bold;">{{ isEditingBeneficio ?
+                        'Actualizar beneficio' : 'Agregar beneficio' }}-<span
+                            style="font-size: 15px;font-weight: normal;">{{beneficioSelect?.data?.nombreBeneficio}}</span>
+                    </h4>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <form [formGroup]="beneficioForm" (ngSubmit)="false">
+                    <div class="modal-body">
+                        <div class="card-body">
+
+                            <div class="row">
+
+                                <!-- 🔵 COLUMNA IZQUIERDA -->
+                                <div class="col-md-6">
+
+                                    <!-- Nombre -->
+                                    <div class="mb-3">
+                                        <label class="form-label">Nombre del beneficio</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i class="fas fa-tag text-info"></i>
+                                            </span>
+                                            <input type="text" class="form-control" placeholder="Nombre del Beneficio"
+                                                formControlName="nombreBeneficio"
+                                                [ngClass]="{'is-invalid': beneficioForm.get('nombreBeneficio')?.invalid && beneficioForm.get('nombreBeneficio')?.touched}">
+                                        </div>
+                                        <div class="invalid-feedback">Campo obligatorio</div>
+                                    </div>
+
+                                    <!-- Cantidad -->
+                                    <div class="mb-3">
+                                        <label class="form-label">Cantidad</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i class="fas fa-sort-numeric-up text-info"></i>
+                                            </span>
+                                            <input type="number" class="form-control" placeholder="Cantidad"
+                                                formControlName="cantidadBeneficio"
+                                                [ngClass]="{'is-invalid': beneficioForm.get('cantidadBeneficio')?.invalid && beneficioForm.get('cantidadBeneficio')?.touched}">
+                                        </div>
+                                        <div class="invalid-feedback">Campo obligatorio</div>
+                                    </div>
+
+                                    <!-- Valor -->
+                                    <div class="mb-3">
+                                        <label class="form-label">Valor</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i class="fas fa-dollar-sign text-info"></i>
+                                            </span>
+                                            <input type="number" class="form-control" placeholder="Valor"
+                                                formControlName="valorBeneficio"
+                                                [ngClass]="{'is-invalid': beneficioForm.get('valorBeneficio')?.invalid && beneficioForm.get('valorBeneficio')?.touched}">
+                                        </div>
+                                        <div class="invalid-feedback">Campo obligatorio</div>
+                                    </div>
+
+                                    <!-- Fecha Entrega -->
+                                    <div class="mb-3">
+                                        <label class="form-label">Fecha Entrega</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i class="fas fa-calendar-alt text-info"></i>
+                                            </span>
+                                            <input type="date" class="form-control" formControlName="fechaCumplimiento"
+                                                [ngClass]="{'is-invalid': beneficioForm.get('fechaCumplimiento')?.invalid && beneficioForm.get('fechaCumplimiento')?.touched}">
+                                        </div>
+                                        <div class="invalid-feedback">Campo obligatorio</div>
+                                    </div>
+
+                                </div>
+
+                                <!-- 🟢 COLUMNA DERECHA -->
+                                <div class="col-md-6">
+
+                                    <!-- Detalle -->
+                                    <div class="mb-3">
+                                        <label class="form-label">Detalle del Beneficio</label>
+
+                                        <textarea class="form-control no-resize" rows="9" style="resize: none;"
+                                            placeholder="Detalle del Beneficio" formControlName="detalleBeneficio"
+                                            [ngClass]="{'is-invalid': beneficioForm.get('detalleBeneficio')?.invalid && beneficioForm.get('detalleBeneficio')?.touched}">
+    </textarea>
+
+                                        <div class="invalid-feedback">Campo obligatorio</div>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <!-- FOOTER -->
+                        <div class="modal-footer text-end">
+                            <button type="button" class="btn btn-success" (click)="guardarBeneficio()">
+                                <i class="fas fa-save me-2"></i>
+                                {{ isEditingBeneficio ? 'Actualizar' : 'Guardar' }}
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="valorAgregadoModal">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" style="font-size: 15px;font-weight: bold;">{{ isEditingValorAgregado ?
+                        'Actualizar Valor Agregado' : 'Agregar Valor Agregado' }}-<span
+                            style="font-size: 15px;font-weight: normal;">{{valorAgregadoSelect?.data?.nombreValor}}</span>
+                    </h4>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <form [formGroup]="valorAgregadoForm" (ngSubmit)="false">
+                    <div class="modal-body">
+                        <div class="card-body">
+
+                            <div class="row">
+
+                                <!-- 🔵 COLUMNA IZQUIERDA -->
+                                <div class="col-md-6">
+
+                                    <!-- Nombre -->
+                                    <div class="mb-3">
+                                        <label class="form-label">Nombre del Valor Agregado</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i class="fas fa-tag text-info"></i>
+                                            </span>
+                                            <input type="text" class="form-control"
+                                                placeholder="Nombre del Valor Agregado" formControlName="nombreValor"
+                                                [ngClass]="{'is-invalid': valorAgregadoForm.get('nombreValor')?.invalid && valorAgregadoForm.get('nombreValor')?.touched}">
+                                        </div>
+                                        <div class="invalid-feedback">Campo obligatorio</div>
+                                    </div>
+
+                                    <!-- Cantidad -->
+                                    <div class="mb-3">
+                                        <label class="form-label">Cantidad</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i class="fas fa-sort-numeric-up text-info"></i>
+                                            </span>
+                                            <input type="number" class="form-control" placeholder="Cantidad"
+                                                formControlName="cantidadValor"
+                                                [ngClass]="{'is-invalid': valorAgregadoForm.get('cantidadValor')?.invalid && valorAgregadoForm.get('cantidadValor')?.touched}">
+                                        </div>
+                                        <div class="invalid-feedback">Campo obligatorio</div>
+                                    </div>
+
+                                    <!-- Valor -->
+                                    <div class="mb-3">
+                                        <label class="form-label">Valor</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i class="fas fa-dollar-sign text-info"></i>
+                                            </span>
+                                            <input type="number" class="form-control" placeholder="Valor"
+                                                formControlName="valor"
+                                                [ngClass]="{'is-invalid': valorAgregadoForm.get('valor')?.invalid && valorAgregadoForm.get('valor')?.touched}">
+                                        </div>
+                                        <div class="invalid-feedback">Campo obligatorio</div>
+                                    </div>
+
+                                    <!-- Fecha Entrega -->
+                                    <div class="mb-3">
+                                        <label class="form-label">Fecha Entrega</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i class="fas fa-calendar-alt text-info"></i>
+                                            </span>
+                                            <input type="date" class="form-control" formControlName="fechaCumplimiento"
+                                                [ngClass]="{'is-invalid': valorAgregadoForm.get('fechaCumplimiento')?.invalid && valorAgregadoForm.get('fechaCumplimiento')?.touched}">
+                                        </div>
+                                        <div class="invalid-feedback">Campo obligatorio</div>
+                                    </div>
+
+                                </div>
+
+                                <!-- 🟢 COLUMNA DERECHA -->
+                                <div class="col-md-6">
+
+                                    <!-- Detalle -->
+                                    <div class="mb-3">
+                                        <label class="form-label">Detalle del Valor Agregado</label>
+
+                                        <textarea class="form-control no-resize" rows="9" style="resize: none;"
+                                            placeholder="Detalle del Valor Agregado" formControlName="detalleValor"
+                                            [ngClass]="{'is-invalid': valorAgregadoForm.get('detalleValor')?.invalid && valorAgregadoForm.get('detalleValor')?.touched}">
+    </textarea>
+
+                                        <div class="invalid-feedback">Campo obligatorio</div>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <!-- FOOTER -->
+                        <div class="modal-footer text-end">
+                            <button type="button" class="btn btn-success" (click)="guardarValorAgregado()">
+                                <i class="fas fa-save me-2"></i>
+                                {{ isEditingValorAgregado ? 'Actualizar' : 'Guardar' }}
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

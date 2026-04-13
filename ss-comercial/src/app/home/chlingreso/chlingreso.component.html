@@ -859,58 +859,113 @@
                                             </button>
                                         </div>
                                     </div>
-                                    <div class="card-body" *ngIf="lstContactos.length > 0">
-                                        <div class="table-responsive">
-                                            <table class="table table-bordered tabla-lstContactos"
-                                                style="font-size: 10px;">
-                                                <thead>
-                                                    <tr>
-                                                        <th>#</th>
-                                                        <th><i class="fas fa-id-card"></i> CI/RUC</th>
-                                                        <th><i class="fas fa-tag"></i> Cargo</th>
-                                                        <th><i class="fas fa-user"></i> Nombre</th>
-                                                        <th><i class="fas fa-calendar-days"></i> F. Nacimiento</th>
-                                                        <th><i class="fas fa-at"></i> Email</th>
-                                                        <th><i class="fas fa-gift"></i> Regalo</th>
-                                                        <th><i class="fas fa-address-book"></i> Contacto</th>
-                                                        <th><i class="fas fa-address-book"></i> Telefonos</th>
-                                                        <th><i class="fas fa-web-awesome"></i> Usuario Web</th>
-                                                        <th><i class="fas fa-cog"></i> Acción</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr *ngFor="let con of lstContactos; let i = index">
-                                                        <td>{{ i + 1 }}</td>
-                                                        <td>{{ con.identificacion }}</td>
-                                                        <td>{{ con.cargo }}</td>
-                                                        <td>{{ con.nombre }}</td>
-                                                        <td>{{ con.fechaNacimiento }}</td>
-                                                        <td>{{ con.email }}</td>
-                                                        <td>{{ con.regalo == 1 ? 'SI' : 'NO' }}</td>
-                                                        <td>{{ con.nombreContacto }}</td>
-                                                        <td>{{ formatearTelefonos(con) }}</td>
-                                                        <td>{{ con.usuarioWeb == 1 ? 'SI' : 'NO' }}</td>
-                                                        <td>
-                                                            <button type="button"
-                                                                class="btn btn-outline-primary btn-sm mr-2"
-                                                                title="editar" (click)="editarContacto(i)">
-                                                                <i class="fas fa-edit"></i>
-                                                            </button>
-                                                            <button type="button"
-                                                                class="btn btn-outline-danger btn-sm mr-2"
-                                                                (click)="eliminarContacto(i)" title="eliminar">
-                                                                <i class="fas fa-trash-alt"></i>
-                                                            </button>
-                                                            <button type="button" class="btn btn-outline-success btn-sm"
-                                                                (click)="duplicarContacto(i)" title="duplicar">
-                                                                <i class="fas fa-copy"></i>
-                                                            </button>
-                                                        </td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
+<div class="card-body" *ngIf="lstContactos.length > 0">
+  <div class="table-responsive">
+    <table class="table table-bordered tabla-lstContactos" style="font-size: 10px;">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th><i class="fas fa-id-card"></i> CI/RUC</th>
+          <th><i class="fas fa-tag"></i> Cargo</th>
+          <th><i class="fas fa-user"></i> Nombre</th>
+          <th><i class="fas fa-calendar-days"></i> F. Nacimiento</th>
+          <th><i class="fas fa-at"></i> Email</th>
+          <th><i class="fas fa-gift"></i> Regalo</th>
+          <th><i class="fas fa-address-book"></i> Contacto</th>
+          <th><i class="fas fa-address-book"></i> Telefonos</th>
+          <th><i class="fas fa-web-awesome"></i> Usuario Web</th>
+          <th><i class="fas fa-cog"></i> Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let con of lstContactos; let i = index">
+          
+          <td>{{ i + 1 }}<i *ngIf="con.advertencia == 1"
+               class="fas fa-exclamation-triangle text-warning ml-1"
+               title="Debe completar la información"></i></td>
+
+          <td>
+            {{ con.identificacion }}
+            <i *ngIf="!con.identificacion && con.advertencia == 1"
+               class="fas fa-exclamation-triangle text-warning ml-1"
+               title="Debe completar la información"></i>
+          </td>
+
+          <td>
+            {{ con.cargo }}
+            <i *ngIf="!con.cargo && con.advertencia == 1"
+               class="fas fa-exclamation-triangle text-warning ml-1"
+               title="Debe completar la información"></i>
+          </td>
+
+          <td>
+            {{ con.nombre }}
+            <i *ngIf="!con.nombre && con.advertencia == 1"
+               class="fas fa-exclamation-triangle text-warning ml-1"
+               title="Debe completar la información"></i>
+          </td>
+
+          <td>
+            {{ con.fechaNacimiento }}
+            <i *ngIf="!con.fechaNacimiento && con.advertencia == 1"
+               class="fas fa-exclamation-triangle text-warning ml-1"
+               title="Debe completar la información"></i>
+          </td>
+
+          <td>
+            {{ con.email }}
+            <i *ngIf="!con.email && con.advertencia == 1"
+               class="fas fa-exclamation-triangle text-warning ml-1"
+               title="Debe completar la información"></i>
+          </td>
+
+          <td>
+            {{ con.regalo == 1 ? 'SI' : 'NO' }}
+          </td>
+
+          <td>
+            {{ con.nombreContacto }}
+            <i *ngIf="!con.nombreContacto && con.advertencia == 1"
+               class="fas fa-exclamation-triangle text-warning ml-1"
+               title="Debe completar la información"></i>
+          </td>
+
+          <td>
+            {{ formatearTelefonos(con) }}
+            <i *ngIf="!formatearTelefonos(con) && con.advertencia == 1"
+               class="fas fa-exclamation-triangle text-warning ml-1"
+               title="Debe completar la información"></i>
+          </td>
+
+          <td>
+            {{ con.usuarioWeb == 1 ? 'SI' : 'NO' }}
+          </td>
+
+          <td>
+            <button type="button"
+              class="btn btn-outline-primary btn-sm mr-2"
+              title="editar" (click)="editarContacto(i)">
+              <i class="fas fa-edit"></i>
+            </button>
+
+            <button type="button"
+              class="btn btn-outline-danger btn-sm mr-2"
+              (click)="eliminarContacto(i)" title="eliminar">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+
+            <button type="button"
+              class="btn btn-outline-success btn-sm"
+              (click)="duplicarContacto(i)" title="duplicar">
+              <i class="fas fa-copy"></i>
+            </button>
+          </td>
+
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
                                 </div>
                                 <div class="card mb-4 p-3 position-relative" *ngIf="lstRequisitos.length>0">
                                     <h6 class="card-title titulo-sobre-borde">Requisitos</h6>

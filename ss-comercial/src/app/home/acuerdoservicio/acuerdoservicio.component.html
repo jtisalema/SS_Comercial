@@ -45,7 +45,7 @@
                                                 Cliente
                                             </label>
 
-                                            <ng-select [items]="clientes" bindLabel="cliente" 
+                                            <ng-select [items]="clientes" bindLabel="cliente" bindValue="cliente"
                                                 [typeahead]="clientesInput$" [loading]="loadingClientes"
                                                 [minTermLength]="3" placeholder="Ingrese el nombre del cliente"
                                                 formControlName="cliente" (change)="onClienteChange($event)"
@@ -212,6 +212,29 @@
                                                 <span *ngIf="ingresoForm.get('contacto')?.hasError('minlength')">
                                                     Mínimo 3 caracteres
                                                 </span>
+                                            </small>
+                                        </div>
+                                        <!-- ASEGURADORA -->
+                                        <div class="col-md-3">
+                                            <label for="aseguradora" class="form-label">
+                                                Aseguradora
+                                            </label>
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text bg-light">
+                                                        <i class="fas fa-building text-info"></i>
+                                                    </span>
+                                                </div>
+                                                <ng-select [items]="lstAseguradoras" formControlName="aseguradora"
+                                                    bindLabel="alias" bindValue="id" [clearable]="true"
+                                                    placeholder="Seleccione la aseguradora" [searchable]="true"
+                                                    style="flex: 1 1 auto;">
+                                                </ng-select>
+                                            </div>
+
+                                            <small class="text-danger"
+                                                *ngIf="ingresoForm.get('aseguradora')?.touched && ingresoForm.get('aseguradora')?.invalid">
+                                                La aseguradora es obligatoria
                                             </small>
                                         </div>
                                     </div>
@@ -484,7 +507,8 @@
                                                             </span>
 
                                                             <input type="text" class="form-control"
-                                                                placeholder="Ingrese el nombre de la actividad" formControlName="actividad"
+                                                                placeholder="Ingrese el nombre de la actividad"
+                                                                formControlName="actividad"
                                                                 [ngClass]="{'is-invalid': slasForm.get('actividad')?.touched && slasForm.get('actividad')?.invalid}">
                                                         </div>
 
@@ -497,12 +521,13 @@
                                                     <div class="mb-3">
                                                         <div class="input-group">
                                                             <span class="input-group-text bg-light">
-                                                                 <i class="fas fa-tasks text-primary"></i>
+                                                                <i class="fas fa-tasks text-primary"></i>
                                                             </span>
 
                                                             <textarea type="text-area" class="form-control" rows="3"
                                                                 style="resize: none;height: 150px;font-size: 12px;"
-                                                                placeholder="Ingrese el nombre del sla" formControlName="sla"
+                                                                placeholder="Ingrese el nombre del sla"
+                                                                formControlName="sla"
                                                                 [ngClass]="{'is-invalid': slasForm.get('sla')?.touched && slasForm.get('sla')?.invalid}"></textarea>
                                                         </div>
 
@@ -520,7 +545,8 @@
 
                                                             <textarea type="text-area" class="form-control" rows="3"
                                                                 style="resize: none;height: 150px;font-size: 12px;"
-                                                                placeholder="Ingrese las consideraciones" formControlName="consideraciones"
+                                                                placeholder="Ingrese las consideraciones"
+                                                                formControlName="consideraciones"
                                                                 [ngClass]="{'is-invalid': slasForm.get('consideraciones')?.touched && slasForm.get('consideraciones')?.invalid}"></textarea>
                                                         </div>
 
@@ -774,7 +800,7 @@
                                                             beneficio</label>
                                                         <div class="input-group">
                                                             <span class="input-group-text bg-light">
-                                                                <i class="fas fa-calendar-sign text-primary"></i>
+                                                                <i class="fas fa-calendar-alt text-primary"></i>
                                                             </span>
 
                                                             <input type="date" class="form-control"
@@ -911,14 +937,265 @@
 
                                     </div>
                                 </form>
+
+                                <!--Valores Agregados-->
+                                <form [formGroup]="agregadosForm">
+                                    <div class="card mb-4 p-3 position-relative">
+                                        <!-- HEADER (CLICK) -->
+                                        <h6 class="card-title titulo-sobre-borde-medio collapsed"
+                                            style="cursor: pointer;" data-bs-toggle="collapse"
+                                            data-bs-target="#collapseValores" aria-expanded="false">
+
+                                            Valores Agregados
+
+                                            <i class="fas ms-2 icono-flecha"></i>
+
+                                        </h6>
+                                        <br>
+                                        <div id="collapseValores" class="collapse">
+                                            <div class="row">
+
+                                                <!-- IZQUIERDA (FORMULARIO) -->
+                                                <div class="col-md-4">
+
+                                                    <!-- nombreValor -->
+                                                    <div class="mb-3">
+                                                        <div class="input-group">
+                                                            <span class="input-group-text bg-light">
+                                                                <i class="fas fa-gift text-primary"></i>
+                                                            </span>
+
+                                                            <input type="text" class="form-control"
+                                                                placeholder="Ingrese el nombre del valor agregado"
+                                                                formControlName="nombreValor"
+                                                                [class.is-invalid]="agregadosForm.get('nombreValor')?.touched && agregadosForm.get('nombreValor')?.invalid">
+                                                        </div>
+
+                                                        <small class="text-danger"
+                                                            *ngIf="agregadosForm.get('nombreValor')?.touched && agregadosForm.get('nombreValor')?.errors">
+
+                                                            <span
+                                                                *ngIf="agregadosForm.get('nombreValor')?.hasError('required')">
+                                                                El nombre es obligatorio
+                                                            </span>
+                                                            <span
+                                                                *ngIf="agregadosForm.get('nombreValor')?.hasError('minlength')">
+                                                                Mínimo 3 caracteres
+                                                            </span>
+                                                        </small>
+                                                    </div>
+                                                    <!-- cantidad -->
+                                                    <div class="mb-3">
+                                                        <div class="input-group">
+                                                            <span class="input-group-text bg-light">
+                                                                <i class="fas fa-sort-numeric-up text-primary"></i>
+                                                            </span>
+
+                                                            <input type="number" class="form-control"
+                                                                placeholder="Ingrese la cantidad"
+                                                                formControlName="cantidadValor" min="1"
+                                                                [class.is-invalid]="agregadosForm.get('cantidadValor')?.touched && agregadosForm.get('cantidadValor')?.invalid">
+                                                        </div>
+
+                                                        <small class="text-danger"
+                                                            *ngIf="agregadosForm.get('cantidadValor')?.touched && agregadosForm.get('cantidadValor')?.errors">
+
+                                                            <span
+                                                                *ngIf="agregadosForm.get('cantidadValor')?.hasError('required')">
+                                                                La cantidad es obligatoria
+                                                            </span>
+                                                            <span
+                                                                *ngIf="agregadosForm.get('cantidadValor')?.hasError('min')">
+                                                                Debe ser mayor a 0
+                                                            </span>
+                                                            <span
+                                                                *ngIf="agregadosForm.get('cantidadValor')?.hasError('pattern')">
+                                                                Solo números enteros
+                                                            </span>
+                                                        </small>
+                                                    </div>
+                                                    <!-- detalleValor -->
+                                                    <div class="mb-3">
+                                                        <div class="input-group">
+                                                            <span class="input-group-text bg-light">
+                                                                <i class="fas fa-align-left text-primary"></i>
+                                                            </span>
+
+                                                            <textarea class="form-control" rows="3"
+                                                                style="resize: none;height: 150px;font-size: 12px;"
+                                                                placeholder="Ingrese el detalle del valor agregado"
+                                                                formControlName="detalleValor"
+                                                                [class.is-invalid]="agregadosForm.get('detalleValor')?.touched && agregadosForm.get('detalleValor')?.invalid">
+    </textarea>
+                                                        </div>
+
+                                                        <small class="text-danger"
+                                                            *ngIf="agregadosForm.get('detalleValor')?.touched && agregadosForm.get('detalleValor')?.errors">
+
+                                                            <span
+                                                                *ngIf="agregadosForm.get('detalleValor')?.hasError('required')">
+                                                                El detalle es obligatorio
+                                                            </span>
+                                                        </small>
+                                                    </div>
+
+                                                    <!-- fecha maxima de cumplimiento del valor agregado -->
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Fecha maxima de cumplimiento del
+                                                            valor agregado</label>
+                                                        <div class="input-group">
+                                                            <span class="input-group-text bg-light">
+                                                                <i class="fas fa-calendar-alt text-primary"></i>
+                                                            </span>
+
+                                                            <input type="date" class="form-control"
+                                                                placeholder="Ingrese la fecha de cumplimiento del valor agregado"
+                                                                formControlName="fechaCumplimiento"
+                                                                [class.is-invalid]="agregadosForm.get('fechaCumplimiento')?.touched && agregadosForm.get('fechaCumplimiento')?.invalid">
+                                                        </div>
+
+                                                        <small class="text-danger"
+                                                            *ngIf="agregadosForm.get('fechaCumplimiento')?.touched && agregadosForm.get('fechaCumplimiento')?.errors">
+
+                                                            <span
+                                                                *ngIf="agregadosForm.get('fechaCumplimiento')?.hasError('required')">
+                                                                Debe ingresar una fecha
+                                                            </span>
+                                                        </small>
+                                                    </div>
+                                                    <!-- BOTONES -->
+                                                    <div class="d-flex gap-2 justify-content-end">
+
+                                                        <button type="button" class="btn btn-primary"
+                                                            (click)="agregarValor()" *ngIf="!esEdicionValor">
+                                                            + Ingresar
+                                                        </button>
+
+                                                        <div *ngIf="esEdicionValor">
+                                                            <button type="button" class="btn btn-success"
+                                                                (click)="actualizarValor()">
+                                                                Actualizar
+                                                            </button>
+
+                                                            <button type="button" class="btn btn-danger"
+                                                                (click)="cancelarValor()">
+                                                                Cancelar
+                                                            </button>
+                                                        </div>
+
+                                                    </div>
+
+                                                </div>
+
+                                                <!-- DERECHA (TABLA) -->
+                                                <div class="col-md-8">
+
+                                                    <div class="table-responsive">
+
+                                                        <div class="table-responsive">
+
+                                                            <table
+                                                                class="table table-hover table-striped align-middle tabla-beneficios"
+                                                                style="font-size:10px;text-align:center;">
+
+                                                                <thead class="table-primary text-center">
+                                                                    <tr>
+                                                                        <th>Valor Agregado</th>
+                                                                        <th>Detalle</th>
+                                                                        <th>Cantidad</th>
+                                                                        <th>Fecha Max.</th>
+                                                                        <th style="width: 120px;">Acción</th>
+                                                                    </tr>
+                                                                </thead>
+
+                                                                <tbody class="text-center">
+
+                                                                    <tr *ngIf="lstValoresAgregados.length === 0">
+                                                                        <td colspan="5" class="text-muted py-4">
+                                                                            <i class="fas fa-inbox me-2"></i>
+                                                                            No hay valores agregados
+                                                                        </td>
+                                                                    </tr>
+
+                                                                    <tr
+                                                                        *ngFor="let ben of lstValoresAgregados; let i = index">
+
+                                                                        <td class="fw-semibold text-start">
+                                                                            {{ ben.nombreValor }}
+                                                                        </td>
+
+                                                                        <td class="text-start text-truncate"
+                                                                            style="max-width: 200px;">
+                                                                            {{ ben.detalleValor }}
+                                                                        </td>
+
+                                                                        <td>
+                                                                            <span class="text-start">
+                                                                                {{ ben.cantidadValor }}
+                                                                            </span>
+                                                                        </td>
+
+                                                                        <td class="text-danger fw-bold">
+                                                                            {{ ben.fechaCumplimiento }}
+                                                                        </td>
+
+                                                                        <td>
+                                                                            <div
+                                                                                class="d-flex justify-content-center gap-2">
+
+                                                                                <button
+                                                                                    class="btn btn-sm btn-outline-primary"
+                                                                                    (click)="editarValor(i)"
+                                                                                    title="Editar">
+                                                                                    <i class="fas fa-edit"></i>
+                                                                                </button>
+
+                                                                                <button
+                                                                                    class="btn btn-sm btn-outline-danger"
+                                                                                    (click)="eliminarValor(i)"
+                                                                                    title="Eliminar">
+                                                                                    <i class="fas fa-trash-alt"></i>
+                                                                                </button>
+
+                                                                            </div>
+                                                                        </td>
+
+                                                                    </tr>
+
+                                                                </tbody>
+
+                                                            </table>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                </div>
+
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </form>
                             </form>
-                            <div class="col d-flex justify-content-end">
-                                <button type="button" class="btn btn-warning" (click)="generarAcuerdo()">
-                                    Generar
-                                </button>&nbsp;&nbsp;
-                                <button type="button" class="btn btn-success" (click)="completarAcuerdo()" *ngIf="this.ingresoForm.value.idEstado!=1">
-                                    Completar
+                            <div class="col d-flex justify-content-end gap-3">
+
+                                <button type="button"
+                                    class="btn btn-warning d-flex align-items-center gap-2 px-3 shadow-sm"
+                                    (click)="generarAcuerdo()">
+
+                                    <i class="fas fa-file-signature"></i>
+                                    <span>Generar</span>
                                 </button>
+
+                                <button type="button"
+                                    class="btn btn-success d-flex align-items-center gap-2 px-3 shadow-sm"
+                                    (click)="completarAcuerdo()" *ngIf="ingresoForm.value.idEstado == 1">
+
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Completar</span>
+                                </button>
+
                             </div>
                         </div>
 
