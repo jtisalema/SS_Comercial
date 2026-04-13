@@ -11,14 +11,14 @@ export class comunicadosService {
     //private authService: AuthService
   ) { }
 
-async obtenerComunicados(): Promise<any[]> {
-  const URL_API = environment.apiUrl + "getVentasComunicados";
-  try {
-    const response = await firstValueFrom(this.httpClient.get<any>(URL_API));
-    return response['data'] || [];
-  } catch (error) {
-    console.error('Error al obtener los comunicados:', error);
-    return [];
+  async obtenerComunicados(): Promise<any[]> {
+    const URL_API = environment.apiUrl + "getVentasComunicados";
+    try {
+      const response = await firstValueFrom(this.httpClient.get<any>(URL_API));
+      return response['data'] || [];
+    } catch (error) {
+      console.error('Error al obtener los comunicados:', error);
+      return [];
+    }
   }
-}
 }

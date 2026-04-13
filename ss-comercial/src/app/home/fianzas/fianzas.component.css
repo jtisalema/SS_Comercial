@@ -1,0 +1,105 @@
+table.dataTable thead th {
+    background: #f4f6f9;
+    color: #1f2d3d;
+    font-weight: 700;
+    font-size: 13px;
+    border-bottom: 1px solid #dee2e6 !important;
+    vertical-align: middle !important;
+    text-align: center;
+    white-space: nowrap;
+}
+
+table.dataTable tbody td {
+    font-size: 13px;
+    vertical-align: top !important;
+    padding: 10px 8px;
+}
+
+table.dataTable tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.col-area,
+.col-subarea,
+.col-poliza,
+.col-fecha,
+.col-telefono {
+    white-space: nowrap;
+    text-align: center;
+}
+
+.col-ramo,
+.col-aseguradora,
+.col-cliente,
+.col-correo {
+    min-width: 160px;
+    white-space: normal !important;
+    text-align: center;
+}
+
+.col-money {
+    white-space: nowrap;
+    color: #198754;
+    text-align: right !important;
+}
+
+.col-objeto {
+    min-width: 520px !important;
+    width: 520px !important;
+    max-width: 520px !important;
+}
+
+table.dataTable tbody td.col-objeto {
+    text-align: justify !important;
+    white-space: normal !important;
+}
+
+.prima-highlight {
+    font-weight: 700;
+}
+
+.objeto-justify {
+    text-align: justify;
+    line-height: 1.5;
+    white-space: normal !important;
+    word-break: break-word;
+    width: 100%;
+    min-width: 100%;
+    max-width: 100%;
+}
+
+.dataTables_wrapper .dataTables_filter input {
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    padding: 4px 10px;
+}
+
+.dataTables_wrapper .dataTables_length select {
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    padding: 4px 8px;
+}
+
+.filtros-vencimientos {
+    background: #f8f9fb;
+    border: 1px solid #e9ecef;
+    border-radius: 10px;
+    padding: 15px 10px 8px 10px;
+    margin-bottom: 15px;
+}
+
+.filtros-vencimientos .form-label {
+    font-size: 13px;
+    color: #344054;
+    margin-bottom: 6px;
+}
+
+.filtros-vencimientos .form-control {
+    height: 38px;
+    border-radius: 8px;
+    font-size: 13px;
+}
+
+.gap-2 {
+    gap: 8px;
+}

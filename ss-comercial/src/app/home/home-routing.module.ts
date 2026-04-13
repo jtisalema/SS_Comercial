@@ -13,25 +13,28 @@ import { AcuerdoservicioComponent } from './acuerdoservicio/acuerdoservicio.comp
 import { AuthGuard } from '../guard/auth-guard.guard';
 import { Role } from 'src/app/helpers/role';
 import { AcuerdoseguimientoComponent } from './acuerdoseguimiento/acuerdoseguimiento.component';
+import { FianzasComponent } from './fianzas/fianzas.component';
 
 const homeRoutes: Routes = [
   {
     path: '',
     component: HomeComponent,
-    children: [{ path: 'inicio', component: InicioComponent},
-      { path: 'personal', component: PersonalComponent },
-      { path: 'presupuesto', component: PresupuestoComponent },
-      { path: 'comunicados', component: ComunicadosComponent },
-      { path: 'checkList/ingreso', component: ChlingresoComponent},
-      { path: 'checkList/ingreso/:id', component: ChlingresoComponent },
-      { path: 'checkList/seguimiento', component: ChlseguimientoComponent,     
-        //canActivate: [AuthGuard],data: { roles: [Role.Comercial] }  
-      },
-      { path: 'pyg/ingreso', component: PygingresoComponent },
-      { path: 'pyg/ingreso2', component: PygingresoComponent2 },
-      { path: 'pyg/seguimiento', component: ChlseguimientoComponent },
-      { path: 'acserv/ingreso', component: AcuerdoservicioComponent },
-      { path: 'acserv/seguimiento', component: AcuerdoseguimientoComponent }
+    children: [{ path: 'inicio', component: InicioComponent },
+    { path: 'personal', component: PersonalComponent },
+    { path: 'presupuesto', component: PresupuestoComponent },
+    { path: 'comunicados', component: ComunicadosComponent },
+    { path: 'checkList/ingreso', component: ChlingresoComponent },
+    { path: 'checkList/ingreso/:id', component: ChlingresoComponent },
+    {
+      path: 'checkList/seguimiento', component: ChlseguimientoComponent,
+      //canActivate: [AuthGuard],data: { roles: [Role.Comercial] }  
+    },
+    { path: 'pyg/ingreso', component: PygingresoComponent },
+    { path: 'pyg/ingreso2', component: PygingresoComponent2 },
+    { path: 'pyg/seguimiento', component: ChlseguimientoComponent },
+    { path: 'acserv/ingreso', component: AcuerdoservicioComponent },
+    { path: 'acserv/seguimiento', component: AcuerdoseguimientoComponent },
+    { path: 'notificacion-fianzas', component: FianzasComponent }
     ]
   }
 ];
