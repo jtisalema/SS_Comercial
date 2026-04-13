@@ -21,6 +21,8 @@ import { AcuerdoseguimientoComponent } from './acuerdoseguimiento/acuerdoseguimi
 import { ReqasegIngresoComponent } from './reqaseg-ingreso/reqaseg-ingreso.component';
 import { ReqasegSeguimientoComponent } from './reqaseg-seguimiento/reqaseg-seguimiento.component';
 import { AcuerdosegbeneficioComponent } from './acuerdosegbeneficio/acuerdosegbeneficio.component';
+import { TreeTableModule } from 'primeng/treetable';
+
 @NgModule({
   declarations: [
     HomeComponent,
@@ -46,7 +48,8 @@ import { AcuerdosegbeneficioComponent } from './acuerdosegbeneficio/acuerdosegbe
     FormsModule,
     ReactiveFormsModule,
     NgSelectModule,
-    NgxDropzoneModule
+    NgxDropzoneModule,
+    TreeTableModule
   ]
 })
 export class HomeModule { }

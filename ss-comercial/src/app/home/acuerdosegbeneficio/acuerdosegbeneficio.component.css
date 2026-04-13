@@ -1,0 +1,233 @@
+.info-box-mini {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    /* más suave */
+    font-size: 12px;
+    padding: 2px 6px;
+    /* 🔥 menos espacio arriba/abajo */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    /* sombra más ligera */
+}
+
+.info-box-mini .item {
+    padding: 1px 4px;
+    /* 🔥 reduce altura interna */
+    line-height: 1.2;
+    /* 🔥 compacta texto */
+    white-space: nowrap;
+}
+
+.info-box-mini .label {
+    color: #6c757d;
+    font-size: 13px;
+}
+
+.info-box-mini .value {
+    font-weight: 600;
+    font-size: 13px;
+    margin-left: 2px;
+}
+
+.custom-tree {
+    font-size: 12px;
+}
+
+.custom-tree th {
+    background: #f4f6f9;
+    font-weight: 600;
+    font-size: 12px;
+    padding: 6px;
+}
+
+.custom-tree td {
+    padding: 6px;
+    vertical-align: top;
+}
+
+/* Nombre */
+.nombre {
+    font-weight: 500;
+}
+
+/* Detalle largo tipo párrafo */
+.detalle {
+    max-width: 350px;
+    white-space: normal;
+    line-height: 1.3;
+    color: #555;
+}
+
+/* Cantidad */
+.cantidad {
+    font-size: 12px;
+}
+
+/* Valor */
+.valor {
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* Alineaciones */
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+}
+
+/* Acciones */
+.acciones {
+    text-align: center;
+}
+
+/* Hover moderno */
+.custom-tree tbody tr:hover {
+    background-color: #f9fafb;
+    transition: 0.2s;
+}
+/* Contenedor */
+.acciones {
+    text-align: center;
+}
+
+/* Botón moderno minimalista */
+.btn-add {
+    border: none;
+    background: #e8f5e9;
+    color: #2e7d32;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+/* Hover elegante */
+.btn-add:hover {
+    background: #2e7d32;
+    color: #fff;
+    transform: scale(1.05);
+}
+
+/* Icono */
+.btn-add i {
+    font-size: 12px;
+}
+/* Botón expandir/colapsar */
+:host ::ng-deep .p-treetable-toggler {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    background: #f1f3f5;
+    color: #495057;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 6px;
+    transition: all 0.2s ease;
+}
+
+/* Hover */
+:host ::ng-deep .p-treetable-toggler:hover {
+    background: #dee2e6;
+    color: #212529;
+    transform: scale(1.05);
+}
+
+/* Icono */
+:host ::ng-deep .p-treetable-toggler-icon {
+    font-size: 12px;
+}
+/* Filas hijas */
+.row-hijo {
+    background-color: #e3f2fd; /* celeste suave */
+}
+
+/* Hover en hijos */
+.row-hijo:hover {
+    background-color: #bbdefb;
+}
+
+/* Filas padre */
+.row-padre {
+    background-color: #ffffff;
+}
+
+/* Hover padres */
+.row-padre:hover {
+    background-color: #f9fafb;
+}
+/* Botón eliminar */
+.btn-delete {
+    border: none;
+    background: #fdecea;
+    color: #c62828;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-left: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+/* Hover */
+.btn-delete:hover {
+    background: #c62828;
+    color: #fff;
+    transform: scale(1.05);
+}
+
+/* Icono */
+.btn-delete i {
+    font-size: 12px;
+}.fila-total {
+  background-color: #f8f9fa;
+  border-top: 2px solid #dee2e6;
+}
+
+.fila-total td {
+  font-size: 12px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.fila-total .label-total {
+  text-align: right;
+  color: #495057;
+  font-weight: 600;
+}
+
+.fila-total .valor-total {
+  font-weight: bold;
+  color: #212529;
+}
+
+.fila-total .cantidad-total {
+  font-weight: bold;
+  color: #212529;
+}
+.fila-total td:first-child {
+  padding-left: 40px; /* alineado con hijos */
+}
+.beneficios-header {
+  border-left: 4px solid #0d6efd;
+  background: #f8f9fa;
+  padding: 8px 12px;
+  border-radius: 4px;
+}
+
+.titulo-beneficios {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0d6efd;
+  display: flex;
+  align-items: center;
+}

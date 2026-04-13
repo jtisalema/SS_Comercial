@@ -40,7 +40,7 @@ export class AcuerdoseguimientoComponent {
     const url = `https://cotizador.segurossuarez.com/backend/storage/app/acuerdosServicio/${id}/${archivoFirmado}`;
     window.open(url, '_blank');
   }
-  seguimientoBeneficios(id: any){
+  seguimientoBeneficios(id: any) {
     this.router.navigate(['/home/acserv/seguimiento/beneficios/', id]);
   }
   consultarIngresos() {
@@ -105,7 +105,7 @@ export class AcuerdoseguimientoComponent {
       `;
               }
 
-              if (full.idEstado == 1) {
+              if (full.idEstado != 1) {
                 // Botón ver documento
                 botones += `
         <button title="Ver documento" type="button"
@@ -114,7 +114,8 @@ export class AcuerdoseguimientoComponent {
           <i class="fas fa-file-alt"></i>
         </button>
       `;
-
+              }
+              if (full.idEstado != 1 && this.userCurrent.idRol == 30) {
                 botones += `
         <button title="Seguimiento" type="button"
           class="btn btn-warning btn-sm"

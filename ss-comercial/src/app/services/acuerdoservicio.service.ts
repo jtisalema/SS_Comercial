@@ -41,4 +41,30 @@ export class AcuerdoservicioService {
       throw error;
     }
   }
+  public obtenerDatosAcuerdobyId2(id: any) {
+    const URL_API = environment.apiUrl + "obtenerDatosAcuerdobyId/" + id;
+    return this.httpClient.get(URL_API).pipe(catchError(this.handleError));
+  }
+
+  public guardarDetalleBeneficio(detalle: FormData) {
+    const URL_API = environment.apiUrl + "detalleSeguimientoAcuerdo";
+    return this.httpClient.post(URL_API, detalle).pipe(catchError(this.handleError));
+  }
+  public quitarDetalleBeneficio(detalle: FormData) {
+    const URL_API = environment.apiUrl + "quitarDetalleBeneficio";
+    return this.httpClient.post(URL_API, detalle).pipe(catchError(this.handleError));
+  }
+    public quitarDetalleValorAgregado(detalle: FormData) {
+    const URL_API = environment.apiUrl + "quitarDetalleValorAgregado";
+    return this.httpClient.post(URL_API, detalle).pipe(catchError(this.handleError));
+  }
+  
+  public agregarDetalleAcuerdo(detalle: FormData) {
+    const URL_API = environment.apiUrl + "agregarDetalleAcuerdo";
+    return this.httpClient.post(URL_API, detalle).pipe(catchError(this.handleError));
+  }
+    public agregarDetalleAcuerdoVA(detalle: FormData) {
+    const URL_API = environment.apiUrl + "agregarDetalleAcuerdoVA";
+    return this.httpClient.post(URL_API, detalle).pipe(catchError(this.handleError));
+  }
 }
