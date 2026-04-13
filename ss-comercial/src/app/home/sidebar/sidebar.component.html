@@ -7,8 +7,6 @@
         <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
             <!-- Acuerdos de Servicio -->
             <li class="nav-item has-treeview" routerLinkActive="menu-open" *ngIf="rolUsuario == 18 || rolUsuario == 30">
-            <!-- Acuerdos de Servicio -->
-            <li class="nav-item has-treeview" routerLinkActive="menu-open" *ngIf="rolUsuario == 18">
                 <a href="javascript:void(0)" class="nav-link d-flex align-items-center">
                     <i class="nav-icon fas fa-cash-register" style="color: white;"></i>
                     <p class="flex-grow-1 ml-2" style="color: white;">
@@ -19,31 +17,31 @@
                 <ul class="nav nav-treeview">
                     <li class="nav-item" *ngIf="rolUsuario == 18|| rolUsuario == 30">
                         <a routerLink="/home/acserv/ingreso" class="nav-link d-flex align-items-center"
-                           
                             routerLinkActive="active" (click)="SetActive($event)">
                             <i class="nav-icon fas fa-plus-square" style="color: white;"></i>
                             <p class="ml-3" style="color: white;">Ingresar</p>
                         </a>
                     </li>
-
                 </ul>
                 <ul class="nav nav-treeview">
                     <li class="nav-item" *ngIf="rolUsuario == 18|| rolUsuario == 30">
                         <a routerLink="/home/acserv/seguimiento" class="nav-link d-flex align-items-center"
                             routerLinkActive="active" (click)="SetActive($event)">
-                <ul class="nav nav-treeview">
-                    <li class="nav-item" *ngIf="rolUsuario == 18">
-                        <a routerLink="/home/acserv/seguimiento" class="nav-link d-flex align-items-center"
-                            routerLinkActive="active" (click)="SetActive($event)">
-                            <i class="nav-icon fas fa-clipboard-list" style="color: white;"></i>
-                            <p class="ml-3" style="color: white;">Listado</p>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item" *ngIf="rolUsuario == 18">
+                                    <a routerLink="/home/acserv/seguimiento" class="nav-link d-flex align-items-center"
+                                        routerLinkActive="active" (click)="SetActive($event)">
+                                        <i class="nav-icon fas fa-clipboard-list" style="color: white;"></i>
+                                        <p class="ml-3" style="color: white;">Listado</p>
+                                    </a>
+                                </li>
+                            </ul>
                         </a>
                     </li>
                 </ul>
             </li>
             <!-- CheckList -->
             <li class="nav-item has-treeview" routerLinkActive="menu-open" *ngIf="rolUsuario == 18 || rolUsuario == 29">
-
                 <a href="javascript:void(0)" class="nav-link">
                     <i class="nav-icon fas fa-tasks" style="color: white;"></i>
                     <p class="flex-grow-1 ml-2" style="color: white;">
@@ -102,13 +100,33 @@
                     <li class="nav-item" *ngIf="rolUsuario == 18">
                         <a routerLink="/home/pyg/seguimiento" class="nav-link d-flex align-items-center"
                             routerLinkActive="active" (click)="SetActive($event)">
-                        <a routerLink="/home/pyg/seguimiento" class="nav-link d-flex align-items-center"
-                            routerLinkActive="active" (click)="SetActive($event)">
-                            <i class="nav-icon fas fa-clipboard-list" style="color: white;"></i>
-                            <p class="ml-3" style="color: white;">Listado1</p>
+                            <a routerLink="/home/pyg/seguimiento" class="nav-link d-flex align-items-center"
+                                routerLinkActive="active" (click)="SetActive($event)">
+                                <i class="nav-icon fas fa-clipboard-list" style="color: white;"></i>
+                                <p class="ml-3" style="color: white;">Listado1</p>
+                            </a>
                         </a>
                     </li>
 
+                </ul>
+            </li>
+            <!-- Notificaciones Fianzas -->
+            <li class="nav-item has-treeview" *ngIf="rolUsuario == 18">
+                <a href="javascript:void(0)" class="nav-link d-flex align-items-center">
+                    <i class="nav-icon fas fa-bell" style="color: white;"></i>
+                    <p class="flex-grow-1 ml-2" style="color: white;">
+                        Notif. Fianzas
+                        <i class="fas fa-angle-left right"></i>
+                    </p>
+                </a>
+                <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                        <a routerLink="/home/notificacion-fianzas" class="nav-link d-flex align-items-center"
+                            routerLinkActive="active" (click)="SetActive($event)">
+                            <i class="nav-icon fas fa-clock" style="color: white;"></i>
+                            <p class="ml-3" style="color: white;">Prox. Vencimientos</p>
+                        </a>
+                    </li>
                 </ul>
             </li>
         </ul>

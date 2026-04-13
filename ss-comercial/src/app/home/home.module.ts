@@ -24,6 +24,7 @@ import { AcuerdosegbeneficioComponent } from './acuerdosegbeneficio/acuerdosegbe
 import { TreeTableModule } from 'primeng/treetable';
 
 import { FianzasComponent } from './fianzas/fianzas.component';
+import { InputTextModule } from "primeng/inputtext";
 @NgModule({
   declarations: [
     HomeComponent,
@@ -41,8 +42,7 @@ import { FianzasComponent } from './fianzas/fianzas.component';
     AcuerdoseguimientoComponent,
     ReqasegIngresoComponent,
     ReqasegSeguimientoComponent,
-    AcuerdosegbeneficioComponent
-    ReqasegSeguimientoComponent,
+    AcuerdosegbeneficioComponent,
     FianzasComponent
   ],
   imports: [
@@ -52,7 +52,8 @@ import { FianzasComponent } from './fianzas/fianzas.component';
     ReactiveFormsModule,
     NgSelectModule,
     NgxDropzoneModule,
-    TreeTableModule
-  ]
+    TreeTableModule,
+    InputTextModule
+]
 })
 export class HomeModule { }
