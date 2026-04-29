@@ -299,13 +299,13 @@ export class AcuerdoservicioComponent {
 
   generarAcuerdo() {
     if (this.ingresoForm.valid) {
-      if (this.lstBeneficios.length < 1) {
-        this.toastrService.warning(
-          'Aviso',
-          'Debe  Ingresar el detalle de beneficios para el cliente.'
-        );
-        return;
-      }
+      // if (this.lstBeneficios.length < 1) {
+      //   this.toastrService.warning(
+      //     'Aviso',
+      //     'Debe  Ingresar el detalle de beneficios para el cliente.'
+      //   );
+      //   return;
+      // }
       if (this.lstContactos.length < 1) {
         this.toastrService.warning(
           'Aviso',

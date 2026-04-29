@@ -4,3 +4,6 @@
     transition: 0.2s;
     cursor: pointer;
 }
+.fila-alerta {
+  background-color: #f8d7da !important;
+}

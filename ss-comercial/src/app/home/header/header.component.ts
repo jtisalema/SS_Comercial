@@ -19,7 +19,6 @@ export class HeaderComponent {
 
   async ngOnInit() {
     this.userCurrent = await this.authService.getUserInfor();
-    console.log('autservice',this.userCurrent);
     this.nombreUsuario = this.userCurrent.get_persona?.nombre+" "+this.userCurrent.get_persona?.apellido;
     this.cargoUsuario = this.userCurrent.get_cargo?.cargo;
   }

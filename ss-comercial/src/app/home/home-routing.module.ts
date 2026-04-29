@@ -25,6 +25,7 @@ const homeRoutes: Routes = [
       { path: 'comunicados', component: ComunicadosComponent },
       { path: 'checkList/ingreso', component: ChlingresoComponent},
       { path: 'checkList/ingreso/:id', component: ChlingresoComponent },
+      { path: 'checkList/ingreso/:id/:visualizar', component: ChlingresoComponent },
       { path: 'checkList/seguimiento', component: ChlseguimientoComponent,     
         //canActivate: [AuthGuard],data: { roles: [Role.Comercial] }  
       },

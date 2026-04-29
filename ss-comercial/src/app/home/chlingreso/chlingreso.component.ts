@@ -1,6 +1,7 @@
 import { Component, ElementRef, Renderer2, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { debounceTime, Subject, switchMap, tap } from 'rxjs';
 import { AppComponent } from 'src/app/app.component';
 import { AuthService } from 'src/app/services/auth.service';
 import { ChecklistService } from 'src/app/services/checklist.service';
@@ -8,7 +9,7 @@ import { LoadingService } from 'src/app/services/loading.service';
 import { ToastrService } from 'src/app/services/toastr.service';
 import * as SpanishLanguage from 'src/assets/Spanish.json';
 import { environment } from 'src/environments/environment';
-
+import { PygService } from 'src/app/services/pyg.service';
 import Swal from 'sweetalert2';
 declare var $: any;
 
@@ -26,7 +27,8 @@ export class ChlingresoComponent {
     private checklistService: ChecklistService,
     private authService: AuthService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private pygService: PygService,
   ) { }
   //variables
   ingresoForm!: FormGroup;
@@ -41,7 +43,9 @@ export class ChlingresoComponent {
   lstSubagentes: any = [];
   lstSubareas: any = [];
   lstRequisitos: any = [];
+  lstEstados: any = [];
   lstPrioridades: any = [{ id: 1, nombre: 'Alta' }, { id: 2, nombre: 'Media' }, { id: 3, nombre: 'Baja' }];
+  lstTipoGestion: any = [{ id: 1, nombre: 'Emision de Poliza Nueva' }, { id: 2, nombre: 'Ingreso de Poliza Nueva' }, { id: 3, nombre: 'Renovación de Poliza' }];
   lstTipoRegalo: any = [{ id: 0, nombre: 'No Aplica' }, { id: 1, nombre: 'Jefes - Gerentes' }, { id: 2, nombre: 'Mando Medios' }, { id: 3, nombre: 'Ejecutivos' }];
   lstAreas: any = [];
   lstEjecutivos: any = [];
@@ -52,7 +56,16 @@ export class ChlingresoComponent {
   requisitosSeleccionados: any[] = [];
   esInfoDbroker: boolean = false;
   idIngreso: any;
+  visualizar: any;
   esEjecutivo: boolean = false;
+  clientes: any[] = [];
+  clientesInput$ = new Subject<string>();
+  loadingClientes = false;
+
+  programaSeguros = {
+    'cdRamo': '999',
+    'nmRamo': 'PROGRAMA DE SEGUROS'
+  }
   lstRamosTexto: any = [
     { id: 54, nombre: 'Accidentes Personales', control: 'textoAP' },
     { id: 8, nombre: 'Responsabilidad Civil', control: 'textoRC' },
@@ -60,16 +73,18 @@ export class ChlingresoComponent {
   ];
   lstFormaPago: any = [
     { id: 1, nombre: 'Contado/Transferencia' },
-    { id: 2, nombre: 'Crédito' },
+    { id: 2, nombre: 'Crédito Directo' },
     { id: 3, nombre: 'Tarjeta de Crédito' },
     { id: 4, nombre: 'Débito Bancario' }
   ];
   lstRamosTextoSeleccionados: any = [];
 
   ngOnInit(): void {
-
     if (this.route.snapshot.paramMap.get("id")) {
       this.idIngreso = this.route.snapshot.paramMap.get("id");
+    }
+    if (this.route.snapshot.paramMap.get("visualizar")) {
+      this.visualizar = this.route.snapshot.paramMap.get("visualizar");
     }
     this.obtenerUsuario();
     this.InicializarInformacionForm();
@@ -89,12 +104,13 @@ export class ChlingresoComponent {
     this.ingresoForm = this.fb.group({
       id: [''],
       estado: [''],
+      tipoGestion: ['', Validators.required],
       prioridad: [3, Validators.required],
       aseguradora: [null, Validators.required],
-      sucursalAseguradora: ['', Validators.required],
+      sucursalAseguradora: [''],
       ramo: [[], Validators.required],
       identificacion: ['', Validators.required],
-      cliente: ['', Validators.required],
+      cliente: [null, Validators.required],
       direccion: ['', Validators.required],
       ciudad: ['', Validators.required],
       subagente: [null, Validators.required],
@@ -123,7 +139,7 @@ export class ChlingresoComponent {
       fechaRecepcionFactura: [''],
       observacion: [''],
       //INSPECCION
-      datosInspeccion: [true],
+      datosInspeccion: [false],
       nombreContactoInspeccion: [''],
       celularcontactoInspeccion: [''],
       observacionInspeccion: [''],
@@ -139,19 +155,21 @@ export class ChlingresoComponent {
     const control = this.ingresoForm.get('fechaRecepcionFactura');
     if (diaActual >= 20) {
       control?.setValidators([Validators.required]);
+    } else {
+      control?.setValidators([]);
     }
     control?.updateValueAndValidity();
 
     this.contactoForm = this.fb.group({
       id: [''],
-      identificacion: ['', Validators.required],
+      identificacion: [''],
       cargo: ['', Validators.required],
       nombre: ['', Validators.required],
       fechaNacimiento: ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]],
+      email: ['', [Validators.required]],
       regalo: [0, Validators.required],
       tipoContacto: ['', Validators.required],
-      usuarioWeb: [0, Validators.required],
+      usuarioWeb: [1, Validators.required],
       celular: [''],
       telefonoTrabajo: [''],
       telefonoConvencional: [''],
@@ -159,6 +177,16 @@ export class ChlingresoComponent {
     }, {
       validators: this.alMenosUnTelefonoValidator
     });
+    this.clientesInput$
+      .pipe(
+        debounceTime(400),
+        tap(() => this.loadingClientes = true),
+        switchMap(term => this.pygService.consultarClienteNombreCompleto(term))
+      )
+      .subscribe((resp: any) => {
+        this.clientes = resp?.resultado;
+        this.loadingClientes = false;
+      });
   }
 
   alMenosUnTelefonoValidator(group: any) {
@@ -176,7 +204,7 @@ export class ChlingresoComponent {
     this.editcontacto = null;
     this.contactoForm.reset({
       regalo: 0,
-      usuarioWeb: 0,
+      usuarioWeb: 1,
       tipoContacto: '',
     });
     if (!esEdicion) {
@@ -217,7 +245,7 @@ export class ChlingresoComponent {
           celular: this.contactoForm.value.celular,
           telefonoTrabajo: this.contactoForm.value.telefonoTrabajo,
           telefonoConvencional: this.contactoForm.value.telefonoConvencional,
-          advertencia:0,
+          advertencia: 0,
         }
         this.lstContactos.push(contacto);
         this.contactoForm.reset({
@@ -313,7 +341,7 @@ export class ChlingresoComponent {
     this.lstContactos.push(copia);
   }
   indexEditar: any;
-  editcontacto:any;
+  editcontacto: any;
   editarContacto(i: any) {
     this.isEditing = true;
     this.indexEditar = i;
@@ -408,7 +436,7 @@ export class ChlingresoComponent {
           !x.nombre.includes('PYG')
         );
       }
-  
+
     } else {
       ///si el pagador es Seguros Suarez
       this.ingresoForm.patchValue({
@@ -492,7 +520,7 @@ export class ChlingresoComponent {
   }
   lstContactosSugeridos: any = [];
   consultarInformacionTitular() {
-    this.lstContactos=[];
+    this.lstContactos = [];
     this.editcontacto = null;
     if (this.ingresoForm.value.identificacion.length > 4) {
       this.loadingService.showLoading();
@@ -505,15 +533,15 @@ export class ChlingresoComponent {
             //informacion obtenida del dbroker
             this.esInfoDbroker = true;
             this.ingresoForm.patchValue({
-              cliente: res.resultado[0]?.apCliente + ' ' + res.resultado[0]?.nmCliente,
+              cliente: ((res.resultado[0]?.apCliente ?? '') + ' ' + (res.resultado[0]?.nmCliente ?? '')).trim(),
               direccion: res.resultado[0]?.direccion,
               ciudad: res.resultado[0]?.nombreCiudad
             });
-   
+
             this.lstContactos = [];
             if (res.resultado[0]?.informacionContactos.length > 0) {
               res.resultado[0]?.informacionContactos?.forEach((element: any) => {
-  
+
                 let emailIndividual = '';
                 let celularIndividual = '';
                 let telefonoTrabajoIndividual = '';
@@ -554,9 +582,9 @@ export class ChlingresoComponent {
                   celular: celularIndividual,
                   telefonoTrabajo: telefonoTrabajoIndividual,
                   telefonoConvencional: telefonoConvencionalIndividual,
-                  regalo:0,
-                  usuarioWeb:0,
-                  advertencia:1
+                  regalo: 0,
+                  usuarioWeb: 0,
+                  advertencia: 1
                 }
                 this.lstContactos.push(contactoSugerido);
               });
@@ -574,15 +602,16 @@ export class ChlingresoComponent {
                 direccion: response.data?.direccion_adicional ?? '',
                 ciudad: response.data?.canton_adicional?.nomdivpol ?? ''
               });
-                let contactoSugerido = {
-                  cargo: 'Titular',
-                  nombre: response.data?.nm ?? '',
-                  email: response.data?.email1 ?? '',
-                  //
-                  celular: response.data?.medio1 ?? '',
-                  fechaNacimiento: response.data?.fcNac ?? ''
-                }
-                this.lstContactosSugeridos.push(contactoSugerido);
+              let contactoSugerido = {
+                identificacion: response.data?.ci ?? '',
+                cargo: 'Titular',
+                nombre: response.data?.nm ?? '',
+                email: response.data?.email1 ?? '',
+                //
+                celular: response.data?.medio1 ?? '',
+                fechaNacimiento: response.data?.fcNac ?? ''
+              }
+              this.lstContactosSugeridos.push(contactoSugerido);
             }, (error: any) => {
               this.loadingService.hideLoading();
               this.toastrService.error('ERROR', 'No se pudo consultar la Información!');
@@ -641,16 +670,16 @@ export class ChlingresoComponent {
     });
   }
   onChangeIdentificacionContacto() {
-    if(this.editcontacto?.advertencia != 1){
-    this.contactoForm.patchValue({
-      cargo: '',
-      nombre: '',
-      fechaNacimiento: '',
-      email: '',
-      regalo: 0,
-      tipoContacto: '',
-      usuarioWeb: 0
-    });
+    if (this.editcontacto?.advertencia != 1) {
+      this.contactoForm.patchValue({
+        cargo: '',
+        nombre: '',
+        fechaNacimiento: '',
+        email: '',
+        regalo: 0,
+        tipoContacto: '',
+        usuarioWeb: 0
+      });
     }
 
   }
@@ -658,8 +687,8 @@ export class ChlingresoComponent {
     this.lstRequisitos = [];
     this.filesRequisitos = [];
     //this.lstContactos = [];
-    this.lstContactos = this.lstContactos.filter((con:any) => con.advertencia != 0);
-    
+    this.lstContactos = this.lstContactos.filter((con: any) => con.advertencia != 0);
+
     this.requisitosSeleccionados = [];
     //si es fianzas se habilita tasa y se pone obligatorio
     if (Number((event.target as HTMLSelectElement).value) == 5) {
@@ -679,7 +708,7 @@ export class ChlingresoComponent {
 
       this.lstFormaPago = [
         { id: 1, nombre: 'Contado/Transferencia' },
-        { id: 2, nombre: 'Crédito' },
+        { id: 2, nombre: 'Crédito Directo' },
         { id: 3, nombre: 'Tarjeta de Crédito' },
         { id: 4, nombre: 'Débito Bancario' }
       ];
@@ -700,16 +729,15 @@ export class ChlingresoComponent {
       if (diaActual >= 20) {
         control?.setValidators([Validators.required]);
       } else {
-        this.ingresoForm.get('fechaRecepcionFactura')?.setValidators([]);
+        control?.setValidators([]);
       }
       control?.updateValueAndValidity();
-      this.ingresoForm.get('fechaRecepcionFactura')?.updateValueAndValidity();
       ///
-      this.ingresoForm.get('fechaRecepcionFactura')?.setValidators(Validators.required);
-      this.ingresoForm.get('fechaRecepcionFactura')?.updateValueAndValidity();
+      // this.ingresoForm.get('fechaRecepcionFactura')?.setValidators([]);
+      // this.ingresoForm.get('fechaRecepcionFactura')?.updateValueAndValidity();
       this.lstFormaPago = [
         { id: 1, nombre: 'Contado/Transferencia' },
-        { id: 2, nombre: 'Crédito' },
+        { id: 2, nombre: 'Crédito Directo' },
         { id: 3, nombre: 'Tarjeta de Crédito' },
         { id: 4, nombre: 'Débito Bancario' }
       ];
@@ -724,7 +752,7 @@ export class ChlingresoComponent {
         this.ingresoForm.get('comision')?.updateValueAndValidity();
         this.lstFormaPago = [
           { id: 1, nombre: 'Contado/Transferencia' },
-          { id: 2, nombre: 'Crédito' }
+          { id: 2, nombre: 'Crédito Directo' }
         ];
       }
       if (Number((event.target as HTMLSelectElement).value) == 3) {
@@ -735,26 +763,14 @@ export class ChlingresoComponent {
 
 
 
-    //si es generales y corporativos habilitar datos para inspeccion
-    if (this.ingresoForm.value.subArea == 4 && this.ingresoForm.value.subArea == 2) {
+    //si es coorporativos y masivos habilitar  regalo vip
+    if (this.ingresoForm.value.subArea == 4 || this.ingresoForm.value.subArea == 2) {
       this.lstTipoRegalo.push({ id: 4, nombre: 'TOP/VIP' });
     } else {
       this.lstTipoRegalo = this.lstTipoRegalo.filter((x: any) => x.id !== 4);
     }
+    //si es generales coorporativos habilitar inspeccion
     if (this.ingresoForm.value.area == 1 && this.ingresoForm.value.subArea == 2) {
-      this.ingresoForm.patchValue({
-        nombreContactoInspeccion: '',
-        celularcontactoInspeccion: '',
-        observacionInspeccion: ''
-
-      });
-      this.ingresoForm.get('nombreContactoInspeccion')?.enable();
-      this.ingresoForm.get('nombreContactoInspeccion')?.setValidators(Validators.required);
-      this.ingresoForm.get('nombreContactoInspeccion')?.updateValueAndValidity();
-      this.ingresoForm.get('celularcontactoInspeccion')?.enable();
-      this.ingresoForm.get('celularcontactoInspeccion')?.setValidators(Validators.required);
-      this.ingresoForm.get('celularcontactoInspeccion')?.updateValueAndValidity();
-
     } else {
       this.ingresoForm.patchValue({
         nombreContactoInspeccion: '',
@@ -838,6 +854,7 @@ export class ChlingresoComponent {
     let formD = new FormData();
     formD.append('idSubarea', this.ingresoForm.value.subArea);
     formD.append('idAseguradora', this.ingresoForm.value.aseguradora);
+    formD.append('ramo', this.ingresoForm.value.ramo);
     this.checklistService.obtenerRequisitosbySubarea(formD).subscribe((res: any) => {
       this.lstRequisitos = res.data;
     }, (error: any) => {
@@ -848,10 +865,6 @@ export class ChlingresoComponent {
   }
   onChangeSubareaManual(id: Number) {
     //si es fianzas se habilita tasa y se pone obligatorio
-    if (id == 5) {
-      this.ingresoForm.get('fechaRecepcionFactura')?.setValidators([]);
-      this.ingresoForm.get('fechaRecepcionFactura')?.updateValueAndValidity();
-    }
     if (id == 5) {
       this.ingresoForm.patchValue({
         tasa: '',
@@ -867,11 +880,9 @@ export class ChlingresoComponent {
       this.ingresoForm.get('fechaRecepcionFactura')?.setValidators([]);
       this.ingresoForm.get('fechaRecepcionFactura')?.updateValueAndValidity();
 
-      this.ingresoForm.get('fechaRecepcionFactura')?.setValidators([]);
-      this.ingresoForm.get('fechaRecepcionFactura')?.updateValueAndValidity();
       this.lstFormaPago = [
         { id: 1, nombre: 'Contado/Transferencia' },
-        { id: 2, nombre: 'Crédito' },
+        { id: 2, nombre: 'Crédito Directo' },
         { id: 3, nombre: 'Tarjeta de Crédito' },
         { id: 4, nombre: 'Débito Bancario' }
       ];
@@ -892,16 +903,15 @@ export class ChlingresoComponent {
       if (diaActual >= 20) {
         control?.setValidators([Validators.required]);
       } else {
-        this.ingresoForm.get('fechaRecepcionFactura')?.setValidators([]);
+        control?.setValidators([]);
       }
       control?.updateValueAndValidity();
-      this.ingresoForm.get('fechaRecepcionFactura')?.updateValueAndValidity();
       ///
-      this.ingresoForm.get('fechaRecepcionFactura')?.setValidators(Validators.required);
-      this.ingresoForm.get('fechaRecepcionFactura')?.updateValueAndValidity();
+      // this.ingresoForm.get('fechaRecepcionFactura')?.setValidators([]);
+      // this.ingresoForm.get('fechaRecepcionFactura')?.updateValueAndValidity();
       this.lstFormaPago = [
         { id: 1, nombre: 'Contado/Transferencia' },
-        { id: 2, nombre: 'Crédito' },
+        { id: 2, nombre: 'Crédito Directo' },
         { id: 3, nombre: 'Tarjeta de Crédito' },
         { id: 4, nombre: 'Débito Bancario' }
       ];
@@ -912,30 +922,17 @@ export class ChlingresoComponent {
         this.ingresoForm.get('comision')?.updateValueAndValidity();
         this.lstFormaPago = [
           { id: 1, nombre: 'Contado/Transferencia' },
-          { id: 2, nombre: 'Crédito' },
+          { id: 2, nombre: 'Crédito Directo' },
         ];
       }
     }
-    //si es generales y corporativos habilitar datos para inspeccion
-    if (this.ingresoForm.value.subArea == 4 && this.ingresoForm.value.subArea == 2) {
+    //si es coorporativos y masivos habilitar datos para inspeccion
+    if (this.ingresoForm.value.subArea == 4 || this.ingresoForm.value.subArea == 2) {
       this.lstTipoRegalo.push({ id: 4, nombre: 'TOP' });
     } else {
       this.lstTipoRegalo = this.lstTipoRegalo.filter((x: any) => x.id !== 4);
     }
     if (this.ingresoForm.value.area == 1 && this.ingresoForm.value.subArea == 2) {
-      this.ingresoForm.patchValue({
-        nombreContactoInspeccion: '',
-        celularcontactoInspeccion: '',
-        observacionInspeccion: ''
-
-      });
-      this.ingresoForm.get('nombreContactoInspeccion')?.enable();
-      this.ingresoForm.get('nombreContactoInspeccion')?.setValidators(Validators.required);
-      this.ingresoForm.get('nombreContactoInspeccion')?.updateValueAndValidity();
-      this.ingresoForm.get('celularcontactoInspeccion')?.enable();
-      this.ingresoForm.get('celularcontactoInspeccion')?.setValidators(Validators.required);
-      this.ingresoForm.get('celularcontactoInspeccion')?.updateValueAndValidity();
-
     } else {
       this.ingresoForm.patchValue({
         nombreContactoInspeccion: '',
@@ -1020,6 +1017,7 @@ export class ChlingresoComponent {
     let formD = new FormData();
     formD.append('idSubarea', this.ingresoForm.value.subArea);
     formD.append('idAseguradora', this.ingresoForm.value.aseguradora);
+    formD.append('ramo', this.ingresoForm.value.ramo);
     this.checklistService.obtenerRequisitosbySubarea(formD).subscribe((res: any) => {
       this.lstRequisitos = res.data;
     }, (error: any) => {
@@ -1051,7 +1049,7 @@ export class ChlingresoComponent {
   }
   onChangeArea(event: Event) {
     this.lstRequisitos = [];
-    this.lstContactos = this.lstContactos.filter((con:any) => con.advertencia != 0);
+    this.lstContactos = this.lstContactos.filter((con: any) => con.advertencia != 0);
     this.filesRequisitos = [];
     this.lstRamos = [];
     this.lstRamosTextoSeleccionados = [];
@@ -1069,12 +1067,14 @@ export class ChlingresoComponent {
     if (Number((event.target as HTMLSelectElement).value) == 3) { // si es fianzas obtengo todos los ramos
       this.checklistService.obtenerRamos().subscribe((res: any) => {
         this.lstRamos = res.resultado;
+        this.lstRamos.push(this.programaSeguros);
       }, (error: any) => {
         this.toastrService.error('ERROR', 'No se pudo obtener los ramos!');
       });
     } else {
       this.checklistService.obtenerRamosbyArea(Number((event.target as HTMLSelectElement).value)).subscribe((res: any) => {
         this.lstRamos = res.resultado;
+        this.lstRamos.push(this.programaSeguros);
       }, (error: any) => {
         this.toastrService.error('ERROR', 'No se pudo obtener los ramos!');
       });
@@ -1091,12 +1091,14 @@ export class ChlingresoComponent {
     if (areaId == 3) {
       this.checklistService.obtenerRamos().subscribe((res: any) => {
         this.lstRamos = res.resultado;
+        this.lstRamos.push(this.programaSeguros);
       }, (error: any) => {
         this.toastrService.error('ERROR', 'No se pudo obtener los ramos!');
       });
     } else {
       this.checklistService.obtenerRamosbyArea(areaId).subscribe((res: any) => {
         this.lstRamos = res.resultado;
+        this.lstRamos.push(this.programaSeguros);
       }, (error: any) => {
         this.toastrService.error('ERROR', 'No se pudo obtener los ramos!');
       });
@@ -1115,7 +1117,6 @@ export class ChlingresoComponent {
     if (this.ingresoForm.invalid) {
       this.appComponent.validateAllFormFields(this.ingresoForm);
       const camposInvalidos = this.obtenerCamposInvalidos();
-
       this.toastrService.error(
         'Error al enviar CheckList',
         'No se llenaron todos los campos necesarios.'
@@ -1125,7 +1126,7 @@ export class ChlingresoComponent {
       if (this.lstContactos.length < 1) {
         this.toastrService.error(
           'Error al enviar CheckList',
-          'Debe Agregar los contactos necesarios.'
+          'Debe Agregar por lo menos 1 contacto.'
         );
         return;
       }
@@ -1138,7 +1139,7 @@ export class ChlingresoComponent {
         return;
       }
       //comprobante si es fianzas
-      if (this.files.length < 1 && this.ingresoForm.value.subArea == 5) {
+      if (this.files.length < 1 && this.ingresoForm.value.subArea == 5 && this.ingresoForm.value.formaPago == 1) {
         this.toastrService.error(
           'Error al enviar CheckList',
           'Debe cargar el comprobante de pago.'
@@ -1165,7 +1166,7 @@ export class ChlingresoComponent {
       let formIngresoData = new FormData();
       formIngresoData.append('id', this.ingresoForm.value.id);
       formIngresoData.append('estado', this.ingresoForm.value.estado);
-
+      formIngresoData.append('tipoGestion', this.ingresoForm.value.tipoGestion);
       formIngresoData.append('prioridad', this.ingresoForm.value.prioridad);
       formIngresoData.append('aseguradora', this.ingresoForm.value.aseguradora);
       formIngresoData.append('sucursalAseguradora', this.ingresoForm.value.sucursalAseguradora);
@@ -1341,6 +1342,7 @@ export class ChlingresoComponent {
     }
   }
   correccionesRealizar: any = '';
+  idEstado = 0;
   async cargarDatosIngreso() {
     this.loadingService.showLoading();
     let res = await this.checklistService.obtenerDatosIngresobyId(this.idIngreso);
@@ -1348,9 +1350,18 @@ export class ChlingresoComponent {
     let ingreso = res.data;
     const listaRamos = ingreso.ramos ? ingreso.ramos.split(',').map(Number).filter((n: any) => !isNaN(n)) : [];
     this.loadingService.hideLoading();
+    this.idEstado = ingreso.idEstado;
+    if (this.idEstado != 4 && this.idEstado != 9) {
+      this.lstEstados = [{ id: 1, nombre: 'Aprobar' }, { id: 2, nombre: 'Corregir' }, { id: 3, nombre: 'Rechazar' }];
+    } else if (this.idEstado == 4) {
+      this.lstEstados = [{ id: 5, nombre: 'Ingresado a la Aseguradora' }];
+    } else {
+      this.lstEstados = [{ id: 4, nombre: 'Enviado al Cliente' }];
+    }
     this.ingresoForm.patchValue({
       id: ingreso.id,
       estado: ingreso.idEstado,
+      tipoGestion: ingreso.tipoGestion,
       prioridad: ingreso.idPrioridad,
       aseguradora: ingreso.idAseguradora,
       sucursalAseguradora: ingreso.sucursalAseguradora,
@@ -1452,7 +1463,7 @@ export class ChlingresoComponent {
         textoRC: ingreso.textoRC ?? '',
         textoTRC: ingreso.textoTRC ?? '',
       });
-   
+
       this.requisitosSeleccionados = ingreso.requisitosSeleccionados ? ingreso.requisitosSeleccionados.split(',').map(Number).filter((n: any) => !isNaN(n)) : [];
       this.cargarFilesRequisitos(ingreso.id);
       //cargar el comprobante si es contado
@@ -1575,7 +1586,7 @@ export class ChlingresoComponent {
       this.ingresoForm.get('observacionInspeccion')?.disable();
     }
   }
-  estadoSeleccionado: number = 1;
+  estadoSeleccionado: any = '';
   accionEjecutivoCheckList() {
     let formd = new FormData();
     formd.append('idIngreso', this.idIngreso);
@@ -1688,6 +1699,52 @@ export class ChlingresoComponent {
           icon: 'success',
           title: '¡Éxito!',
           text: 'Solicitud aprobada Correctamente',
+          confirmButtonText: 'OK',
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          allowEnterKey: true,
+          showCloseButton: false
+        }).then((result) => {
+          if (result.isConfirmed) {
+            this.router.navigate(['/home/checkList/seguimiento']);
+          }
+        });
+      }, (error: any) => {
+        this.loadingService.hideLoading();
+        this.toastrService.error('ERROR', 'No se pudo actualizar el estado!');
+      });
+    }
+    if (this.estadoSeleccionado == 5) {//ingresado a la aseguradora
+      this.loadingService.showLoading();
+      this.checklistService.accionEjecutivoCheckList(formd).subscribe((res: any) => {
+        this.loadingService.hideLoading();
+        Swal.fire({
+          icon: 'success',
+          title: '¡Éxito!',
+          text: 'Solicitud Ingresada a la Aseguradora Correctamente',
+          confirmButtonText: 'OK',
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          allowEnterKey: true,
+          showCloseButton: false
+        }).then((result) => {
+          if (result.isConfirmed) {
+            this.router.navigate(['/home/checkList/seguimiento']);
+          }
+        });
+      }, (error: any) => {
+        this.loadingService.hideLoading();
+        this.toastrService.error('ERROR', 'No se pudo actualizar el estado!');
+      });
+    }
+    if (this.estadoSeleccionado == 4) {
+      this.loadingService.showLoading();
+      this.checklistService.accionEjecutivoCheckList(formd).subscribe((res: any) => {
+        this.loadingService.hideLoading();
+        Swal.fire({
+          icon: 'success',
+          title: '¡Éxito!',
+          text: 'Se ha notificado que se envio la póliza al cliente!',
           confirmButtonText: 'OK',
           allowOutsideClick: false,
           allowEscapeKey: false,
@@ -1838,16 +1895,26 @@ export class ChlingresoComponent {
   }
 
   burbujaSeleccionada(item: any) {
-
     this.contactoForm.patchValue({
       cargo: item.cargo,
       nombre: item.nombre,
       email: item.email,
+      identificacion: item.identificacion,
       //
       celular: item.celular ?? '',
       fechaNacimiento: item.fechaNacimiento ?? '',
       telefonoTrabajo: item.telefonoTrabajo ?? '',
       telefonoConvencional: item.telefonoConvencional ?? '',
     });
+  }
+  clienteSeleccionado: any;
+  onClienteChange(cliente: any) {
+    this.clienteSeleccionado = cliente;
+    if (this.clienteSeleccionado?.identificacion) {
+      this.ingresoForm.patchValue({
+        identificacion: this.clienteSeleccionado?.identificacion ?? ''
+      });
+      this.consultarInformacionTitular();
+    }
   }
 }

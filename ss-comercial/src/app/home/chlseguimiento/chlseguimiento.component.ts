@@ -20,6 +20,8 @@ export class ChlseguimientoComponent {
   userCurrent: any;
   esEjecutivo: boolean = false;
   idEjecutivo: any;
+  esComercial: boolean = false;
+  idComercial: any;
   constructor(private checklistService: ChecklistService, private loadingService: LoadingService,
     private toastrService: ToastrService, private router: Router, private authService: AuthService,
     private cdr: ChangeDetectorRef
@@ -32,8 +34,13 @@ export class ChlseguimientoComponent {
       this.idEjecutivo = this.userCurrent.id;
       this.esEjecutivo = true;
     }
+    if (this.userCurrent.idRol == 18) {
+      this.idComercial = this.userCurrent.id;
+      this.esComercial = true;
+    }
     (window as any).revisarIngreso = this.revisarIngreso.bind(this);
     (window as any).estimarEntrega = this.estimarEntrega.bind(this);
+    (window as any).visualizarIngreso = this.visualizarIngreso.bind(this);
     (window as any).abrirModalHistorialMovimientos = this.abrirModalHistorialMovimientos.bind(this);
 
     this.consultarIngresos();
@@ -47,220 +54,286 @@ export class ChlseguimientoComponent {
         (settings: any, data: any, dataIndex: any) => {
 
           // 🔹 Solo aplicar si esEjecutivo es verdadero
-          if (!this.esEjecutivo) return true;
+          //if (!this.esEjecutivo) return true;
 
           const checked = ($('#chkEstadoFiltro') as any).prop('checked');
 
           if (!checked) return true;
 
           const rowData = settings.aoData[dataIndex]._aData;
-          const estado = Number(rowData.idEjecutivo);
-
-          return [this.idEjecutivo].includes(estado);
-        }
-      );
-      const self = this;
-
-      this.dtOptions = {
-        data: this.lstIngresos,
-        info: false,
-        pageLength: 7,
-        lengthChange: false,
-        language: {
-          ...this.GetSpanishLanguage()
-        },
-
-        // ✅ Checkbox al lado del buscador
-        initComplete: function () {
-          if (!self.esEjecutivo) return;
-
-          const api = this.api();
-
-          const checkbox = `
-      <div class="form-check form-check-inline me-3" style="margin-bottom:0;">
-        <input 
-          class="form-check-input" 
-          type="checkbox" 
-          id="chkEstadoFiltro" 
-          checked
-          style="margin-top:0; cursor:pointer;"
-        >
-        <label 
-          class="form-check-label ms-2" 
-          for="chkEstadoFiltro"
-          style="cursor:pointer; margin-bottom:0;font-weight:bold"
-        >
-          Mis asignaciones
-        </label>
-      </div>
-    `;
-
-          $('.dataTables_filter').prepend(checkbox);
-
-          $('#chkEstadoFiltro').on('change', function () {
-            api.draw();
-          });
-
-          setTimeout(() => {
-            api.draw();
-          }, 0);
-        },
-
-        columns: [
-
-          // N°
-          {
-            title: '<i class="fas fa-hashtag me-1"></i> N°',
-            data: 'id'
-          },
-
-          // Prioridad
-          {
-            title: '<i class="fas fa-exclamation-circle me-1 text-danger"></i> Prioridad',
-            data: 'prioridad',
-            className: 'text-center',
-            render: function (data: string) {
-
-              let clase = 'badge bg-secondary';
-
-              if (data === 'ALTA') {
-                clase = 'badge bg-danger';
-              } else if (data === 'MEDIA') {
-                clase = 'badge bg-warning';
-              } else if (data === 'BAJA') {
-                clase = 'badge bg-success';
-              }
-
-              return `<span class="${clase} px-2 py-1" style="font-size:10px">${data}</span>`;
-            }
-          },
-
-          // Opciones
-          {
-            title: '<i class="fas fa-cogs me-1"></i> Opción',
-            searchable: false,
-            render: (data: any, type: any, full: any, meta: any) => {
-
-              let botones = '';
-
-              if ((full.idEstado == 1 || full.idEstado == 2) && this.esEjecutivo) {
-                botones += `
-        <button title="Revisar" type="button"
-          class="btn btn-primary btn-sm"
-          onclick="revisarIngreso(${full.id})">
-          <i class="fas fa-edit"></i>
-        </button>
-      `;
-              }
-
-              if (full.idEstado == 3 && !this.esEjecutivo) {
-                botones += `
-        <button title="Revisar" type="button"
-          class="btn btn-primary btn-sm"
-          onclick="revisarIngreso(${full.id})">
-          <i class="fas fa-edit"></i>
-        </button>
-      `;
-              }
-
-              botones += `
-      <button title="Seguimiento" type="button"
-        class="btn btn-success btn-sm"
-        onclick="abrirModalHistorialMovimientos(${full.id})">
-        <i class="fas fa-search"></i>
-      </button>
-    `;
-
-              if (full.idEstado == 1 && !this.esEjecutivo) {
-                botones += `
-        <button title="Corregir" type="button"
-          class="btn btn-warning btn-sm"
-          onclick="revisarIngreso(${full.id})">
-          <i class="fas fa-edit"></i>
-        </button>
-      `;
-              }
-
-              if (full.idEstado == 2 && this.esEjecutivo) {
-                botones += `
-        <button title="Estimar" type="button"
-          class="btn btn-info btn-sm"
-          onclick="estimarEntrega(${full.id})">
-          <i class="fas fa-flag"></i>
-        </button>
-      `;
-              }
-
-              // Flex container centrado con espacio entre botones
-              return `<div class="d-flex justify-content-center flex-nowrap" style="gap: 5px;">${botones}</div>`;
-            }
-          },
-
-          // Estado
-          {
-            title: '<i class="fas fa-info-circle me-1"></i> Estado',
-            data: 'estado',
-            render: function (data: any) {
-              return `<strong>${data}</strong>`;
-            }
-          },
-
-          // Fecha Registro
-          {
-            title: '<i class="fas fa-calendar-alt me-1"></i> F. Registro',
-            data: 'fechaRegistro'
-          },
-
-          // Fecha Entrega
-          {
-            title: '<i class="fas fa-clock me-1"></i> F. Entrega',
-            data: 'fechaMaxima',
-            render: function (data: any, type: any, row: any) {
-              const estado = Number(row.idEstado);
-              if ([2, 4].includes(estado)) {
-                return data ?? '';
-              }
-              return '-';
-            }
-          },
-
-          // Cliente
-          {
-            title: '<i class="fas fa-user me-1"></i> Cliente',
-            data: 'cliente'
-          },
-
-          // Ramos
-          {
-            title: '<i class="fas fa-layer-group me-1"></i> Ramos',
-            data: 'lstRamos'
-          },
-
-          // Aseguradora
-          {
-            title: '<i class="fas fa-building me-1"></i> Aseguradora',
-            data: 'aseguradora'
-          },
-
-          // Solicitante
-          {
-            title: '<i class="fas fa-user-tie me-1"></i> Solicitante',
-            data: 'solicitante'
-          },
-
-          // Ejecutivo
-          {
-            title: '<i class="fas fa-briefcase me-1"></i> Ejecutivo',
-            data: 'ejecutivo'
+          if (this.esEjecutivo) {
+            const estado = Number(rowData.idEjecutivo);
+            return [this.idEjecutivo].includes(estado);
+          } else if (this.esComercial) {
+            const estado = Number(rowData.idComercial);
+            return [this.idComercial].includes(estado);
+          } else {
+            return true;
           }
 
-        ],
+        }
+      );
+const self = this;
 
-        order: [[0, 'desc']],
-        responsive: false,
-        autoWidth: false,
-        scrollX: true,
-      };
+// 🔥 FILTRO GLOBAL (ROJO / AMARILLO)
+$.fn.dataTable.ext.search.push((settings: any, data: any, dataIndex: any) => {
+
+  const row = settings.aoData[dataIndex]._aData;
+
+  const chkRojo = ($('#chkRojo') as any).prop('checked');
+  const chkAmarillo = ($('#chkAmarillo') as any).prop('checked');
+
+  if (!chkRojo && !chkAmarillo) return true;
+
+  if (!row.fechaMaxima) return true;
+
+  const hoy = new Date();
+  const fechaMaxima = new Date((row.fechaMaxima + '').replace(' ', 'T'));
+
+  hoy.setHours(0, 0, 0, 0);
+  fechaMaxima.setHours(0, 0, 0, 0);
+
+  const estado = Number(row.idEstado);
+
+  const esRojo = (hoy >= fechaMaxima && estado === 2);
+  const esAmarillo = (hoy >= fechaMaxima && (estado === 4 || estado === 9));
+
+  if (chkRojo && !chkAmarillo) return esRojo;
+  if (chkAmarillo && !chkRojo) return esAmarillo;
+  if (chkRojo && chkAmarillo) return esRojo || esAmarillo;
+
+  return true;
+});
+
+this.dtOptions = {
+  data: this.lstIngresos,
+  info: false,
+  pageLength: 7,
+  lengthChange: false,
+  language: {
+    ...this.GetSpanishLanguage()
+  },
+
+  // 🔥 PINTADO DE FILAS
+  rowCallback: function (row: any, data: any) {
+
+    $(row).find('td').css('background-color', '');
+
+    if (!data.fechaMaxima) return;
+
+    const hoy = new Date();
+    const fechaMaxima = new Date((data.fechaMaxima + '').replace(' ', 'T'));
+
+    hoy.setHours(0, 0, 0, 0);
+    fechaMaxima.setHours(0, 0, 0, 0);
+
+    const estado = Number(data.idEstado);
+
+    if (hoy >= fechaMaxima) {
+
+      if (estado === 2) {
+        $(row).find('td').css('background-color', '#f8d7da'); // 🔴
+      } else if (estado == 4 || estado == 9) {
+        $(row).find('td').css('background-color', '#fff9b2'); // 🟡
+      }
+    }
+  },
+
+  // 🔥 UI CONTROLES
+initComplete: function () {
+
+    let mensaje = 'Mis Registros';
+    if (self.esEjecutivo) {
+        mensaje = 'Mis Asignaciones';
+    }
+
+    const api = this.api();
+
+    setTimeout(() => {
+
+        const checkbox = `
+        <div id="filtrosExtras" class="d-flex flex-wrap align-items-center gap-3">
+
+            <div class="d-flex align-items-center">
+                <input type="checkbox" id="chkEstadoFiltro" class="me-1" checked>
+                <label class="mb-0" for="chkEstadoFiltro">
+                    ${mensaje}
+                </label>
+            </div>
+
+            <div class="d-flex align-items-center">
+                <input type="checkbox" id="chkRojo" class="me-1">
+                <label class="mb-0 text-danger" for="chkRojo">
+                    ● Atrasado
+                </label>
+            </div>
+
+            <div class="d-flex align-items-center">
+                <input type="checkbox" id="chkAmarillo" class="me-1">
+                <label class="mb-0 text-warning" for="chkAmarillo">
+                    ● Pendiente
+                </label>
+            </div>
+
+        </div>
+        `;
+
+        const filter = $(api.table().container()).find('.dataTables_filter');
+
+        // Crear barra superior si no existe
+        if (!$('#toolbarFiltros').length) {
+
+            filter.before(`
+                <div id="toolbarFiltros"
+                     style="
+                       display:flex;
+                       justify-content:space-between;
+                       align-items:center;
+                       flex-wrap:wrap;
+                       gap:12px;
+                       margin-bottom:10px;
+                     ">
+                </div>
+            `);
+
+            $('#toolbarFiltros').append(checkbox);
+
+            // mover buscador dentro de la barra
+            $('#toolbarFiltros').append(filter);
+        }
+
+        // evita que el buscador se expanda raro
+        filter.css({
+            margin: 0,
+            whiteSpace: 'nowrap'
+        });
+
+        const drawTable = () => api.draw();
+
+        $('#chkEstadoFiltro').on('change', drawTable);
+        $('#chkRojo').on('change', drawTable);
+        $('#chkAmarillo').on('change', drawTable);
+
+        api.draw();
+
+    },0);
+},
+
+  columns: [
+
+    // 🔥 ORDEN (prioridad interna)
+    {
+      data: null,
+      visible: false,
+      render: function (data: any, type: any, row: any) {
+
+        if (type === 'sort') {
+
+          if (!row.fechaMaxima) return 0;
+
+          const hoy = new Date();
+          const fechaMaxima = new Date((row.fechaMaxima + '').replace(' ', 'T'));
+
+          hoy.setHours(0, 0, 0, 0);
+          fechaMaxima.setHours(0, 0, 0, 0);
+
+          const estado = Number(row.idEstado);
+
+          if (hoy >= fechaMaxima && estado === 2) return 1;
+
+          return 0;
+        }
+
+        return '';
+      }
+    },
+
+    { title: 'N°', data: 'id' },
+
+    {
+      title: 'Prioridad / Gestión',
+      data: null,
+      render: function (data: any, type: any, row: any) {
+
+        let icono = '';
+        let color = '';
+
+        switch (row.prioridad) {
+          case 'ALTA': icono = '↑'; color = 'red'; break;
+          case 'MEDIA': icono = '='; color = 'orange'; break;
+          case 'BAJA': icono = '↓'; color = 'green'; break;
+          default: icono = '?';
+        }
+
+let tipo = row.tipoGestion == 1
+    ? 'Emisión Póliza nueva'
+    : row.tipoGestion == 2
+        ? 'Ingreso Póliza nueva'
+        : row.tipoGestion == 3
+            ? 'Renovación de póliza'
+            : 'Sin definir';
+        return `
+          <div style="font-size:11px">
+            <div style="color:${color}">
+              ${icono} <strong>${row.prioridad}</strong>
+            </div>
+            <div>${tipo}</div>
+          </div>
+        `;
+      }
+    },
+
+    {
+      title: '<i class="fas fa-cogs me-1"></i> Opción',
+      searchable: false,
+      render: (data: any, type: any, full: any) => {
+
+        let botones = '';
+
+        if ((full.idEstado == 1 || full.idEstado == 2 || full.idEstado == 4|| full.idEstado == 9) && this.esEjecutivo) {
+          botones += `<button title="Revisar" class="btn btn-primary btn-sm" onclick="revisarIngreso(${full.id})"><i class="fas fa-edit"></i></button>`;
+        }
+
+        if (full.idEstado == 3 && !this.esEjecutivo) {
+          botones += `<button title="Revisar" class="btn btn-primary btn-sm" onclick="revisarIngreso(${full.id})"><i class="fas fa-edit"></i></button>`;
+        }
+
+        botones += `<button title="Seguimiento" class="btn btn-success btn-sm" onclick="abrirModalHistorialMovimientos(${full.id})"><i class="fas fa-search"></i></button>`;
+
+        if (full.idEstado == 1 && !this.esEjecutivo) {
+          botones += `<button title="Revisar" class="btn btn-warning btn-sm" onclick="revisarIngreso(${full.id})"><i class="fas fa-edit"></i></button>`;
+        }
+
+        if (full.idEstado == 2 && this.esEjecutivo) {
+          botones += `<button title="Estimar Entrega" class="btn btn-info btn-sm" onclick="estimarEntrega(${full.id})"><i class="fas fa-flag"></i></button>`;
+        }
+
+        botones += `<button title="Visualizar" class="btn btn-info btn-sm" onclick="visualizarIngreso(${full.id})"><i class="fas fa-eye"></i></button>`;
+
+        return `<div class="d-flex justify-content-center flex-nowrap" style="gap:5px">${botones}</div>`;
+      }
+    },
+
+    { title: 'Estado', data: 'estado' },
+    { title: 'F. Registro', data: 'fechaRegistro' },
+    { title: 'F. Ingreso', data: 'fechaMaxima' },
+    { title: 'Cliente', data: 'cliente' },
+    { title: 'Ramos', data: 'lstRamos' },
+    { title: 'Aseguradora', data: 'aseguradora' },
+    { title: 'Solicitante', data: 'solicitante' },
+    { title: 'Ejecutivo', data: 'ejecutivo' }
+
+  ],
+
+  order: [
+    [0, 'desc'],
+    [1, 'desc']
+  ],
+
+  responsive: false,
+  autoWidth: false,
+  scrollX: true,
+};
       this.dataTable = $(this.tableIngresos.nativeElement);
       this.dataTable.DataTable(this.dtOptions);
       this.loadingService.hideLoading();
@@ -376,6 +449,10 @@ export class ChlseguimientoComponent {
         });
       }
     });
+  }
+  visualizarIngreso(idIngreso: any) {
+    let visualizar = 1;
+    this.router.navigate(['/home/checkList/ingreso', idIngreso, visualizar]);
   }
   openDialogEnviar() {
     Swal.fire({
