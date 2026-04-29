@@ -7,7 +7,7 @@ import { Role } from 'src/app/helpers/role';
 import { ToastrService } from 'src/app/services/toastr.service';
 
 @Component({
- selector: 'aside[app-sidebar]',
+  selector: 'aside[app-sidebar]',
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.css']
 })
@@ -36,17 +36,17 @@ if (tienePermiso) {
 }
 }
 
-ngAfterViewInit() {
-  const menu = document.getElementById('mainParent');
-  if (!menu) return; // evita el error
-  const targets = menu.getElementsByTagName('a');
-  for (let i = 0; i < targets.length; i++) {
-    if (targets[i].pathname === this.router.url) {
-      this.homeComponent.AddClass(targets[i] as HTMLElement);
-      break;
+  ngAfterViewInit() {
+    const menu = document.getElementById('mainParent');
+    if (!menu) return; // evita el error
+    const targets = menu.getElementsByTagName('a');
+    for (let i = 0; i < targets.length; i++) {
+      if (targets[i].pathname === this.router.url) {
+        this.homeComponent.AddClass(targets[i] as HTMLElement);
+        break;
+      }
     }
   }
-}
 
   public SetActive(event: MouseEvent) {
     let targetElement = event.target as HTMLElement;

@@ -1,0 +1,68 @@
+<div class="content-wrapper"
+    style="background-image: url('assets/images/fondos/plataforma_fondo2.png');background-repeat: no-repeat;height: 100%;background-size: cover;">
+    <br>
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card card-primary card-outline">
+                        <div class="card-header d-flex align-items-center">
+                            <h3 class="card-title mb-0" style="font-weight: bold;">
+                                <i class="fas fas fa-bell mr-2"></i>
+                                Notificación Próximos Vencimientos
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row align-items-end mb-3 filtros-vencimientos">
+                                <div class="col-md-3 col-sm-6 mb-2">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-calendar-alt mr-1 text-primary"></i>
+                                        Año
+                                    </label>
+                                    <select class="form-control" [(ngModel)]="anioSeleccionadoVencimiento"
+                                        (change)="onChangeAnioVencimiento()">
+                                        <option [ngValue]="null" disabled>-- Seleccione un año --</option>
+                                        <option *ngFor="let anio of lstAniosVencimientos" [ngValue]="anio">
+                                            {{ anio }}
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 col-sm-6 mb-2">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-calendar mr-1 text-success"></i>
+                                        Mes
+                                    </label>
+                                    <select class="form-control" [(ngModel)]="mesSeleccionadoVencimiento">
+                                        <option [ngValue]="null" disabled>-- Seleccione un mes --</option>
+                                        <option *ngFor="let mes of lstMesesAnioVencimientos" [ngValue]="mes.numeroMes">
+                                            {{ mes.nombreMes }}
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 col-sm-6 mb-2 d-flex gap-2">
+                                    <button type="button" class="btn btn-primary" (click)="consultarVencimientos()">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary"
+                                        (click)="limpiarFiltrosVencimientos()">
+                                        <i class="fas fa-eraser"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-success btn-enviar"
+                                        (click)="enviarNotificacionesSeleccionadas()">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table #dataTableVencimientos
+                                    class="table table-bordered table-striped tabla-vencimientos"
+                                    style="width: 100%; font-size: 11px;">
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>

@@ -14,6 +14,7 @@ import { AuthGuard } from '../guard/auth-guard.guard';
 import { Role } from 'src/app/helpers/role';
 import { AcuerdoseguimientoComponent } from './acuerdoseguimiento/acuerdoseguimiento.component';
 import { AcuerdosegbeneficioComponent } from './acuerdosegbeneficio/acuerdosegbeneficio.component';
+import { FianzasComponent } from './fianzas/fianzas.component';
 
 const homeRoutes: Routes = [
   {
@@ -35,7 +36,8 @@ const homeRoutes: Routes = [
       { path: 'acserv/ingreso', component: AcuerdoservicioComponent },
       { path: 'acserv/ingreso/:id', component: AcuerdoservicioComponent },
       { path: 'acserv/seguimiento', component: AcuerdoseguimientoComponent },
-      { path: 'acserv/seguimiento/beneficios/:id', component: AcuerdosegbeneficioComponent }
+      { path: 'acserv/seguimiento/beneficios/:id', component: AcuerdosegbeneficioComponent },
+      { path: 'notificacion-fianzas', component: FianzasComponent }
     ]
   }
 ];
