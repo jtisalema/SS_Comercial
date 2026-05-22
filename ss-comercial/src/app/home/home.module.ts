@@ -25,6 +25,7 @@ import { TreeTableModule } from 'primeng/treetable';
 
 import { FianzasComponent } from './fianzas/fianzas.component';
 import { InputTextModule } from "primeng/inputtext";
+import { PygseguimientoComponent } from './pygseguimiento/pygseguimiento.component';
 @NgModule({
   declarations: [
     HomeComponent,
@@ -43,7 +44,8 @@ import { InputTextModule } from "primeng/inputtext";
     ReqasegIngresoComponent,
     ReqasegSeguimientoComponent,
     AcuerdosegbeneficioComponent,
-    FianzasComponent
+    FianzasComponent,
+    PygseguimientoComponent
   ],
   imports: [
     CommonModule,

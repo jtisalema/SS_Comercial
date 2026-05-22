@@ -112,8 +112,9 @@ export class ChecklistService {
     }
   }
   async getFilesRequisitos(idEmision: number) {
+    
     const urlApi = `${environment.apiUrl}getFilesRequisitosCheckList/${idEmision}`;
-
+    console.log(urlApi);
     // NO usar responseType: 'blob'
     return this.httpClient
       .get<{ data: { name: string; type: string; size: number; url: string; blob: string }[] }>(urlApi)

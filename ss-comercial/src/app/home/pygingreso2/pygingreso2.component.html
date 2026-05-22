@@ -26,11 +26,10 @@
                                                 Cliente
                                             </label>
 
-                                            <ng-select [items]="clientes" bindLabel="NOMBRES" bindValue="ID"
+                                            <ng-select [items]="clientes" bindLabel="NOMBRES" bindValue="NOMBRES"
                                                 [typeahead]="clientesInput$" [loading]="loadingClientes"
                                                 [minTermLength]="3" placeholder="Ingrese el nombre del cliente"
-                                                formControlName="cliente"
-                                                (change)="onClienteChange($event)"
+                                                formControlName="cliente" (change)="onClienteChange($event)"
                                                 [class.is-invalid]="ingresoForm.get('cliente')?.touched && ingresoForm.get('cliente')?.invalid">
 
                                                 <ng-template ng-option-tmp let-item="item">
@@ -153,8 +152,8 @@
                                                 <span class="input-group-text bg-light">
                                                     <i class="fas fa-dollar-sign text-success"></i>
                                                 </span>
-                                                <input id="cliente" type="number" class="form-control"
-                                                    placeholder="0" formControlName="primaAnual" readonly>
+                                                <input id="cliente" type="number" class="form-control" placeholder="0"
+                                                    formControlName="primaAnual" readonly>
                                             </div>
                                         </div>
 
@@ -171,8 +170,8 @@
                                                 </span>
 
                                                 <input id="porcentajeComision" type="number" class="form-control"
-                                                    formControlName="porcentajeComision" min="0" max="100" step="0.01"placeholder="0"
-                                                    (change)="changePorcentaje()"
+                                                    formControlName="porcentajeComision" min="0" max="100" step="0.01"
+                                                    placeholder="0" (change)="changePorcentaje()"
                                                     [class.is-invalid]="ingresoForm.get('porcentajeComision')?.touched && ingresoForm.get('porcentajeComision')?.invalid">
                                             </div>
 
@@ -203,7 +202,7 @@
                                                     <i class="fas fa-dollar-sign text-success"></i>
                                                 </span>
                                                 <input id="ciudad" type="number" class="form-control" readonly
-                                                    formControlName="comision"placeholder="0">
+                                                    formControlName="comision" placeholder="0">
                                             </div>
                                         </div>
                                         <!-- CIUDAD -->
@@ -217,7 +216,7 @@
                                                     <i class="fas fa-dollar-sign text-success"></i>
                                                 </span>
                                                 <input id="ciudad" type="number" class="form-control" readonly
-                                                    formControlName="comisionAnual" placeholder="0" >
+                                                    formControlName="comisionAnual" placeholder="0">
                                             </div>
                                         </div>
                                     </div>
@@ -352,7 +351,7 @@
                                                                     <td colspan="2"><strong>Total</strong></td>
                                                                     <td>
                                                                         <strong>
-                                                                            {{ totalGastos |
+                                                                            {{ totalDetalleGastos |
                                                                             currency:'USD':'symbol':'1.2-2'
                                                                             }}
                                                                         </strong>
@@ -371,13 +370,16 @@
                                         </div>
                                     </form>
                                     <div class="d-flex gap-2 justify-content-end">
-                                        <button type="button" class="btn btn-primary" (click)="guardarIngresoGastos()" *ngIf="!editarIngresoGasto">
+                                        <button type="button" class="btn btn-primary" (click)="guardarIngresoGastos()"
+                                            *ngIf="!editarIngresoGasto">
                                             Agregar
                                         </button>
-                                        <button type="button" class="btn btn-primary" (click)="actualizarIngresoGasto()" *ngIf="editarIngresoGasto">
+                                        <button type="button" class="btn btn-primary" (click)="actualizarIngresoGasto()"
+                                            *ngIf="editarIngresoGasto">
                                             Actualizar
                                         </button>
-                                        <button type="button" class="btn btn-danger" (click)="cancelarActualizarIG()" *ngIf="editarIngresoGasto">
+                                        <button type="button" class="btn btn-danger" (click)="cancelarActualizarIG()"
+                                            *ngIf="editarIngresoGasto">
                                             Cancelar
                                         </button>
                                     </div>
@@ -388,78 +390,111 @@
                                     <div class="col-md-8">
                                         <div class="card mb-4 p-3 position-relative"
                                             *ngIf="lstIngresosGastos.length > 0">
-                                            <h6 class="card-title titulo-sobre-borde-centrado">Detalles Gastos por Ramo</h6>
+                                            <h6 class="card-title titulo-sobre-borde-centrado">Detalles Gastos por Ramo
+                                            </h6>
 
                                             <div class="row">
 
-<div class="col-md-6 mb-3" *ngFor="let ing of lstIngresosGastos; let i = index" style="font-size:12px;">
-  <div class="card shadow-sm border-0 h-100 p-3">
+                                                <div class="col-md-6 mb-3"
+                                                    *ngFor="let ing of lstIngresosGastos; let i = index"
+                                                    style="font-size:12px;">
+                                                    <div class="card shadow-sm border-0 h-100 p-3">
 
-    <!-- Contenedor flex para título + botones -->
-    <div class="d-flex justify-content-between align-items-center mb-2">
-      <h6 class="card-title titulo-sobre-borde-2 mb-0 text-info"  style="font-size: 12px;">
-        {{ ing.nombreRamo }}
-      </h6>
+                                                        <!-- Contenedor flex para título + botones -->
+                                                        <div
+                                                            class="d-flex justify-content-between align-items-center mb-2">
+                                                            <h6 class="card-title titulo-sobre-borde-2 mb-0 text-info"
+                                                                style="font-size: 12px;">
+                                                                {{ ing.nombreRamo }}
+                                                            </h6>
 
-      <!-- Botones al lado derecho -->
-      <div class="btn-group btn-group-sm" role="group">
-        <button type="button" class="btn btn-outline-danger" (click)="eliminarIngreso(i)">
-          <i class="fas fa-times"></i>
-        </button>
-        <button type="button" class="btn btn-outline-primary" (click)="editarIngreso(i)">
-          <i class="fas fa-pencil-alt"></i>
-        </button>
-      </div>
-    </div>
+                                                            <!-- Botones al lado derecho -->
+                                                            <div class="btn-group btn-group-sm" role="group">
+                                                                <button type="button" class="btn btn-outline-danger"
+                                                                    (click)="eliminarIngreso(i)">
+                                                                    <i class="fas fa-times"></i>
+                                                                </button>
+                                                                <button type="button" class="btn btn-outline-primary"
+                                                                    (click)="editarIngreso(i)">
+                                                                    <i class="fas fa-pencil-alt"></i>
+                                                                </button>
+                                                            </div>
+                                                        </div>
 
-    <!-- Información principal -->
-    <div class="row g-2 mb-2" style="font-size: 10px;">
-      <div class="col-6 d-flex justify-content-between">
-        <span class="text-muted">Inicio Vigencia:</span>
-        <strong>{{ ing.inicioVigencia }}</strong>
-      </div>
-      <div class="col-6 d-flex justify-content-between">
-        <span class="text-muted">Fin Vigencia:</span>
-        <strong>{{ ing.finVigencia }}</strong>
-      </div>
-      <div class="col-6 d-flex justify-content-between">
-        <span class="text-muted">Prima Mensual:</span>
-        <strong class="text-success">{{ ing.primaMensual | currency }}</strong>
-      </div>
-      <div class="col-6 d-flex justify-content-between">
-        <span class="text-muted">Comisión Mensual:</span>
-        <strong class="text-info">{{ ing.comision | currency }}</strong>
-      </div>
-      <div class="col-6 d-flex justify-content-between">
-        <span class="text-muted">Prima Anual:</span>
-        <strong class="text-success">{{ ing.primaAnual | currency }}</strong>
-      </div>
-      <div class="col-6 d-flex justify-content-between">
-        <span class="text-muted">Comisión Anual:</span>
-        <strong class="text-info">{{ ing.comisionAnual | currency }}</strong>
-      </div>
-    </div>
+                                                        <!-- Información principal -->
+                                                        <div class="row g-2 mb-2" style="font-size: 10px;">
+                                                            <div class="col-6 d-flex justify-content-between">
+                                                                <span class="text-muted">Inicio Vigencia:</span>
+                                                                <strong>{{ ing.inicioVigencia }}</strong>
+                                                            </div>
+                                                            <div class="col-6 d-flex justify-content-between">
+                                                                <span class="text-muted">Fin Vigencia:</span>
+                                                                <strong>{{ ing.finVigencia }}</strong>
+                                                            </div>
+                                                            <div class="col-6 d-flex justify-content-between">
+                                                                <span class="text-muted">Prima Mensual:</span>
+                                                                <strong class="text-success">{{ ing.primaMensual |
+                                                                    currency }}</strong>
+                                                            </div>
+                                                            <div class="col-6 d-flex justify-content-between">
+                                                                <span class="text-muted">Comisión Mensual:</span>
+                                                                <strong class="text-info">{{ ing.comision | currency
+                                                                    }}</strong>
+                                                            </div>
+                                                            <div class="col-6 d-flex justify-content-between">
+                                                                <span class="text-muted">Prima Anual:</span>
+                                                                <strong class="text-success">{{ ing.primaAnual |
+                                                                    currency }}</strong>
+                                                            </div>
+                                                            <div class="col-6 d-flex justify-content-between">
+                                                                <span class="text-muted">Comisión Anual:</span>
+                                                                <strong class="text-info">{{ ing.comisionAnual |
+                                                                    currency }}</strong>
+                                                            </div>
+                                                        </div>
 
-    <!-- Tabla de gastos -->
-    <div class="table-responsive">
-      <table class="table table-sm table-hover align-middle mb-0 table-bordered tabla-gastos" style="font-size: 10px;">
-        <thead class="table-primary text-center" style="font-size: 10px;">
-          <tr>
-            <th>Descripción</th>
-            <th>Valor</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let gasto of ing.gastos" style="text-align: center;font-size: 10px;">
-            <td>{{ gasto.descripcion }}</td>
-            <td>{{ gasto.valor | currency }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+                                                        <!-- Tabla de gastos -->
+                                                        <div class="table-responsive">
+                                                            <table
+                                                                class="table table-sm table-hover align-middle mb-0 table-bordered tabla-gastos"
+                                                                style="font-size: 10px;">
+                                                                <thead class="table-primary text-center"
+                                                                    style="font-size: 10px;">
+                                                                    <tr>
+                                                                        <th>Descripción</th>
+                                                                        <th>Valor</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <tr *ngFor="let gasto of ing.gastos"
+                                                                        style="text-align: center;font-size: 10px;">
+                                                                        <td>{{ gasto.descripcion }}</td>
+                                                                        <td>{{ gasto.valor | currency }}</td>
+                                                                    </tr>
+                                                                </tbody>
+                                                                <tfoot>
+                                                                    <tr style="
+      text-align: center;
+      font-size: 11px;
+      font-weight: bold;
+      background-color: #e9f5ff;
+      color: #0d6efd;
+    ">
+                                                                        <td style="padding: 8px;">
+                                                                            <i class="fas fa-calculator me-1"></i>
+                                                                            TOTAL
+                                                                        </td>
 
-  </div>
-</div>
+                                                                        <td style="padding: 8px;">
+                                                                            {{ getTotalGastos(ing.gastos) | currency }}
+                                                                        </td>
+                                                                    </tr>
+                                                                </tfoot>
+                                                            </table>
+                                                        </div>
+
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -478,9 +513,11 @@
                                                                 *ngFor="let ingresos of lstIngresosGastos">
                                                                 <td>
                                                                     <i class="bi bi-cash-stack text-success me-1"></i>
-                                                                    Ingreso Anual <strong>{{ ingresos.nombreRamo }}</strong>
+                                                                    Ingreso Anual <strong>{{ ingresos.nombreRamo
+                                                                        }}</strong>
                                                                 </td>
-                                                                <td class="text-end fw-semibold text-success" style="font-weight: bold;">
+                                                                <td class="text-end fw-semibold text-success"
+                                                                    style="font-weight: bold;">
                                                                     {{ ingresos.comisionAnual | currency }}
                                                                 </td>
                                                             </tr>
@@ -490,14 +527,16 @@
 
                                                             <tr class="fila-total-ingresos" style="font-size: 10px;">
                                                                 <td><strong>Total Ingresos</strong></td>
-                                                                <td class="text-end fw-bold text-success" style="font-weight: bold;">
+                                                                <td class="text-end fw-bold text-success"
+                                                                    style="font-weight: bold;">
                                                                     {{ totalIngresos | currency }}
                                                                 </td>
                                                             </tr>
 
                                                             <tr class="fila-gastos" style="font-size: 10px;">
                                                                 <td><strong>Total Gastos</strong></td>
-                                                                <td class="text-end fw-bold text-danger" style="font-weight: bold;">
+                                                                <td class="text-end fw-bold text-danger"
+                                                                    style="font-weight: bold;">
                                                                     {{ totalGastos | currency }}
                                                                 </td>
                                                             </tr>
@@ -507,21 +546,24 @@
                                                                 <td>
                                                                     Retorno <strong>{{ ingresos.nombreRamo }}</strong>
                                                                 </td>
-                                                                <td class="text-end fw-semibold text-primary" style="font-weight: bold;">
+                                                                <td class="text-end fw-semibold text-primary"
+                                                                    style="font-weight: bold;">
                                                                     {{ 0 | currency }}
                                                                 </td>
                                                             </tr>
 
                                                             <tr class="fila-porcentaje" style="font-size: 10px;">
                                                                 <td>% Inversión</td>
-                                                                <td class="text-end fw-bold text-warning" style="font-weight: bold;">
+                                                                <td class="text-end fw-bold text-warning"
+                                                                    style="font-weight: bold;">
                                                                     {{ calcularPorcentajeGastos() | number:'1.2-2' }} %
                                                                 </td>
                                                             </tr>
 
                                                             <tr class="fila-total-general" style="font-size: 10px;">
                                                                 <td><strong>Total Final</strong></td>
-                                                                <td class="text-end fw-bold text-dark" style="font-weight: bold;">
+                                                                <td class="text-end fw-bold text-dark"
+                                                                    style="font-weight: bold;">
                                                                     {{ totalFinal | currency }}
                                                                 </td>
                                                             </tr>
@@ -535,8 +577,18 @@
                                             </div>
                                         </div>
                                     </div>
-                                </div>
 
+                                </div>
+                                <div class="d-flex gap-2 justify-content-end" *ngIf="!this.ingresoForm.value.id">
+                                    <button type="button" class="btn btn-success" (click)="guardarPYG()">
+                                        Guardar
+                                    </button>
+                                </div>
+                                <div class="d-flex gap-2 justify-content-end" *ngIf="this.ingresoForm.value.id">
+                                    <button type="button" class="btn btn-success" (click)="actualizarPYG()">
+                                        Actualizar
+                                    </button>
+                                </div>
                             </div>
 
                         </div>

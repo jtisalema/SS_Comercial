@@ -33,6 +33,7 @@ export class ChlingresoComponent {
   //variables
   ingresoForm!: FormGroup;
   contactoForm!: FormGroup;
+  primaMasivoForm!: FormGroup;
   isEditing: boolean = false;
   userCurrent: any;
   lstContactos: any = [];
@@ -51,6 +52,7 @@ export class ChlingresoComponent {
   lstEjecutivos: any = [];
   lstTipoContacto: any = [];
   lstSubareasTodo: any = [];
+  lstPrimasMasivos: any = [];
   files: File[] = [];
   filesRequisitos: File[] = [];
   requisitosSeleccionados: any[] = [];
@@ -63,7 +65,7 @@ export class ChlingresoComponent {
   loadingClientes = false;
 
   programaSeguros = {
-    'cdRamo': '999',
+    'cdRamo': 999,
     'nmRamo': 'PROGRAMA DE SEGUROS'
   }
   lstRamosTexto: any = [
@@ -123,12 +125,12 @@ export class ChlingresoComponent {
       comision: [''],
       tasa: [{ value: '', disabled: true }],
 
-      tipoPrima: ['', Validators.required],
-      hur: [''],
-      primaRiesgo: [''],
-      primaNeta: [''],
-      comisionBroker: [''],
-
+      // tipoPrima: [''],
+      // hur: [''],
+      // primaRiesgo: [''],
+      // primaNeta: [''],
+      // comisionBroker: [''],
+      lstPolizas: [''],
       formaPago: ['', Validators.required],
       cuotas: [1],
       numeroDias: [0],
@@ -147,6 +149,13 @@ export class ChlingresoComponent {
       textoAP: [''],
       textoRC: [''],
       textoTRC: [''],
+      //vigencia
+      inicioVigencia: [new Date().toISOString().substring(0, 10)],
+      finVigencia: [
+        new Date(
+          new Date().setFullYear(new Date().getFullYear() + 1)
+        ).toISOString().substring(0, 10)
+      ],
     });
     this.ingresoForm.get('ramo')?.valueChanges.subscribe(() => {
       this.actualizarValidadoresRamos();
@@ -176,6 +185,17 @@ export class ChlingresoComponent {
       advertencia: [0],
     }, {
       validators: this.alMenosUnTelefonoValidator
+    });
+    this.primaMasivoForm = this.fb.group({
+      id: [''],
+      tipoPrima: ['', Validators.required],
+      hur: ['', Validators.required],
+      comisionBroker: ['', Validators.required],
+      lstRamos: '',
+      ramo: [[]],
+      observacionMasivos: [''],
+      inicioVigencia: [''],
+      finVigencia: [''],
     });
     this.clientesInput$
       .pipe(
@@ -583,7 +603,7 @@ export class ChlingresoComponent {
                   telefonoTrabajo: telefonoTrabajoIndividual,
                   telefonoConvencional: telefonoConvencionalIndividual,
                   regalo: 0,
-                  usuarioWeb: 0,
+                  usuarioWeb: 1,
                   advertencia: 1
                 }
                 this.lstContactos.push(contactoSugerido);
@@ -630,12 +650,15 @@ export class ChlingresoComponent {
       this.checklistService.obtenerClientebyCedula(this.contactoForm.value.identificacion).subscribe((res: any) => {
         setTimeout(() => {
           this.loadingService.hideLoading();
-          this.toastrService.success('Correcto', 'Información obtenida!');
           if (!res.esError) {
+
+            this.toastrService.success('Correcto', 'Información obtenida!');
             this.contactoForm.patchValue({
               nombre: res.resultado[0]?.apCliente + ' ' + res.resultado[0]?.nmCliente,
               fechaNacimiento: res.resultado[0]?.fcNacimiento?.split('T')[0] || null,
-              email: res.resultado[0]?.email
+              email: res.resultado[0]?.email,
+              celular: res.resultado[0]?.telefonoFij,
+              usuarioWeb: 1
             });
           } else {
             //si no hay datos consulto en el databook
@@ -647,11 +670,15 @@ export class ChlingresoComponent {
               this.contactoForm.patchValue({
                 nombre: response.data?.nm ?? '',
                 fechaNacimiento: response.data?.fcNac ?? '',
-                email: response.data?.email1 ?? ''
+                email: response.data?.email1 ?? '',
               });
             }, (error: any) => {
               this.loadingService.hideLoading();
-              this.toastrService.error('ERROR', 'No se pudo consultar la Información!');
+              this.toastrService.error(
+                'ERROR',
+                'No se pudo consultar la Información! ' +
+                (error?.error?.message ?? '')
+              );
             });
           }
         }, 500);
@@ -688,7 +715,6 @@ export class ChlingresoComponent {
     this.filesRequisitos = [];
     //this.lstContactos = [];
     this.lstContactos = this.lstContactos.filter((con: any) => con.advertencia != 0);
-
     this.requisitosSeleccionados = [];
     //si es fianzas se habilita tasa y se pone obligatorio
     if (Number((event.target as HTMLSelectElement).value) == 5) {
@@ -719,6 +745,11 @@ export class ChlingresoComponent {
       this.ingresoForm.get('tasa')?.disable();
       this.ingresoForm.get('tasa')?.setValidators([]);
       this.ingresoForm.get('tasa')?.updateValueAndValidity();
+      if (Number((event.target as HTMLSelectElement).value) == 3) {
+        this.ingresoForm.get('tasa')?.enable();
+        this.ingresoForm.get('tasa')?.setValidators(Validators.required);
+        this.ingresoForm.get('tasa')?.updateValueAndValidity();
+      }
       this.ingresoForm.get('comision')?.enable();
       this.ingresoForm.get('comision')?.setValidators([]);
       this.ingresoForm.get('comision')?.updateValueAndValidity();
@@ -743,6 +774,10 @@ export class ChlingresoComponent {
       ];
       //si es masivos no va comision especifica
       if (Number((event.target as HTMLSelectElement).value) == 4) {
+        //pongo el ramo en no obligatorio pero el listado de polizas y primas debe ser obligatorio
+        this.ingresoForm.get('ramo')?.setValidators([]);
+        this.ingresoForm.get('ramo')?.updateValueAndValidity();
+
         this.ingresoForm.get('fechaRecepcionFactura')?.disable();
         this.ingresoForm.get('fechaRecepcionFactura')?.setValidators([]);
         this.ingresoForm.get('fechaRecepcionFactura')?.updateValueAndValidity();
@@ -754,6 +789,10 @@ export class ChlingresoComponent {
           { id: 1, nombre: 'Contado/Transferencia' },
           { id: 2, nombre: 'Crédito Directo' }
         ];
+      } else {
+        this.ingresoForm.get('ramo')?.enable();
+        this.ingresoForm.get('ramo')?.setValidators(Validators.required);
+        this.ingresoForm.get('ramo')?.updateValueAndValidity();
       }
       if (Number((event.target as HTMLSelectElement).value) == 3) {
         this.ingresoForm.get('fechaRecepcionFactura')?.setValidators([]);
@@ -784,31 +823,6 @@ export class ChlingresoComponent {
     }
     //si es masivo o coorporativo comisiones y hur van obligatorios
     //if (Number((event.target as HTMLSelectElement).value) == 2 || Number((event.target as HTMLSelectElement).value) == 4) {
-    if (Number((event.target as HTMLSelectElement).value) == 4) {
-      this.ingresoForm.get('tipoPrima')?.enable();
-      this.ingresoForm.get('tipoPrima')?.setValidators(Validators.required);
-      this.ingresoForm.get('tipoPrima')?.updateValueAndValidity();
-
-      this.ingresoForm.get('hur')?.enable();
-      this.ingresoForm.get('hur')?.setValidators(Validators.required);
-      this.ingresoForm.get('hur')?.updateValueAndValidity();
-
-      this.ingresoForm.get('comisionBroker')?.enable();
-      this.ingresoForm.get('comisionBroker')?.setValidators(Validators.required);
-      this.ingresoForm.get('comisionBroker')?.updateValueAndValidity();
-    } else {
-      this.ingresoForm.get('tipoPrima')?.disable();
-      this.ingresoForm.get('tipoPrima')?.setValidators([]);
-      this.ingresoForm.get('tipoPrima')?.updateValueAndValidity();
-
-      this.ingresoForm.get('hur')?.disable();
-      this.ingresoForm.get('hur')?.setValidators([]);
-      this.ingresoForm.get('hur')?.updateValueAndValidity();
-
-      this.ingresoForm.get('comisionBroker')?.disable();
-      this.ingresoForm.get('comisionBroker')?.setValidators([]);
-      this.ingresoForm.get('comisionBroker')?.updateValueAndValidity();
-    }
     //
     this.filesRequisitos = [];
     this.requisitosSeleccionados = [];
@@ -822,15 +836,6 @@ export class ChlingresoComponent {
         primaNeta: '',
         comisionBroker: '',
       });
-      this.ingresoForm.get('tipoPrima')?.enable();
-      this.ingresoForm.get('tipoPrima')?.setValidators(Validators.required);
-      this.ingresoForm.get('tipoPrima')?.updateValueAndValidity();
-
-      this.ingresoForm.get('hur')?.setValidators(Validators.required);
-      this.ingresoForm.get('hur')?.updateValueAndValidity();
-
-      this.ingresoForm.get('comisionBroker')?.setValidators(Validators.required);
-      this.ingresoForm.get('comisionBroker')?.updateValueAndValidity();
     } else {
       this.ingresoForm.patchValue({
         // comision: '',
@@ -839,14 +844,6 @@ export class ChlingresoComponent {
         primaNeta: '',
         comisionBroker: '',
       });
-      this.ingresoForm.get('tipoPrima')?.disable();
-      this.ingresoForm.get('tipoPrima')?.setValidators([]);
-      this.ingresoForm.get('tipoPrima')?.updateValueAndValidity();
-
-      this.ingresoForm.get('hur')?.setValidators([]);
-      this.ingresoForm.get('hur')?.updateValueAndValidity();
-      this.ingresoForm.get('comisionBroker')?.setValidators([]);
-      this.ingresoForm.get('comisionBroker')?.updateValueAndValidity();
     }
 
     this.lstRequisitos = [];
@@ -893,6 +890,11 @@ export class ChlingresoComponent {
       this.ingresoForm.get('tasa')?.disable();
       this.ingresoForm.get('tasa')?.setValidators([]);
       this.ingresoForm.get('tasa')?.updateValueAndValidity();
+      if (id == 3) {
+        this.ingresoForm.get('tasa')?.enable();
+        this.ingresoForm.get('tasa')?.setValidators(Validators.required);
+        this.ingresoForm.get('tasa')?.updateValueAndValidity();
+      }
       this.ingresoForm.get('comision')?.enable();
       this.ingresoForm.get('comision')?.setValidators([]);
       this.ingresoForm.get('comision')?.updateValueAndValidity();
@@ -947,29 +949,12 @@ export class ChlingresoComponent {
     //si es masivo o coorporativo comisiones y hur van obligatorios
     //if (id == 2 || id == 4) {
     if (id == 4) {
-      this.ingresoForm.get('tipoPrima')?.enable();
-      this.ingresoForm.get('tipoPrima')?.setValidators(Validators.required);
-      this.ingresoForm.get('tipoPrima')?.updateValueAndValidity();
-
-      this.ingresoForm.get('hur')?.enable();
-      this.ingresoForm.get('hur')?.setValidators(Validators.required);
-      this.ingresoForm.get('hur')?.updateValueAndValidity();
-
-      this.ingresoForm.get('comisionBroker')?.enable();
-      this.ingresoForm.get('comisionBroker')?.setValidators(Validators.required);
-      this.ingresoForm.get('comisionBroker')?.updateValueAndValidity();
+      //pongo el ramo en no obligatorio pero el listado de polizas y primas debe ser obligatorio
+      this.ingresoForm.get('ramo')?.setValidators([]);
+      this.ingresoForm.get('ramo')?.updateValueAndValidity();
     } else {
-      this.ingresoForm.get('tipoPrima')?.disable();
-      this.ingresoForm.get('tipoPrima')?.setValidators([]);
-      this.ingresoForm.get('tipoPrima')?.updateValueAndValidity();
-
-      this.ingresoForm.get('hur')?.disable();
-      this.ingresoForm.get('hur')?.setValidators([]);
-      this.ingresoForm.get('hur')?.updateValueAndValidity();
-
-      this.ingresoForm.get('comisionBroker')?.disable();
-      this.ingresoForm.get('comisionBroker')?.setValidators([]);
-      this.ingresoForm.get('comisionBroker')?.updateValueAndValidity();
+      this.ingresoForm.get('ramo')?.setValidators(Validators.required);
+      this.ingresoForm.get('ramo')?.updateValueAndValidity();
     }
     //
     this.filesRequisitos = [];
@@ -984,15 +969,6 @@ export class ChlingresoComponent {
         primaNeta: '',
         comisionBroker: '',
       });
-      this.ingresoForm.get('tipoPrima')?.enable();
-      this.ingresoForm.get('tipoPrima')?.setValidators(Validators.required);
-      this.ingresoForm.get('tipoPrima')?.updateValueAndValidity();
-
-      this.ingresoForm.get('hur')?.setValidators(Validators.required);
-      this.ingresoForm.get('hur')?.updateValueAndValidity();
-
-      this.ingresoForm.get('comisionBroker')?.setValidators(Validators.required);
-      this.ingresoForm.get('comisionBroker')?.updateValueAndValidity();
     } else {
       this.ingresoForm.patchValue({
         // comision: '',
@@ -1001,15 +977,6 @@ export class ChlingresoComponent {
         primaNeta: '',
         comisionBroker: '',
       });
-      this.ingresoForm.get('tipoPrima')?.disable();
-      this.ingresoForm.get('tipoPrima')?.setValidators([]);
-      this.ingresoForm.get('tipoPrima')?.updateValueAndValidity();
-
-      this.ingresoForm.get('hur')?.setValidators([]);
-      this.ingresoForm.get('hur')?.updateValueAndValidity();
-
-      this.ingresoForm.get('comisionBroker')?.setValidators([]);
-      this.ingresoForm.get('comisionBroker')?.updateValueAndValidity();
     }
 
     this.lstRequisitos = [];
@@ -1068,6 +1035,7 @@ export class ChlingresoComponent {
       this.checklistService.obtenerRamos().subscribe((res: any) => {
         this.lstRamos = res.resultado;
         this.lstRamos.push(this.programaSeguros);
+
       }, (error: any) => {
         this.toastrService.error('ERROR', 'No se pudo obtener los ramos!');
       });
@@ -1117,16 +1085,35 @@ export class ChlingresoComponent {
     if (this.ingresoForm.invalid) {
       this.appComponent.validateAllFormFields(this.ingresoForm);
       const camposInvalidos = this.obtenerCamposInvalidos();
+      console.log('camposInvalidos', camposInvalidos);
       this.toastrService.error(
         'Error al enviar CheckList',
         'No se llenaron todos los campos necesarios.'
       );
       return;
     } else {
+
+      if (this.ingresoForm.value.subArea == 4 && this.lstPrimasMasivos.length < 1) {
+        this.toastrService.error(
+          'Error al enviar CheckList',
+          'Debe Agregar por lo menos 1 detalle primas de póliza.'
+        );
+        return;
+      }
       if (this.lstContactos.length < 1) {
         this.toastrService.error(
           'Error al enviar CheckList',
           'Debe Agregar por lo menos 1 contacto.'
+        );
+        return;
+      }
+      const tieneAdvertencia = this.lstContactos.some(
+        (x: any) => Number(x.advertencia) === 1
+      );
+      if (tieneAdvertencia) {
+        this.toastrService.error(
+          'Error al enviar CheckList',
+          'Debe revisar los contactos con advertencia y actualizar los campos necesarios.'
         );
         return;
       }
@@ -1217,6 +1204,11 @@ export class ChlingresoComponent {
       formIngresoData.append('textoAP', this.ingresoForm.value.textoAP);
       formIngresoData.append('textoRC', this.ingresoForm.value.textoRC);
       formIngresoData.append('textoTRC', this.ingresoForm.value.textoTRC);
+
+      formIngresoData.append('lstPrimasMasivos', JSON.stringify(this.lstPrimasMasivos));
+      //vigencia
+      formIngresoData.append('inicioVigencia', this.ingresoForm.value.inicioVigencia);
+      formIngresoData.append('finVigencia', this.ingresoForm.value.finVigencia);
 
       this.filesRequisitos.forEach((file: File, index: number) => {
         formIngresoData.append('file_' + index, file);
@@ -1346,18 +1338,20 @@ export class ChlingresoComponent {
   async cargarDatosIngreso() {
     this.loadingService.showLoading();
     let res = await this.checklistService.obtenerDatosIngresobyId(this.idIngreso);
+    let detallePrimas = res.detallePrimas;
     let contactos = res.dataContactos;
     let ingreso = res.data;
     const listaRamos = ingreso.ramos ? ingreso.ramos.split(',').map(Number).filter((n: any) => !isNaN(n)) : [];
     this.loadingService.hideLoading();
     this.idEstado = ingreso.idEstado;
-    if (this.idEstado != 4 && this.idEstado != 9) {
-      this.lstEstados = [{ id: 1, nombre: 'Aprobar' }, { id: 2, nombre: 'Corregir' }, { id: 3, nombre: 'Rechazar' }];
-    } else if (this.idEstado == 4) {
-      this.lstEstados = [{ id: 5, nombre: 'Ingresado a la Aseguradora' }];
-    } else {
-      this.lstEstados = [{ id: 4, nombre: 'Enviado al Cliente' }];
-    }
+    // if (this.idEstado != 4 && this.idEstado != 9) {
+    this.lstEstados = [{ id: 1, nombre: 'Aprobar' }, { id: 2, nombre: 'Corregir' }, { id: 3, nombre: 'Rechazar' },
+    { id: 5, nombre: 'Ingresado a la Aseguradora' }, { id: 6, nombre: 'Pendiente Emisión' }, { id: 4, nombre: 'Ingresado Dbroker/Enviado Cliente' }];
+    // } else if (this.idEstado == 4) {
+    //   this.lstEstados = [{ id: 5, nombre: 'Ingresado a la Aseguradora' }];
+    // } else {
+    //   this.lstEstados = [{ id: 4, nombre: 'Enviado al Cliente' }];
+    // }
     this.ingresoForm.patchValue({
       id: ingreso.id,
       estado: ingreso.idEstado,
@@ -1373,7 +1367,6 @@ export class ChlingresoComponent {
       subagente: ingreso.idSubagente,
       grupoContratante: ingreso.idGrupoContratante,
       area: ingreso.idArea,
-
       sucursalDB: ingreso.idSucursalDB,
       comision: ingreso.comision,
     });
@@ -1430,7 +1423,22 @@ export class ChlingresoComponent {
       }
 
     }
+    detallePrimas.forEach((element: any) => {
+      const ramos = element.ramo ? element.ramo.split(',').map(Number).filter((n: any) => !isNaN(n)) : [];
+      let prima = {
+        id: [''],
+        tipoPrima: element.tipoPrima,
+        hur: element.hur,
+        comisionBroker: element.comision,
+        ramo: ramos,
+        lstRamos: element.lstRamos,
+        observacionMasivos: element.observaciones,
+        inicioVigencia: element.inicioVigencia,
+        finVigencia: element.finVigencia,
+      };
+      this.lstPrimasMasivos.push(prima);
 
+    });
     ///ingresarContactos
     this.checklistService.obtenerTipoContactobySubarea(ingreso.idSubarea).subscribe((res: any) => {
       this.lstTipoContacto = res.data;
@@ -1445,7 +1453,7 @@ export class ChlingresoComponent {
           regalo: element.regalo ?? 0,
           tipoContacto: element.tipoContacto ?? '',
           nombreContacto: nombreContacto.nombre ?? '',
-          usuarioWeb: element.usuarioWeb ?? 0,
+          usuarioWeb: element.usuarioWeb ?? 1,
           //
           celular: element.celular ?? '',
           telefonoConvencional: nombreContacto.telefonoConvencional ?? '',
@@ -1462,8 +1470,10 @@ export class ChlingresoComponent {
         textoAP: ingreso.textoAP ?? '',
         textoRC: ingreso.textoRC ?? '',
         textoTRC: ingreso.textoTRC ?? '',
+        //
+        inicioVigencia: ingreso.inicioVigencia ?? '',
+        finVigencia: ingreso.finVigencia ?? '',
       });
-
       this.requisitosSeleccionados = ingreso.requisitosSeleccionados ? ingreso.requisitosSeleccionados.split(',').map(Number).filter((n: any) => !isNaN(n)) : [];
       this.cargarFilesRequisitos(ingreso.id);
       //cargar el comprobante si es contado
@@ -1617,7 +1627,6 @@ export class ChlingresoComponent {
           const observacion = result.value;
           formd.append('observacion', observacion);
           this.loadingService.showLoading();
-          // Aquí haces lo que necesites (ej: llamar a un servicio)
           this.checklistService.accionEjecutivoCheckList(formd).subscribe((res: any) => {
             this.loadingService.hideLoading();
             Swal.fire({
@@ -1641,7 +1650,7 @@ export class ChlingresoComponent {
         }
       });
     }
-    if (this.estadoSeleccionado == 3) {//Cancelar
+    if (this.estadoSeleccionado == 3) {//Cancelar/Rechazar
       Swal.fire({
         title: 'Motivo para Cancelar',
         input: 'textarea',
@@ -1691,74 +1700,305 @@ export class ChlingresoComponent {
         }
       });
     }
-    if (this.estadoSeleccionado == 1) {
-      this.loadingService.showLoading();
-      this.checklistService.accionEjecutivoCheckList(formd).subscribe((res: any) => {
-        this.loadingService.hideLoading();
-        Swal.fire({
-          icon: 'success',
-          title: '¡Éxito!',
-          text: 'Solicitud aprobada Correctamente',
-          confirmButtonText: 'OK',
-          allowOutsideClick: false,
-          allowEscapeKey: false,
-          allowEnterKey: true,
-          showCloseButton: false
-        }).then((result) => {
-          if (result.isConfirmed) {
-            this.router.navigate(['/home/checkList/seguimiento']);
-          }
-        });
-      }, (error: any) => {
-        this.loadingService.hideLoading();
-        this.toastrService.error('ERROR', 'No se pudo actualizar el estado!');
+    if (this.estadoSeleccionado == 1) {//aprobar
+      Swal.fire({
+        title: 'Antes de Aprobar',
+        input: 'textarea',
+        inputLabel: '¿Desea Ingresar algun comentario u observación?',
+        inputPlaceholder: 'Escriba aquí ...',
+        showCancelButton: true,
+        confirmButtonText: 'Aceptar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          const observacion = result.value;
+          formd.append('observacion', observacion);
+          this.loadingService.showLoading();
+          this.checklistService.accionEjecutivoCheckList(formd).subscribe((res: any) => {
+            this.loadingService.hideLoading();
+            Swal.fire({
+              icon: 'success',
+              title: '¡Éxito!',
+              text: 'Solicitud aprobada Correctamente',
+              confirmButtonText: 'OK',
+              allowOutsideClick: false,
+              allowEscapeKey: false,
+              allowEnterKey: true,
+              showCloseButton: false
+            }).then((result) => {
+              if (result.isConfirmed) {
+                this.router.navigate(['/home/checkList/seguimiento']);
+              }
+            });
+          }, (error: any) => {
+            this.loadingService.hideLoading();
+            this.toastrService.error('ERROR', 'No se pudo actualizar el estado!');
+          });
+        }
       });
     }
     if (this.estadoSeleccionado == 5) {//ingresado a la aseguradora
-      this.loadingService.showLoading();
-      this.checklistService.accionEjecutivoCheckList(formd).subscribe((res: any) => {
-        this.loadingService.hideLoading();
-        Swal.fire({
-          icon: 'success',
-          title: '¡Éxito!',
-          text: 'Solicitud Ingresada a la Aseguradora Correctamente',
-          confirmButtonText: 'OK',
-          allowOutsideClick: false,
-          allowEscapeKey: false,
-          allowEnterKey: true,
-          showCloseButton: false
-        }).then((result) => {
-          if (result.isConfirmed) {
-            this.router.navigate(['/home/checkList/seguimiento']);
-          }
-        });
-      }, (error: any) => {
-        this.loadingService.hideLoading();
-        this.toastrService.error('ERROR', 'No se pudo actualizar el estado!');
+      Swal.fire({
+        title: 'Ingresado a la Aseguradora',
+        input: 'textarea',
+        inputLabel: '¿Desea Ingresar algun comentario u observación?',
+        inputPlaceholder: 'Escriba aquí ...',
+        showCancelButton: true,
+        confirmButtonText: 'Aceptar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          const observacion = result.value;
+          formd.append('observacion', observacion);
+          this.loadingService.showLoading();
+          this.checklistService.accionEjecutivoCheckList(formd).subscribe((res: any) => {
+            this.loadingService.hideLoading();
+            Swal.fire({
+              icon: 'success',
+              title: '¡Éxito!',
+              text: 'Solicitud Ingresada a la Aseguradora Correctamente',
+              confirmButtonText: 'OK',
+              allowOutsideClick: false,
+              allowEscapeKey: false,
+              allowEnterKey: true,
+              showCloseButton: false
+            }).then((result) => {
+              if (result.isConfirmed) {
+                this.router.navigate(['/home/checkList/seguimiento']);
+              }
+            });
+          }, (error: any) => {
+            this.loadingService.hideLoading();
+            this.toastrService.error('ERROR', 'No se pudo actualizar el estado!');
+          });
+        }
       });
     }
-    if (this.estadoSeleccionado == 4) {
-      this.loadingService.showLoading();
-      this.checklistService.accionEjecutivoCheckList(formd).subscribe((res: any) => {
-        this.loadingService.hideLoading();
-        Swal.fire({
-          icon: 'success',
-          title: '¡Éxito!',
-          text: 'Se ha notificado que se envio la póliza al cliente!',
-          confirmButtonText: 'OK',
-          allowOutsideClick: false,
-          allowEscapeKey: false,
-          allowEnterKey: true,
-          showCloseButton: false
-        }).then((result) => {
-          if (result.isConfirmed) {
-            this.router.navigate(['/home/checkList/seguimiento']);
-          }
-        });
-      }, (error: any) => {
-        this.loadingService.hideLoading();
-        this.toastrService.error('ERROR', 'No se pudo actualizar el estado!');
+    if (this.estadoSeleccionado == 4) {//ingresado al dbroker
+      Swal.fire({
+        title: 'Ingresado a la Aseguradora',
+        html: `
+    <label style="display:block; margin-bottom:5px;">
+      ¿Desea ingresar algún comentario u observación?
+    </label>
+      <textarea id="swal-observacion" class="form-control" style="resize:none;text-align:center" placeholder="Ingresa una observación"></textarea>
+
+<div class="form-group" style="margin-top:20px; text-align:left;">
+  
+  <div style="
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:15px;
+    margin-bottom:15px;
+  ">
+    
+    <label 
+      for="swal-envio-cliente"
+      style="
+        font-weight:600;
+        margin:0;
+        flex:1;
+      "
+    >
+      ¿Se envió al cliente?
+    </label>
+
+    <select 
+      id="swal-envio-cliente"
+      class="form-control"
+      style="
+       width:60%;
+        height:38px;
+      "
+    >
+      <option value="1">SI</option>
+      <option value="0" selected>NO</option>
+    </select>
+
+  </div>
+
+  <div style="
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:15px;
+  ">
+    
+    <label 
+      for="swal-enviar-facturas"
+      style="
+        font-weight:600;
+        margin:0;
+        flex:1;
+      "
+    >
+      ¿Se envió la Factura?
+    </label>
+
+    <select 
+      id="swal-enviar-facturas"
+      class="form-control"
+      style="
+        width:60%;
+        height:38px;
+      "
+    >
+      <option value="1">SI</option>
+      <option value="0" selected>NO</option>
+    </select>
+
+  </div>
+
+</div>
+
+  `,
+        showCancelButton: true,
+        confirmButtonText: 'Aceptar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+
+        preConfirm: () => {
+
+          const observacion = (
+            document.getElementById('swal-observacion') as HTMLTextAreaElement
+          ).value;
+
+          const envioCliente = (
+            document.getElementById('swal-envio-cliente') as HTMLSelectElement
+          ).value;
+
+          const enviarFacturas = (
+            document.getElementById('swal-enviar-facturas') as HTMLSelectElement
+          ).value;
+
+          return {
+            observacion,
+            envioCliente,
+            enviarFacturas
+          };
+        }
+
+      }).then((result) => {
+
+        if (result.isConfirmed) {
+          formd.append('observacion', result.value.observacion);
+          formd.append('envioCliente', result.value.envioCliente);
+          formd.append('envioFacturas', result.value.enviarFacturas);
+
+          this.loadingService.showLoading();
+          this.checklistService.accionEjecutivoCheckList(formd).subscribe((res: any) => {
+            this.loadingService.hideLoading();
+            Swal.fire({
+              icon: 'success',
+              title: '¡Éxito!',
+              text: 'Se ha notificado que se envio la póliza al cliente!',
+              confirmButtonText: 'OK',
+              allowOutsideClick: false,
+              allowEscapeKey: false,
+              allowEnterKey: true,
+              showCloseButton: false
+            }).then((result) => {
+              if (result.isConfirmed) {
+                this.router.navigate(['/home/checkList/seguimiento']);
+              }
+            });
+          }, (error: any) => {
+            this.loadingService.hideLoading();
+            this.toastrService.error('ERROR', 'No se pudo actualizar el estado!');
+          });
+        }
       });
+
+    }
+    if (this.estadoSeleccionado == 6) {//Pendiente Emision
+      const fechaActual = new Date().toISOString().slice(0, 16);
+      Swal.fire({
+        title: 'Pendiente Emisión',
+        html: `
+    <label style="display:block; margin-bottom:5px;">
+      ¿Desea ingresar algún comentario u observación?
+    </label>
+
+      <label for="observacion" class="form-label fw-bold">Observaciones / Razón de la entrega</label>
+      <textarea id="swal-observacion" class="form-control" style="resize:none;text-align:center" placeholder="Ingresa una observación"></textarea>
+
+    <label style="display:block; margin-top:15px; margin-bottom:5px;">
+      Fecha y hora
+    </label>
+
+    <input 
+      id="swal-fecha" 
+      type="datetime-local" 
+      class="swal2-input"
+      value="${fechaActual}"
+    >
+  `,
+        showCancelButton: true,
+        confirmButtonText: 'Aceptar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+
+        preConfirm: () => {
+
+          const observacion = (
+            document.getElementById('swal-observacion') as HTMLTextAreaElement
+          ).value;
+
+          const fecha = (
+            document.getElementById('swal-fecha') as HTMLInputElement
+          ).value;
+
+          if (!observacion || observacion.trim() === '') {
+            Swal.showValidationMessage('Las observaciones son obligatorias');
+            return false;
+          }
+
+          return {
+            observacion,
+            fecha
+          };
+        }
+
+      }).then((result) => {
+
+        if (result.isConfirmed) {
+          const observacion = result.value.observacion;
+          const fecha = result.value.fecha;
+
+          formd.append('observacion', observacion);
+          formd.append('fechaEstimada', fecha);
+
+          this.loadingService.showLoading();
+          this.checklistService.accionEjecutivoCheckList(formd).subscribe((res: any) => {
+            this.loadingService.hideLoading();
+            Swal.fire({
+              icon: 'success',
+              title: '¡Éxito!',
+              text: 'Se ha notificado que la póliza esta pendiente de emisión!',
+              confirmButtonText: 'OK',
+              allowOutsideClick: false,
+              allowEscapeKey: false,
+              allowEnterKey: true,
+              showCloseButton: false
+            }).then((result) => {
+              if (result.isConfirmed) {
+                this.router.navigate(['/home/checkList/seguimiento']);
+              }
+            });
+          }, (error: any) => {
+            this.loadingService.hideLoading();
+            this.toastrService.error('ERROR', 'No se pudo actualizar el estado!');
+          });
+        }
+      });
+
     }
   }
 
@@ -1917,4 +2157,66 @@ export class ChlingresoComponent {
       this.consultarInformacionTitular();
     }
   }
+  agregarPrimaMasivos() {
+    if (this.primaMasivoForm.invalid) {
+      this.appComponent.validateAllFormFields(this.primaMasivoForm);
+      const camposInvalidos = this.obtenerCamposInvalidos();
+      this.toastrService.error(
+        'Error al agregar el detalle',
+        'No se llenaron todos los campos necesarios.'
+      );
+      return;
+    } else {
+      if (!this.ingresoForm.value.ramo || this.ingresoForm.value.ramo.length < 1) {
+        this.toastrService.error(
+          'Error al agregar el detalle',
+          'Debe seleccionar el Ramo.'
+        );
+        return;
+      }
+      if (!this.ingresoForm.value.inicioVigencia) {
+        this.toastrService.error(
+          'Error al agregar el detalle',
+          'Debe ingresar el inicio de vigencia.'
+        );
+        return;
+      }
+      if (!this.ingresoForm.value.finVigencia) {
+        this.toastrService.error(
+          'Error al agregar el detalle',
+          'Debe ingresar el fin de vigencia.'
+        );
+        return;
+      }
+      const nombres = (this.ingresoForm.value.ramo || [])
+        .map((id: any) => this.lstRamos.find((item: any) => item.cdRamo === id)?.nmRamo)
+        .filter(Boolean)
+        .join(', ');
+
+      this.primaMasivoForm.patchValue({
+        ramo: this.ingresoForm.value.ramo,
+        inicioVigencia: this.ingresoForm.value.inicioVigencia,
+        finVigencia: this.ingresoForm.value.finVigencia,
+        lstRamos: nombres
+      });
+      this.lstPrimasMasivos.push(this.primaMasivoForm.value);
+      this.primaMasivoForm.reset();
+      this.ingresoForm.patchValue({
+        ramo: [],
+        inicioVigencia: '',
+        finVigencia: '',
+      });
+      this.primaMasivoForm.patchValue({
+        tipoPrima: ''
+      });
+      this.toastrService.success(
+        'Correcto!',
+        'Detalle de primas agregado correctamente.'
+      );
+    }
+  }
+  eliminarDetallePrima(i: any) {
+    this.lstPrimasMasivos.splice(i, 1);
+  }
+
 }

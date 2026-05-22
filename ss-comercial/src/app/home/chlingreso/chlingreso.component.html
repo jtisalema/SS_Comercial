@@ -185,7 +185,7 @@
                                                 formControlName="cliente" (change)="onClienteChange($event)"
                                                 [addTag]="true"
                                                 [class.is-invalid]="ingresoForm.get('cliente')?.touched && ingresoForm.get('cliente')?.invalid">
-<ng-template ng-option-tmp let-item="item">
+                                                <ng-template ng-option-tmp let-item="item">
                                                     {{item.cliente}}
                                                 </ng-template>
 
@@ -380,7 +380,7 @@
                                         <!-- TASA -->
                                         <div class="col-md-3">
                                             <label for="tasa" class="form-label">
-                                                Tasa
+                                                Tasa (individual - fianzas)
                                             </label>
 
                                             <div class="input-group">
@@ -424,129 +424,153 @@
                                         </div>
 
                                     </div>
+                                    <!-- Solo para masivos -->
+                                    <form [formGroup]="primaMasivoForm">
+                                        <div class="row mb-4" *ngIf="this.ingresoForm.value.subArea==4">
+                                            <!-- Tipo comision de prima -->
 
-                                    <div class="row mb-4">
-                                        <!-- Tipo comision de prima -->
-                                        <div class="col-md-4">
-                                            <label for="tipoPrima" class="form-label">
-                                                Tipo de Prima
-                                            </label>
+                                            <div class="col-md-2">
+                                                <label for="tipoPrima" class="form-label">
+                                                    Tipo de Prima(Masivos)
+                                                </label>
 
-                                            <div class="input-group">
-                                                <span class="input-group-text bg-light">
-                                                    <i class="fas fa-user-tie text-info"></i>
-                                                </span>
-                                                <select id="tipoPrima" class="form-control" formControlName="tipoPrima">
-                                                    <option value="" disabled selected>Seleccione el tipo de prima
-                                                    </option>
-                                                    <option value="1">Prima Neta</option>
-                                                    <option value="2">Prima Riesgo</option>
-                                                </select>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-light">
+                                                        <i class="fas fa-user-tie text-info"></i>
+                                                    </span>
+                                                    <select id="tipoPrima" class="form-control"
+                                                        formControlName="tipoPrima">
+                                                        <option value="" disabled selected>Seleccione
+                                                        </option>
+                                                        <option value="1">Prima Neta</option>
+                                                        <option value="2">Prima Riesgo</option>
+                                                    </select>
+                                                </div>
+
+                                                <small class="text-danger"
+                                                    *ngIf="primaMasivoForm.get('tipoPrima')?.touched && primaMasivoForm.get('tipoPrima')?.hasError('required')">
+                                                    Debe seleccionar un ejecutivo
+                                                </small>
+                                            </div>
+                                            <!-- HUR -->
+                                            <div class="col-md-3">
+                                                <label for="hur" class="form-label">
+                                                    {{
+                                                    primaMasivoForm.value.tipoPrima == 1
+                                                    ? '% HUR Prima Neta (Masivos)'
+                                                    : primaMasivoForm.value.tipoPrima == 2
+                                                    ? '% HUR Prima Riesgo (Masivos)'
+                                                    : '% HUR (Masivos)'
+                                                    }}
+                                                </label>
+
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-light">
+                                                        <i class="fas fa-percentage text-info"></i>
+                                                    </span>
+                                                    <input id="hur" type="number" min="0" class="form-control"
+                                                        formControlName="hur" placeholder="Ingrese el valor">
+                                                </div>
+
+                                                <small class="text-danger"
+                                                    *ngIf="primaMasivoForm.get('hur')?.touched && primaMasivoForm.get('hur')?.hasError('required')">
+                                                    Debe ingresar el valor de HUR
+                                                </small>
                                             </div>
 
-                                            <small class="text-danger"
-                                                *ngIf="ingresoForm.get('tipoPrima')?.touched && ingresoForm.get('tipoPrima')?.hasError('required')">
-                                                Debe seleccionar un ejecutivo
-                                            </small>
-                                        </div>
-                                        <!-- HUR -->
-                                        <div class="col-md-4">
-                                            <label for="hur" class="form-label">
-                                                {{
-                                                ingresoForm.value.tipoPrima == 1
-                                                ? '% HUR Prima Neta'
-                                                : ingresoForm.value.tipoPrima == 2
-                                                ? '% HUR Prima Riesgo'
-                                                : '% HUR'
-                                                }}
-                                            </label>
+                                            <!-- COMISIÓN BROKER -->
+                                            <div class="col-md-3">
+                                                <label for="hur" class="form-label">
+                                                    {{
+                                                    primaMasivoForm.value.tipoPrima == 1
+                                                    ? '% Comisión Broker Prima Neta (Masivos)'
+                                                    : primaMasivoForm.value.tipoPrima == 2
+                                                    ? '% Comisión Broker Prima Riesgo (Masivos)'
+                                                    : '% Comisión Broker (Masivos)'
+                                                    }}
+                                                </label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-light">
+                                                        <i class="fas fa-percentage text-info"></i>
+                                                    </span>
+                                                    <input id="comisionBroker" type="number" min="0"
+                                                        class="form-control" formControlName="comisionBroker"
+                                                        placeholder="Ingrese la comisión para el broker">
+                                                </div>
 
-                                            <div class="input-group">
-                                                <span class="input-group-text bg-light">
-                                                    <i class="fas fa-percentage text-info"></i>
-                                                </span>
-                                                <input id="hur" type="number" min="0" class="form-control"
-                                                    formControlName="hur" placeholder="Ingrese el valor de HUR">
+                                                <small class="text-danger"
+                                                    *ngIf="primaMasivoForm.get('comisionBroker')?.touched && primaMasivoForm.get('comisionBroker')?.hasError('required')">
+                                                    Debe ingresar la comisión para el broker
+                                                </small>
+                                            </div>
+                                            <!-- Observaciones -->
+                                            <div class="col-md-3">
+                                                <label for="hur" class="form-label">Observaciones</label>
+
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-light">
+                                                        <i class="fas fa-comment-alt text-info"></i>
+                                                    </span>
+                                                    <textarea class="form-control"
+                                                        placeholder="Escriba las observaciones..."
+                                                        formControlName="observacionMasivos"
+                                                        style="resize: none;height: 38px;">
+                </textarea>
+                                                </div>
+
+                                                <small class="text-danger"
+                                                    *ngIf="primaMasivoForm.get('hur')?.touched && primaMasivoForm.get('hur')?.hasError('required')">
+                                                    Debe ingresar el valor de HUR
+                                                </small>
+                                            </div>
+                                            <div class="col-md-1 d-flex flex-column justify-content-end">
+                                                <button type="button" class="btn btn-warning"
+                                                    style="color: white;font-weight: bold;"
+                                                    title="agregar detalle de póliza" (click)="agregarPrimaMasivos()">
+                                                    <span class="me-1">+</span> Agregar
+                                                </button>
                                             </div>
 
-                                            <small class="text-danger"
-                                                *ngIf="ingresoForm.get('hur')?.touched && ingresoForm.get('hur')?.hasError('required')">
-                                                Debe ingresar el valor de HUR
-                                            </small>
                                         </div>
-
-                                        <!-- COMISIÓN PRIMA RIESGO -->
-                                        <div class="col-md-3" hidden>
-                                            <label for="primaRiesgo" class="form-label">
-                                                Comisión Prima Riesgo
-                                            </label>
-
-                                            <div class="input-group">
-                                                <span class="input-group-text bg-light">
-                                                    <i class="fas fa-shield-alt text-info"></i>
-                                                </span>
-                                                <input id="primaRiesgo" type="text" class="form-control"
-                                                    formControlName="primaRiesgo"
-                                                    placeholder="Ingrese la comisión de prima de riesgo">
-                                            </div>
-
-                                            <small class="text-danger"
-                                                *ngIf="ingresoForm.get('primaRiesgo')?.touched && ingresoForm.get('primaRiesgo')?.hasError('required')">
-                                                Debe ingresar la comisión de prima de riesgo
-                                            </small>
-                                        </div>
-
-                                        <!-- COMISIÓN PRIMA NETA -->
-                                        <div class="col-md-3" hidden>
-                                            <label for="primaNeta" class="form-label">
-                                                Comisión Prima Neta
-                                            </label>
-
-                                            <div class="input-group">
-                                                <span class="input-group-text bg-light">
-                                                    <i class="fas fa-coins text-info"></i>
-                                                </span>
-                                                <input id="primaNeta" type="text" class="form-control"
-                                                    formControlName="primaNeta"
-                                                    placeholder="Ingrese la comisión de la prima neta">
-                                            </div>
-
-                                            <small class="text-danger"
-                                                *ngIf="ingresoForm.get('primaNeta')?.touched && ingresoForm.get('primaNeta')?.hasError('required')">
-                                                Debe ingresar la comisión de la prima neta
-                                            </small>
-                                        </div>
-
-                                        <!-- COMISIÓN BROKER -->
-                                        <div class="col-md-4">
-                                            <label for="hur" class="form-label">
-                                                {{
-                                                ingresoForm.value.tipoPrima == 1
-                                                ? '% Comisión Broker Prima Neta'
-                                                : ingresoForm.value.tipoPrima == 2
-                                                ? '% Comisión Broker Prima Riesgo'
-                                                : '% Comisión Broker'
-                                                }}
-                                            </label>
-                                            <div class="input-group">
-                                                <span class="input-group-text bg-light">
-                                                    <i class="fas fa-percentage text-info"></i>
-                                                </span>
-                                                <input id="comisionBroker" type="number" min="0" class="form-control"
-                                                    formControlName="comisionBroker"
-                                                    placeholder="Ingrese la comisión para el broker">
-                                            </div>
-
-                                            <small class="text-danger"
-                                                *ngIf="ingresoForm.get('comisionBroker')?.touched && ingresoForm.get('comisionBroker')?.hasError('required')">
-                                                Debe ingresar la comisión para el broker
-                                            </small>
-                                        </div>
-
-                                    </div>
-
+                                    </form>
                                     <div class="row mb-3">
+                                        <!-- Fecha  Inicio Vigencia -->
+                                        <div class="col-md-3">
+                                            <label for="formaPago" class="form-label">
+                                                Fecha Inicio Vigencia
+                                            </label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light">
+                                                    <i class="fas fa-calendar-alt text-info"></i>
+                                                </span>
+                                                <input id="inicioVigencia" type="date" class="form-control"
+                                                    formControlName="inicioVigencia">
+                                            </div>
 
+                                            <small class="text-danger"
+                                                *ngIf="ingresoForm.get('formaPago')?.touched && ingresoForm.get('formaPago')?.hasError('required')">
+                                                Debe seleccionar una forma de pago
+                                            </small>
+                                        </div>
+                                        <!-- Fecha  Fin Vigencia -->
+                                        <div class="col-md-3">
+                                            <label for="formaPago" class="form-label">
+                                                Fecha Fin Vigencia
+                                            </label>
+
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light">
+                                                    <i class="fas fa-calendar-alt text-info"></i>
+                                                </span>
+                                                <input id="finVigencia" type="date" class="form-control"
+                                                    formControlName="finVigencia">
+                                            </div>
+
+                                            <small class="text-danger"
+                                                *ngIf="ingresoForm.get('formaPago')?.touched && ingresoForm.get('formaPago')?.hasError('required')">
+                                                Debe seleccionar una forma de pago
+                                            </small>
+                                        </div>
                                         <!-- FORMA DE PAGO -->
                                         <div class="col-md-3">
                                             <label for="formaPago" class="form-label">
@@ -601,226 +625,317 @@
 
                                             </div>
                                         </div>
-
-                                        <!-- IDENTIFICACIÓN DEL PAGADOR -->
-                                        <div class="col-md-3">
-                                            <label for="identificacionPagador" class="form-label">
-                                                Identificación
-                                            </label>
-
-                                            <div class="input-group">
-                                                <span class="input-group-text bg-light">
-                                                    <i class="fas fa-id-card text-info"></i>
-                                                </span>
-                                                <input id="identificacionPagador" type="text" class="form-control"
-                                                    formControlName="identificacionPagador"
-                                                    placeholder="Ingrese la identificación del pagador">
-                                            </div>
-
-                                            <small class="text-danger"
-                                                *ngIf="ingresoForm.get('identificacionPagador')?.touched && ingresoForm.get('identificacionPagador')?.hasError('required')">
-                                                Debe ingresar la identificación del pagador
-                                            </small>
-                                        </div>
-
-                                        <!-- FECHA MAX. RECEPCIÓN FACTURA -->
-                                        <div class="col-md-3">
-                                            <label for="fechaRecepcionFactura" class="form-label">
-                                                Fecha Max. Recepción Factura
-                                            </label>
-
-                                            <div class="input-group">
-                                                <span class="input-group-text bg-light">
-                                                    <i class="fas fa-calendar-alt text-info"></i>
-                                                </span>
-                                                <input id="fechaRecepcionFactura" type="date" class="form-control"
-                                                    formControlName="fechaRecepcionFactura">
-                                            </div>
-
-                                            <small class="text-danger"
-                                                *ngIf="ingresoForm.get('fechaRecepcionFactura')?.touched && ingresoForm.get('fechaRecepcionFactura')?.hasError('required')">
-                                                Debe seleccionar la fecha máxima para recepción de factura
-                                            </small>
-                                        </div>
-
                                     </div>
-                                    <div class="row mb-3">
+                                    <div class="row mb-3 align-items-stretch">
 
-                                        <!-- Número de Cuotas -->
-                                        <div class="col-md-2" *ngIf="ingresoForm.value.formaPago != 1">
-                                            <label for="cuotas" class="form-label"># Cuotas</label>
+                                        <!-- BLOQUE IZQUIERDO -->
+                                        <div class="col-md-8">
 
-                                            <div class="input-group">
-                                                <span class="input-group-text bg-light">
-                                                    <i class="fas fa-list-ol text-info"></i>
-                                                </span>
-                                                <input id="cuotas" type="number" min="1" class="form-control"
-                                                    placeholder="1" formControlName="cuotas">
-                                            </div>
+                                            <div class="row">
 
-                                            <small class="text-danger"
-                                                *ngIf="ingresoForm.get('cuotas')?.touched && ingresoForm.get('cuotas')?.hasError('required')">
-                                                Debe ingresar el número de cuotas
-                                            </small>
-                                        </div>
-                                        <!----->
-                                        <div class="col-md-2"
-                                            *ngIf="ingresoForm.value.formaPago != 1 && this.ingresoForm.value.subArea==5">
-                                            <label for="cuotas" class="form-label"># Días</label>
-                                            <div class="input-group">
-                                                <span class="input-group-text bg-light">
-                                                    <i class="fas fa-list-ol text-info"></i>
-                                                </span>
-                                                <input id="cuotas" type="number" min="0" class="form-control"
-                                                    placeholder="0" (change)="calcularFechaPago()"
-                                                    formControlName="numeroDias">
-                                            </div>
-                                        </div>
-                                        <!-- Fecha Pago / Cobro -->
-                                        <div class="col-md-2" *ngIf="ingresoForm.value.formaPago != 1">
-                                            <label for="fechaPagoCobro" class="form-label">Fecha Pago/Cobro</label>
+                                                <!-- IDENTIFICACIÓN DEL PAGADOR -->
+                                                <div class="col-md-4">
 
-                                            <div class="input-group">
-                                                <span class="input-group-text bg-light">
-                                                    <i class="fas fa-calendar-alt text-info"></i>
-                                                </span>
-                                                <input id="fechaPagoCobro" type="date" class="form-control"
-                                                    formControlName="fechaPago">
-                                            </div>
+                                                    <label for="identificacionPagador" class="form-label">
+                                                        Identificación
+                                                    </label>
 
-                                            <small class="text-danger"
-                                                *ngIf="ingresoForm.get('fechaPago')?.touched && ingresoForm.get('fechaPago')?.hasError('required')">
-                                                Debe seleccionar la fecha de pago/cobro
-                                            </small>
-                                        </div>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text bg-light">
+                                                            <i class="fas fa-id-card text-info"></i>
+                                                        </span>
 
-                                        <!-- Adjuntar comprobante -->
-                                        <div class="col-md-4" *ngIf="ingresoForm.value.formaPago == 1">
-                                            <label class="form-label">Adjuntar comprobante<span
-                                                    *ngIf="ingresoForm.value.subArea != 5">(opcional)</span></label>
-
-                                            <ngx-dropzone class="custom-dropzone" (change)="onSelect($event)"
-                                                accept="image/jpeg,image/jpg,image/png,image/gif,application/pdf"
-                                                [multiple]="false" style="height: 140px;">
-                                                <ngx-dropzone-label>
-                                                    <div class="dropzone-label text-center">
-                                                        <i class="fa fa-cloud-upload-alt fa-2x mb-2"></i>
-                                                        <p class="mb-0">Arrastre el archivo aquí</p>
-                                                        <small>o haga clic para seleccionar</small>
+                                                        <input id="identificacionPagador" type="text"
+                                                            class="form-control" formControlName="identificacionPagador"
+                                                            placeholder="Ingrese la identificación del pagador">
                                                     </div>
+
+                                                    <small class="text-danger" *ngIf="ingresoForm.get('identificacionPagador')?.touched 
+                    && ingresoForm.get('identificacionPagador')?.hasError('required')">
+
+                                                        Debe ingresar la identificación del pagador
+
+                                                    </small>
+
+                                                </div>
+
+                                                <!-- FECHA MAX. RECEPCIÓN FACTURA -->
+                                                <div class="col-md-4">
+
+                                                    <label for="fechaRecepcionFactura" class="form-label">
+                                                        Fecha Max. Recepción Factura
+                                                    </label>
+
+                                                    <div class="input-group">
+                                                        <span class="input-group-text bg-light">
+                                                            <i class="fas fa-calendar-alt text-info"></i>
+                                                        </span>
+
+                                                        <input id="fechaRecepcionFactura" type="date"
+                                                            class="form-control"
+                                                            formControlName="fechaRecepcionFactura">
+                                                    </div>
+
+                                                    <small class="text-danger" *ngIf="ingresoForm.get('fechaRecepcionFactura')?.touched 
+                    && ingresoForm.get('fechaRecepcionFactura')?.hasError('required')">
+
+                                                        Debe seleccionar la fecha máxima para recepción de factura
+
+                                                    </small>
+
+                                                </div>
+
+                                                <!-- INSPECCIÓN -->
+                                                <div class="col-md-4"
+                                                    *ngIf="ingresoForm.value.area == 1 && ingresoForm.value.subArea == 2">
+
+                                                    <div style="display:flex; flex-direction:column;">
+
+                                                        <label for="activarInspeccion"
+                                                            style="font-weight:600; margin-bottom:12px;">
+
+                                                            ¿Requiere inspección?
+
+                                                        </label>
+
+                                                        <div class="form-check form-switch" style="margin:0;">
+
+                                                            <input class="form-check-input" type="checkbox"
+                                                                style="transform: scale(1.9); margin:0;"
+                                                                id="activarInspeccion" formControlName="datosInspeccion"
+                                                                (change)="toggleInspeccion($event)">
+
+                                                        </div>
+
+                                                    </div>
+
+                                                </div>
+
+                                            </div>
+
+                                            <div class="row">
+
+                                                <!-- Número de Cuotas -->
+                                                <div class="col-md-2" *ngIf="ingresoForm.value.formaPago != 1">
+
+                                                    <label for="cuotas" class="form-label">
+                                                        # Cuotas
+                                                    </label>
+
+                                                    <div class="input-group">
+                                                        <span class="input-group-text bg-light">
+                                                            <i class="fas fa-list-ol text-info"></i>
+                                                        </span>
+
+                                                        <input id="cuotas" type="number" min="1" class="form-control"
+                                                            placeholder="1" formControlName="cuotas">
+                                                    </div>
+
+                                                    <small class="text-danger" *ngIf="ingresoForm.get('cuotas')?.touched 
+                    && ingresoForm.get('cuotas')?.hasError('required')">
+
+                                                        Debe ingresar el número de cuotas
+
+                                                    </small>
+
+                                                </div>
+
+                                                <!-- DÍAS -->
+                                                <div class="col-md-2" *ngIf="ingresoForm.value.formaPago != 1 
+                && this.ingresoForm.value.subArea==5">
+
+                                                    <label for="cuotas" class="form-label">
+                                                        # Días
+                                                    </label>
+
+                                                    <div class="input-group">
+
+                                                        <span class="input-group-text bg-light">
+                                                            <i class="fas fa-list-ol text-info"></i>
+                                                        </span>
+
+                                                        <input id="cuotas" type="number" min="0" class="form-control"
+                                                            placeholder="0" (change)="calcularFechaPago()"
+                                                            formControlName="numeroDias">
+
+                                                    </div>
+
+                                                </div>
+
+                                                <!-- Fecha Pago / Cobro -->
+                                                <div class="col-md-4" *ngIf="ingresoForm.value.formaPago != 1">
+
+                                                    <label for="fechaPagoCobro" class="form-label">
+                                                        Fecha Pago/Cobro
+                                                    </label>
+
+                                                    <div class="input-group">
+
+                                                        <span class="input-group-text bg-light">
+                                                            <i class="fas fa-calendar-alt text-info"></i>
+                                                        </span>
+
+                                                        <input id="fechaPagoCobro" type="date" class="form-control"
+                                                            formControlName="fechaPago">
+
+                                                    </div>
+
+                                                    <small class="text-danger" *ngIf="ingresoForm.get('fechaPago')?.touched 
+                    && ingresoForm.get('fechaPago')?.hasError('required')">
+
+                                                        Debe seleccionar la fecha de pago/cobro
+
+                                                    </small>
+
+                                                </div>
+
+                                                <!-- DATOS INSPECCIÓN -->
+                                                <div class="col-md-6" *ngIf="ingresoForm.value.datosInspeccion">
+                                                    <div class="card mt-3 p-3 position-relative">
+
+                                                        <!-- Título + Switch -->
+                                                        <div
+                                                            class="d-flex justify-content-between align-items-center mb-3">
+                                                            <h6 class="card-title titulo-sobre-borde m-0"
+                                                                style="color:blue">
+                                                                Datos para la Inspección
+                                                            </h6>
+                                                        </div>
+
+                                                        <div class="row">
+
+
+                                                            <!-- Nombre -->
+                                                            <div class="col-md-6">
+                                                                <label for="nombreContactoInspeccion"
+                                                                    class="form-label">Nombre</label>
+                                                                <div class="input-group">
+                                                                    <span class="input-group-text bg-light">
+                                                                        <i class="fas fa-user text-info"></i>
+                                                                    </span>
+                                                                    <input id="nombreContactoInspeccion" type="text"
+                                                                        class="form-control"
+                                                                        placeholder="Nombre del contacto"
+                                                                        formControlName="nombreContactoInspeccion">
+                                                                </div>
+
+                                                                <small class="text-danger"
+                                                                    *ngIf="ingresoForm.get('nombreContactoInspeccion')?.touched &&
+                                                       ingresoForm.get('nombreContactoInspeccion')?.hasError('required')">
+                                                                    Debe ingresar el nombre del contacto
+                                                                </small>
+                                                            </div>
+
+                                                            <!-- Teléfono -->
+                                                            <div class="col-md-6">
+                                                                <label for="celularcontactoInspeccion"
+                                                                    class="form-label">Teléfono / Celular</label>
+                                                                <div class="input-group">
+                                                                    <span class="input-group-text bg-light">
+                                                                        <i class="fas fa-phone text-info"></i>
+                                                                    </span>
+                                                                    <input id="celularcontactoInspeccion" type="text"
+                                                                        class="form-control"
+                                                                        placeholder="Teléfono o celular"
+                                                                        formControlName="celularcontactoInspeccion">
+                                                                </div>
+
+                                                                <small class="text-danger"
+                                                                    *ngIf="ingresoForm.get('celularcontactoInspeccion')?.touched &&
+                                                       ingresoForm.get('celularcontactoInspeccion')?.hasError('required')">
+                                                                    Debe ingresar el teléfono/celular
+                                                                </small>
+                                                            </div>
+
+                                                            <!-- Observación -->
+                                                            <div class="col-md-12">
+                                                                <label for="observacionInspeccion"
+                                                                    class="form-label">Observación</label>
+                                                                <div class="input-group">
+                                                                    <span class="input-group-text bg-light">
+                                                                        <i class="fas fa-sticky-note text-info"></i>
+                                                                    </span>
+                                                                    <input id="observacionInspeccion" type="text"
+                                                                        class="form-control" placeholder="Observación"
+                                                                        formControlName="observacionInspeccion">
+                                                                </div>
+
+                                                                <small class="text-danger" *ngIf="ingresoForm.get('observacionInspeccion')?.touched &&
+                                                       ingresoForm.get('observacionInspeccion')?.hasError('required')">
+                                                                    Debe ingresar una observación
+                                                                </small>
+                                                            </div>
+
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                        <!-- BLOQUE DERECHO -->
+                                        <div class="col-md-4 ms-auto d-flex flex-column"
+                                            *ngIf="ingresoForm.value.formaPago == 1">
+
+                                            <!-- Adjuntar comprobante -->
+                                            <label class="form-label">
+                                                Adjuntar comprobante
+                                                <span *ngIf="ingresoForm.value.subArea != 5">(opcional)</span>
+                                            </label>
+
+                                            <ngx-dropzone class="custom-dropzone flex-grow-1"
+                                                (change)="onSelect($event)"
+                                                accept="image/jpeg,image/jpg,image/png,image/gif,application/pdf"
+                                                [multiple]="false" style="min-height: 140px;">
+
+                                                <ngx-dropzone-label>
+
+                                                    <div class="dropzone-label text-center">
+
+                                                        <i class="fa fa-cloud-upload-alt fa-2x mb-2"></i>
+
+                                                        <p class="mb-0">
+                                                            Arrastre el archivo aquí
+                                                        </p>
+
+                                                        <small>
+                                                            o haga clic para seleccionar
+                                                        </small>
+
+                                                    </div>
+
                                                 </ngx-dropzone-label>
 
                                                 <ngx-dropzone-preview *ngFor="let f of files" [removable]="true"
                                                     (removed)="onRemove(f)" [removable]="!esEjecutivo"
                                                     (click)="descargarArchivo(f, $event)">
+
                                                     <ngx-dropzone-label style="font-size: 10px;">
+
                                                         {{ f.name.length > 15 ? (f.name | slice:0:15) + '...' : f.name
                                                         }}
+
                                                     </ngx-dropzone-label>
+
                                                 </ngx-dropzone-preview>
+
                                             </ngx-dropzone>
-                                            <small class="d-block mt-1"
-                                                *ngIf="ingresoForm.value.subArea == 5 && this.files.length < 1 && this.ingresoForm.value.formaPago==1">
-                                                <em style="color: red;">El comprobante de pago es Obligatorio</em>
+
+                                            <small class="d-block mt-1" *ngIf="ingresoForm.value.subArea == 5 
+            && this.files.length < 1 
+            && this.ingresoForm.value.formaPago==1">
+
+                                                <em style="color: red;">
+                                                    El comprobante de pago es Obligatorio
+                                                </em>
+
                                             </small>
+
                                             <small class="d-block mt-1">
                                                 <em>Tamaño máximo por archivo 4MB</em>
                                             </small>
-                                        </div>
 
-                                        <!-- INSPECCIÓN -->
-                                        <div class="col-md-1"
-                                            *ngIf="ingresoForm.value.area == 1 && ingresoForm.value.subArea == 2">
-                                            <div style="display:flex; flex-direction:column;">
-
-                                                <label for="activarInspeccion"
-                                                    style="font-weight:600; margin-bottom:12px;">
-                                                    ¿Requiere inspección?
-                                                </label>
-
-                                                <div class="form-check form-switch" style="margin:0;">
-                                                    <input class="form-check-input" type="checkbox"
-                                                        style="transform: scale(1.9); margin:0;" id="activarInspeccion"
-                                                        formControlName="datosInspeccion"
-                                                        (change)="toggleInspeccion($event)">
-                                                </div>
-
-                                            </div>
-                                        </div>
-                                        <div class="col-md-7" *ngIf="ingresoForm.value.datosInspeccion">
-                                            <div class="card mt-3 p-3 position-relative">
-
-                                                <!-- Título + Switch -->
-                                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                                    <h6 class="card-title titulo-sobre-borde m-0" style="color:blue">
-                                                        Datos para la Inspección
-                                                    </h6>
-                                                </div>
-
-                                                <div class="row">
-
-
-                                                    <!-- Nombre -->
-                                                    <div class="col-md-6">
-                                                        <label for="nombreContactoInspeccion"
-                                                            class="form-label">Nombre</label>
-                                                        <div class="input-group">
-                                                            <span class="input-group-text bg-light">
-                                                                <i class="fas fa-user text-info"></i>
-                                                            </span>
-                                                            <input id="nombreContactoInspeccion" type="text"
-                                                                class="form-control" placeholder="Nombre del contacto"
-                                                                formControlName="nombreContactoInspeccion">
-                                                        </div>
-
-                                                        <small class="text-danger"
-                                                            *ngIf="ingresoForm.get('nombreContactoInspeccion')?.touched &&
-                                                       ingresoForm.get('nombreContactoInspeccion')?.hasError('required')">
-                                                            Debe ingresar el nombre del contacto
-                                                        </small>
-                                                    </div>
-
-                                                    <!-- Teléfono -->
-                                                    <div class="col-md-6">
-                                                        <label for="celularcontactoInspeccion"
-                                                            class="form-label">Teléfono / Celular</label>
-                                                        <div class="input-group">
-                                                            <span class="input-group-text bg-light">
-                                                                <i class="fas fa-phone text-info"></i>
-                                                            </span>
-                                                            <input id="celularcontactoInspeccion" type="text"
-                                                                class="form-control" placeholder="Teléfono o celular"
-                                                                formControlName="celularcontactoInspeccion">
-                                                        </div>
-
-                                                        <small class="text-danger"
-                                                            *ngIf="ingresoForm.get('celularcontactoInspeccion')?.touched &&
-                                                       ingresoForm.get('celularcontactoInspeccion')?.hasError('required')">
-                                                            Debe ingresar el teléfono/celular
-                                                        </small>
-                                                    </div>
-
-                                                    <!-- Observación -->
-                                                    <div class="col-md-12">
-                                                        <label for="observacionInspeccion"
-                                                            class="form-label">Observación</label>
-                                                        <div class="input-group">
-                                                            <span class="input-group-text bg-light">
-                                                                <i class="fas fa-sticky-note text-info"></i>
-                                                            </span>
-                                                            <input id="observacionInspeccion" type="text"
-                                                                class="form-control" placeholder="Observación"
-                                                                formControlName="observacionInspeccion">
-                                                        </div>
-
-                                                        <small class="text-danger" *ngIf="ingresoForm.get('observacionInspeccion')?.touched &&
-                                                       ingresoForm.get('observacionInspeccion')?.hasError('required')">
-                                                            Debe ingresar una observación
-                                                        </small>
-                                                    </div>
-
-                                                </div>
-                                            </div>
                                         </div>
 
                                     </div>
@@ -883,8 +998,138 @@
                                     </div>
 
                                 </div>
+                                <!---Para el detalle de primas-->
+                                <div class="card mb-4 p-3 position-relative" *ngIf="lstPrimasMasivos.length > 0">
+                                    <h6 class="card-title titulo-sobre-borde">Detalle de Primas y Pólizas</h6>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table
+                                                class="table table-hover table-bordered tabla-lstPrimasMasivos text-center align-middle shadow-sm"
+                                                style="font-size: 11px; border-radius: 10px; overflow: hidden;">
 
+                                                <thead class="bg-primary text-white">
+                                                    <tr>
+                                                        <th class="align-middle">
+                                                            <i class="fas fa-hashtag mr-1"></i>
+                                                        </th>
 
+                                                        <th class="align-middle">
+                                                            <i class="fas fa-file-invoice-dollar mr-1"></i>
+                                                            Tipo Prima
+                                                        </th>
+                                                        <th class="align-middle">
+                                                            <i class="fas fa-dollar mr-1"></i>
+                                                            Ramo
+                                                        </th>
+
+                                                        <th class="align-middle">
+                                                            <i class="fas fa-percent mr-1"></i>
+                                                            HUR
+                                                        </th>
+
+                                                        <th class="align-middle">
+                                                            <i class="fas fa-percent mr-1"></i>
+                                                            Comisión Broker
+                                                        </th>
+
+                                                        <th class="align-middle">
+                                                            <i class="fas fa-calendar mr-1"></i>
+                                                            Inicio Vigencia
+                                                        </th>
+
+                                                        <th class="align-middle">
+                                                            <i class="fas fa-calendar mr-1"></i>
+                                                            Fin Vigencia
+                                                        </th>
+                                                        <th class="align-middle">
+                                                            <i class="fas fa-comment-dots mr-1"></i>
+                                                            Observaciones
+                                                        </th>
+
+                                                        <th class="align-middle">
+                                                            <i class="fas fa-gears mr-1"></i>
+                                                            Acciones
+                                                        </th>
+                                                    </tr>
+                                                </thead>
+
+                                                <tbody>
+                                                    <tr *ngFor="let con of lstPrimasMasivos; let i = index">
+
+                                                        <td class="fw-bold">
+                                                            {{ i + 1 }}
+                                                        </td>
+
+                                                        <td>
+                                                            <span class="badge" style="font-size: 10px;"
+                                                                [ngClass]="con.tipoPrima == 1 ? 'badge-primary' : 'badge-warning'">
+
+                                                                {{ con.tipoPrima == 1 ? 'Prima Neta' : 'Prima Riesgo' }}
+
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            <span class=" px-3 py-2">
+                                                                {{ con.lstRamos }}
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            <span class="badge badge-info px-3 py-2">
+                                                                {{ con.hur }}%
+                                                            </span>
+                                                        </td>
+
+                                                        <td>
+                                                            <span class="badge badge-warning px-3 py-2">
+                                                                {{ con.comisionBroker }}%
+                                                            </span>
+                                                        </td>
+                                                        <td class="text-left">
+                                                            {{ con.inicioVigencia }}
+                                                        </td>
+                                                        <td class="text-left">
+                                                            {{ con.finVigencia }}
+                                                        </td>
+                                                        <td class="text-left">
+                                                            {{ con.observacionMasivos }}
+                                                        </td>
+
+                                                        <td>
+                                                            <div
+                                                                class="d-flex justify-content-center align-items-center">
+
+                                                                <!-- <button type="button"
+                                                                    class="btn btn-outline-primary btn-sm mx-1 rounded-circle shadow-sm"
+                                                                    title="Editar" (click)="editarContacto(i)">
+
+                                                                    <i class="fas fa-pen"></i>
+                                                                </button> -->
+
+                                                                <button type="button"
+                                                                    class="btn btn-outline-danger btn-sm mx-1 rounded-circle shadow-sm"
+                                                                    title="Eliminar" (click)="eliminarDetallePrima(i)">
+
+                                                                    <i class="fas fa-trash"></i>
+                                                                </button>
+
+                                                                <!-- <button type="button"
+                                                                    class="btn btn-outline-success btn-sm mx-1 rounded-circle shadow-sm"
+                                                                    title="Duplicar" (click)="duplicarContacto(i)">
+
+                                                                    <i class="fas fa-clone"></i>
+                                                                </button> -->
+
+                                                            </div>
+                                                        </td>
+
+                                                    </tr>
+                                                </tbody>
+
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!----->
                                 <div class="card mb-4 p-3 position-relative">
                                     <h6 class="card-title titulo-sobre-borde">Contactos</h6>
                                     <div class="row">
@@ -897,108 +1142,231 @@
                                     </div>
                                     <div class="card-body" *ngIf="lstContactos.length > 0">
                                         <div class="table-responsive">
-                                            <table class="table table-bordered tabla-lstContactos"
-                                                style="font-size: 10px;">
-                                                <thead>
+                                            <table
+                                                class="table table-hover table-bordered tabla-lstContactos text-center align-middle shadow-sm"
+                                                style="font-size: 11px; border-radius: 10px; overflow: hidden;">
+
+                                                <thead class="bg-primary text-white">
                                                     <tr>
-                                                        <th>#</th>
-                                                        <th><i class="fas fa-id-card"></i> CI/RUC</th>
-                                                        <th><i class="fas fa-tag"></i> Cargo</th>
-                                                        <th><i class="fas fa-user"></i> Nombre</th>
-                                                        <th><i class="fas fa-calendar-days"></i> F. Nacimiento</th>
-                                                        <th><i class="fas fa-at"></i> Email</th>
-                                                        <th><i class="fas fa-gift"></i> Regalo</th>
-                                                        <th><i class="fas fa-address-book"></i> Contacto</th>
-                                                        <th><i class="fas fa-address-book"></i> Telefonos</th>
-                                                        <th><i class="fas fa-web-awesome"></i> Usuario Web</th>
-                                                        <th><i class="fas fa-cog"></i> Acción</th>
+
+                                                        <th class="align-middle">
+                                                            <i class="fas fa-hashtag mr-1"></i> #
+                                                        </th>
+
+                                                        <th class="align-middle">
+                                                            <i class="fas fa-id-card mr-1"></i>
+                                                            CI / RUC
+                                                        </th>
+
+                                                        <th class="align-middle">
+                                                            <i class="fas fa-briefcase mr-1"></i>
+                                                            Cargo
+                                                        </th>
+
+                                                        <th class="align-middle">
+                                                            <i class="fas fa-user-tie mr-1"></i>
+                                                            Nombre
+                                                        </th>
+
+                                                        <th class="align-middle">
+                                                            <i class="fas fa-cake-candles mr-1"></i>
+                                                            F. Nacimiento
+                                                        </th>
+
+                                                        <th class="align-middle">
+                                                            <i class="fas fa-envelope mr-1"></i>
+                                                            Email
+                                                        </th>
+
+                                                        <th class="align-middle">
+                                                            <i class="fas fa-gift mr-1"></i>
+                                                            Regalo
+                                                        </th>
+
+                                                        <th class="align-middle">
+                                                            <i class="fas fa-address-book mr-1"></i>
+                                                            Contacto
+                                                        </th>
+
+                                                        <th class="align-middle">
+                                                            <i class="fas fa-phone-alt mr-1"></i>
+                                                            Teléfonos
+                                                        </th>
+
+                                                        <th class="align-middle">
+                                                            <i class="fas fa-globe mr-1"></i>
+                                                            Usuario Web
+                                                        </th>
+
+                                                        <th class="align-middle">
+                                                            <i class="fas fa-gears mr-1"></i>
+                                                            Acciones
+                                                        </th>
+
                                                     </tr>
                                                 </thead>
+
                                                 <tbody>
                                                     <tr *ngFor="let con of lstContactos; let i = index">
 
-                                                        <td>{{ i + 1 }}<i *ngIf="con.advertencia == 1"
-                                                                class="fas fa-exclamation-triangle text-warning ml-1"
-                                                                title="Debe completar la información"></i></td>
+                                                        <!-- INDEX -->
+                                                        <td class="fw-bold">
 
+                                                            {{ i + 1 }}
+
+                                                            <i *ngIf="con.advertencia == 1"
+                                                                class="fas fa-exclamation-circle text-warning ml-1"
+                                                                title="Debe completar la información">
+                                                            </i>
+
+                                                        </td>
+
+                                                        <!-- IDENTIFICACION -->
                                                         <td>
+
                                                             {{ con.identificacion }}
+
                                                             <i *ngIf="!con.identificacion && con.advertencia == 1"
-                                                                class="fas fa-exclamation-triangle text-warning ml-1"
-                                                                title="Debe completar la información"></i>
+                                                                class="fas fa-exclamation-circle text-warning ml-1"
+                                                                title="Debe completar la información">
+                                                            </i>
+
                                                         </td>
 
+                                                        <!-- CARGO -->
                                                         <td>
+
                                                             {{ con.cargo }}
+
                                                             <i *ngIf="!con.cargo && con.advertencia == 1"
-                                                                class="fas fa-exclamation-triangle text-warning ml-1"
-                                                                title="Debe completar la información"></i>
+                                                                class="fas fa-exclamation-circle text-warning ml-1"
+                                                                title="Debe completar la información">
+                                                            </i>
+
                                                         </td>
 
-                                                        <td>
-                                                            {{ con.nombre }}
+                                                        <!-- NOMBRE -->
+                                                        <td class="text-left">
+
+                                                            <strong>{{ con.nombre }}</strong>
+
                                                             <i *ngIf="!con.nombre && con.advertencia == 1"
-                                                                class="fas fa-exclamation-triangle text-warning ml-1"
-                                                                title="Debe completar la información"></i>
+                                                                class="fas fa-exclamation-circle text-warning ml-1"
+                                                                title="Debe completar la información">
+                                                            </i>
+
                                                         </td>
 
+                                                        <!-- FECHA -->
                                                         <td>
-                                                            {{ con.fechaNacimiento }}
+
+                                                            <span class="badge badge-light px-3 py-2">
+                                                                {{ con.fechaNacimiento }}
+                                                            </span>
+
                                                             <i *ngIf="!con.fechaNacimiento && con.advertencia == 1"
-                                                                class="fas fa-exclamation-triangle text-warning ml-1"
-                                                                title="Debe completar la información"></i>
+                                                                class="fas fa-exclamation-circle text-warning ml-1"
+                                                                title="Debe completar la información">
+                                                            </i>
+
                                                         </td>
 
-                                                        <td>
+                                                        <!-- EMAIL -->
+                                                        <td class="text-left">
                                                             {{ con.email }}
+
                                                             <i *ngIf="!con.email && con.advertencia == 1"
-                                                                class="fas fa-exclamation-triangle text-warning ml-1"
-                                                                title="Debe completar la información"></i>
+                                                                class="fas fa-exclamation-circle text-warning ml-1"
+                                                                title="Debe completar la información">
+                                                            </i>
+
                                                         </td>
 
+                                                        <!-- REGALO -->
                                                         <td>
-                                                            {{ con.regalo == 1 ? 'SI' : 'NO' }}
+
+                                                            <span class="badge"
+                                                                [ngClass]="con.regalo == 0 ? 'badge-success' : 'badge-secondary'">
+
+                                                                {{ con.regalo == 0 ? 'NO' : 'SI' }}
+
+                                                            </span>
+
                                                         </td>
 
+                                                        <!-- CONTACTO -->
                                                         <td>
+
                                                             {{ con.nombreContacto }}
+
                                                             <i *ngIf="!con.nombreContacto && con.advertencia == 1"
-                                                                class="fas fa-exclamation-triangle text-warning ml-1"
-                                                                title="Debe completar la información"></i>
+                                                                class="fas fa-exclamation-circle text-warning ml-1"
+                                                                title="Debe completar la información">
+                                                            </i>
+
                                                         </td>
 
+                                                        <!-- TELEFONOS -->
                                                         <td>
+
                                                             {{ formatearTelefonos(con) }}
+
                                                             <i *ngIf="!formatearTelefonos(con) && con.advertencia == 1"
-                                                                class="fas fa-exclamation-triangle text-warning ml-1"
-                                                                title="Debe completar la información"></i>
+                                                                class="fas fa-exclamation-circle text-warning ml-1"
+                                                                title="Debe completar la información">
+                                                            </i>
+
                                                         </td>
 
+                                                        <!-- USUARIO WEB -->
                                                         <td>
-                                                            {{ con.usuarioWeb == 1 ? 'SI' : 'NO' }}
+
+                                                            <span class="badge"
+                                                                [ngClass]="con.usuarioWeb == 1 ? 'badge-info' : 'badge-dark'">
+
+                                                                {{ con.usuarioWeb == 1 ? 'SI' : 'NO' }}
+
+                                                            </span>
+
                                                         </td>
 
+                                                        <!-- ACCIONES -->
                                                         <td>
-                                                            <button type="button"
-                                                                class="btn btn-outline-primary btn-sm mr-2"
-                                                                title="editar" (click)="editarContacto(i)">
-                                                                <i class="fas fa-edit"></i>
-                                                            </button>
 
-                                                            <button type="button"
-                                                                class="btn btn-outline-danger btn-sm mr-2"
-                                                                (click)="eliminarContacto(i)" title="eliminar">
-                                                                <i class="fas fa-trash-alt"></i>
-                                                            </button>
+                                                            <div
+                                                                class="d-flex justify-content-center align-items-center">
 
-                                                            <button type="button" class="btn btn-outline-success btn-sm"
-                                                                (click)="duplicarContacto(i)" title="duplicar">
-                                                                <i class="fas fa-copy"></i>
-                                                            </button>
+                                                                <button type="button"
+                                                                    class="btn btn-outline-primary btn-sm mx-1 rounded-circle shadow-sm"
+                                                                    title="Editar" (click)="editarContacto(i)">
+
+                                                                    <i class="fas fa-pen"></i>
+
+                                                                </button>
+
+                                                                <button type="button"
+                                                                    class="btn btn-outline-danger btn-sm mx-1 rounded-circle shadow-sm"
+                                                                    title="Eliminar" (click)="eliminarContacto(i)">
+
+                                                                    <i class="fas fa-trash"></i>
+
+                                                                </button>
+
+                                                                <button type="button"
+                                                                    class="btn btn-outline-success btn-sm mx-1 rounded-circle shadow-sm"
+                                                                    title="Duplicar" (click)="duplicarContacto(i)">
+
+                                                                    <i class="fas fa-clone"></i>
+
+                                                                </button>
+
+                                                            </div>
+
                                                         </td>
 
                                                     </tr>
                                                 </tbody>
+
                                             </table>
                                         </div>
                                     </div>
@@ -1116,12 +1484,14 @@
                                     Guardar
                                 </button>
                             </div>
-                            <div class="col d-flex justify-content-end" *ngIf="!esEjecutivo && !ingresoForm.value.id && visualizar!=1">
+                            <div class="col d-flex justify-content-end"
+                                *ngIf="!esEjecutivo && !ingresoForm.value.id && visualizar!=1">
                                 <button type="button" class="btn btn-success" (click)="enviarCheckList()">
                                     Enviar
                                 </button>
                             </div>
-                            <div class="col d-flex justify-content-end" *ngIf="!esEjecutivo && ingresoForm.value.id && visualizar!=1">
+                            <div class="col d-flex justify-content-end"
+                                *ngIf="!esEjecutivo && ingresoForm.value.id && visualizar!=1">
                                 <button type="button" class="btn btn-success" (click)="enviarCheckList()">
                                     Corregir
                                 </button>

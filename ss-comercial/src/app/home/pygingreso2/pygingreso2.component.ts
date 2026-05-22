@@ -9,6 +9,7 @@ import { PygService } from 'src/app/services/pyg.service';
 import { ChecklistService } from 'src/app/services/checklist.service';
 import { LoadingService } from 'src/app/services/loading.service';
 import Swal from 'sweetalert2';
+import { ActivatedRoute, Router } from '@angular/router';
 @Component({
   selector: 'app-pygingreso2',
   templateUrl: './pygingreso2.component.html',
@@ -20,6 +21,7 @@ export class PygingresoComponent2 {
   userCurrent: any;
   lstGastos: any;
   lstPYG: any;
+  idRegistro: any;
   clientes: any[] = [];
   clientesInput$ = new Subject<string>();
   loadingClientes = false;
@@ -34,16 +36,22 @@ export class PygingresoComponent2 {
     private pygService: PygService,
     private checklistService: ChecklistService,
     private loadingService: LoadingService,
+    private router: Router,
+    private route: ActivatedRoute,
   ) {
 
   }
   ngOnInit(): void {
+    if (this.route.snapshot.paramMap.get("id")) {
+      this.idRegistro = this.route.snapshot.paramMap.get("id");
+    }
     this.obtenerUsuario();
     this.obtenerInformacionInicial();
   }
   obtenerInformacionInicial() {
     this.loadingService.showLoading();
     this.ingresoForm = this.fb.group({
+      id: [],
       cliente: [null, Validators.required],
       nombreCliente: [],
       ramo: [null, Validators.required],
@@ -76,7 +84,6 @@ export class PygingresoComponent2 {
       });
     this.checklistService.obtenerRamos().subscribe((res: any) => {
       this.lstRamos = res.resultado;
-      console.log(this.lstRamos);
     }, (error: any) => {
       this.toastrService.error('ERROR', 'Error al obtener los Ramos!');
     });
@@ -86,6 +93,9 @@ export class PygingresoComponent2 {
   }
   async obtenerUsuario() {
     this.userCurrent = await this.authService.getUserInfor();
+    if (this.idRegistro) {
+      this.cargarDatosRegistro();
+    }
   }
   formatearMoneda() {
     const mensualControl = this.ingresoForm.get('primaMensual');
@@ -120,18 +130,14 @@ export class PygingresoComponent2 {
     }
   }
   changePrimaMensual() {
-    console.log('cambioValor');
     const mensualControl = this.ingresoForm.get('primaMensual');
-    console.log('mensualControl', mensualControl?.value);
     const anualControl = this.ingresoForm.get('primaAnual');
     const anual = mensualControl?.value * 12;
 
     anualControl?.setValue(anual, { emitEvent: false });
   }
   changePorcentaje() {
-    console.log('cambioValor');
     const mensualControl = this.ingresoForm.get('primaMensual');
-    console.log('mensualControl', mensualControl?.value);
     const porcentaje = this.ingresoForm.get('porcentajeComision');
     const comision = this.ingresoForm.get('comision');
     const comisionAnual = this.ingresoForm.get('comisionAnual');
@@ -174,7 +180,6 @@ export class PygingresoComponent2 {
       descripcion: itemEditar.descripcion,
       valor: itemEditar.valor,
     });
-    console.log('item', item);
   }
   actualizarGasto() {
     this.esEdicion = false;
@@ -201,6 +206,12 @@ export class PygingresoComponent2 {
       descripcion: '',
       valor: null,
     });
+  }
+  get totalDetalleGastos(): number {
+    return this.lstGastos.reduce(
+      (a: number, b: any) => a + Number(b.valor),
+      0
+    );
   }
   get totalGastos(): number {
     return this.lstIngresosGastos.reduce((totalIngresos: any, ingreso: any) => {
@@ -233,11 +244,11 @@ export class PygingresoComponent2 {
         return;
       }
       if (this.ingresoForm.valid) {
-        console.log(this.ingresoForm.getRawValue().cliente);
         const ramo = this.lstRamos.find((r: any) => r.cdRamo === this.ingresoForm.value.ramo);
         let ingreso = {
           cliente: this.ingresoForm.getRawValue().cliente,
           nombreCliente: this.clienteSeleccionado.NOMBRES,
+          idCliente: this.clienteSeleccionado.ID,
           ramo: this.ingresoForm.value.ramo,
           nombreRamo: ramo.nmRamo,
           inicioVigencia: this.ingresoForm.value.inicioVigencia,
@@ -249,10 +260,8 @@ export class PygingresoComponent2 {
           comisionAnual: this.ingresoForm.value.comisionAnual,
           gastos: this.lstGastos
         }
-        console.log('ingreso', ingreso);
         this.lstIngresosGastos.push(ingreso);
         this.limpiarFormIngreso();
-        console.log('ingresos', this.lstIngresosGastos);
       } else {
         const camposInvalidos: string[] = [];
 
@@ -263,8 +272,6 @@ export class PygingresoComponent2 {
             camposInvalidos.push(campo);
           }
         });
-
-        console.log('Campos faltantes:', camposInvalidos);
         this.appComponent.validateAllFormFields(this.ingresoForm);
         this.toastrService.error(
           'Error al agregar el Detalle',
@@ -315,10 +322,9 @@ export class PygingresoComponent2 {
   clienteSeleccionado: any;
   onClienteChange(cliente: any) {
     this.clienteSeleccionado = cliente;
-    console.log(this.clienteSeleccionado);
+    console.log('clienteSeleccionado',this.clienteSeleccionado);
   }
   eliminarIngreso(dato: number) {
-    console.log('Eliminar índice:', dato);
 
     Swal.fire({
       title: '¿Está segur@?',
@@ -343,13 +349,12 @@ export class PygingresoComponent2 {
       }
     });
   }
-  editarIngresoGasto:boolean=false;
-  indexIGActualizar:any;
+  editarIngresoGasto: boolean = false;
+  indexIGActualizar: any;
   editarIngreso(index: any) {
     this.indexIGActualizar = index;
     this.editarIngresoGasto = true;
     let dato = JSON.parse(JSON.stringify(this.lstIngresosGastos[index]));
-    console.log('dato',dato);
     this.ingresoForm.patchValue({
       // cliente: dato.cliente,
       // nombreCliente: dato.nombreClienete,
@@ -360,38 +365,121 @@ export class PygingresoComponent2 {
       primaMensual: dato.primaMensual,
       primaAnual: dato.primaAnual,
       porcentajeComision: dato.porcentajeComision,
-      comision:dato.comision,
+      comision: dato.comision,
       comisionAnual: dato.comisionAnual,
       gastos: dato.gastos
     });
     this.lstGastos = dato.gastos;
   }
-  actualizarIngresoGasto(){
+  actualizarIngresoGasto() {
     const ramo = this.lstRamos.find((r: any) => r.cdRamo === this.ingresoForm.value.ramo);
-          let ingreso = {
-          cliente: this.ingresoForm.getRawValue().cliente,
-          nombreCliente: this.clienteSeleccionado.NOMBRES,
-          ramo: this.ingresoForm.value.ramo,
-          nombreRamo: ramo.nmRamo,
-          inicioVigencia: this.ingresoForm.value.inicioVigencia,
-          finVigencia: this.ingresoForm.value.finVigencia,
-          primaMensual: this.ingresoForm.value.primaMensual,
-          primaAnual: this.ingresoForm.value.primaAnual,
-          porcentajeComision: this.ingresoForm.value.porcentajeComision,
-          comision: this.ingresoForm.value.comision,
-          comisionAnual: this.ingresoForm.value.comisionAnual,
-          gastos: this.lstGastos
-        }
+    let ingreso = {
+      cliente: this.ingresoForm.getRawValue().cliente,
+      nombreCliente: this.clienteSeleccionado.NOMBRES,
+      idCliente: this.clienteSeleccionado.ID,
+      ramo: this.ingresoForm.value.ramo,
+      nombreRamo: ramo.nmRamo,
+      inicioVigencia: this.ingresoForm.value.inicioVigencia,
+      finVigencia: this.ingresoForm.value.finVigencia,
+      primaMensual: this.ingresoForm.value.primaMensual,
+      primaAnual: this.ingresoForm.value.primaAnual,
+      porcentajeComision: this.ingresoForm.value.porcentajeComision,
+      comision: this.ingresoForm.value.comision,
+      comisionAnual: this.ingresoForm.value.comisionAnual,
+      gastos: this.lstGastos
+    }
     this.lstIngresosGastos[this.indexIGActualizar] = ingreso;
     this.limpiarFormIngreso();
-          this.toastrService.success(
-        'Correcto!',
-        'Detalle actualizado correctamente.'
-      );
-      this.editarIngresoGasto = false;
+    this.toastrService.success(
+      'Correcto!',
+      'Detalle actualizado correctamente.'
+    );
+    this.editarIngresoGasto = false;
   }
-  cancelarActualizarIG(){
-    this.editarIngresoGasto=false;
+  cancelarActualizarIG() {
+    this.editarIngresoGasto = false;
     this.limpiarFormIngreso();
+  }
+  getTotalGastos(gastos: any[]): number {
+    return gastos.reduce((total, gasto) => total + Number(gasto.valor), 0);
+  }
+  guardarPYG() {
+    if (!this.ingresoForm.getRawValue().cliente) {
+      this.toastrService.error('ERROR', 'Debe ingresar/seleccionar un cliente!');
+      return;
+    }
+    if (this.lstIngresosGastos.length < 1) {
+      this.toastrService.error('ERROR', 'Debe ingresar por lo menos 1 detalle de gastos!');
+      return;
+    }
+    let formD = new FormData();
+    formD.append('cliente', JSON.stringify(this.ingresoForm.getRawValue().cliente));
+    formD.append('nombreCliente', this.clienteSeleccionado.NOMBRES);
+    formD.append('idCliente', this.clienteSeleccionado.ID);
+    formD.append('idUsuario', this.userCurrent.id);
+    formD.append('lstIngresosGastos', JSON.stringify(this.lstIngresosGastos));
+    this.pygService.guardarPYG(formD).subscribe((res: any) => {
+      Swal.fire({
+        icon: 'success',
+        title: '¡Éxito!',
+        text: 'Registro Ingresado Correctamente',
+        confirmButtonText: 'OK',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        allowEnterKey: true,
+        showCloseButton: false
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.router.navigate(['/home/pyg/seguimiento']);
+        }
+      });
+    }, (error: any) => {
+      this.loadingService.hideLoading();
+      this.toastrService.error('ERROR', 'No se pudo actualizar el registro!');
+    });
+  }
+  cargarDatosRegistro() {
+    this.loadingService.showLoading();
+    this.pygService.obtenerRegistrosPYGbyID(this.idRegistro).subscribe((res: any) => {
+      let respuesta = res.data;
+      this.loadingService.hideLoading();
+      this.ingresoForm.patchValue({
+        id: respuesta.id,
+        cliente: respuesta.cliente ?? '',
+      });
+      respuesta.ramos.forEach((element: any) => {
+        // para las listas 
+        let nombreRamo = this.lstRamos.find((item:any)=>item.cdRamo==element.ramo).nmRamo;
+        let ingreso = {
+          cliente: '',
+          nombreCliente: respuesta.cliente ?? '',
+          ramo: element.ramo ?? '',
+          nombreRamo: nombreRamo??'',
+          inicioVigencia: element.inicioVigencia ?? '',
+          finVigencia: element.finVigencia ?? '',
+          primaMensual: element.primaMensual ?? '',
+          primaAnual: element.primaMensual
+            ? element.primaMensual * 12
+            : '',
+          porcentajeComision: element.comision ?? '',
+          comision: element.primaMensual != null && element.comision != null
+            ? (element.primaMensual * element.comision) / 100
+            : 0,
+          comisionAnual: element.primaMensual
+            ? element.primaMensual * 12
+            : '',
+          gastos: element.gastos
+        }
+        this.lstIngresosGastos.push(ingreso);
+      });
+
+    }, (error: any) => {
+      this.loadingService.hideLoading();
+      this.toastrService.error('ERROR', 'No se pudo cargar el registro!');
+      this.router.navigate(['/home/pyg/seguimiento']);
+    });
+  }
+  actualizarPYG(){
+    console.log('actualizar');
   }
 }

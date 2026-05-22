@@ -15,6 +15,7 @@ import { Role } from 'src/app/helpers/role';
 import { AcuerdoseguimientoComponent } from './acuerdoseguimiento/acuerdoseguimiento.component';
 import { AcuerdosegbeneficioComponent } from './acuerdosegbeneficio/acuerdosegbeneficio.component';
 import { FianzasComponent } from './fianzas/fianzas.component';
+import { PygseguimientoComponent } from './pygseguimiento/pygseguimiento.component';
 
 const homeRoutes: Routes = [
   {
@@ -32,7 +33,8 @@ const homeRoutes: Routes = [
       },
       { path: 'pyg/ingreso', component: PygingresoComponent },
       { path: 'pyg/ingreso2', component: PygingresoComponent2 },
-      { path: 'pyg/seguimiento', component: ChlseguimientoComponent },
+      { path: 'pyg/ingreso2/:id', component: PygingresoComponent2 },
+      { path: 'pyg/seguimiento', component: PygseguimientoComponent },
       { path: 'acserv/ingreso', component: AcuerdoservicioComponent },
       { path: 'acserv/ingreso/:id', component: AcuerdoservicioComponent },
       { path: 'acserv/seguimiento', component: AcuerdoseguimientoComponent },
