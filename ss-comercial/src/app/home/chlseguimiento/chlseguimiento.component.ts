@@ -3,6 +3,7 @@ import { ChecklistService } from 'src/app/services/checklist.service';
 import { LoadingService } from 'src/app/services/loading.service';
 import * as SpanishLanguage from 'src/assets/Spanish.json';
 import { ToastrService } from 'src/app/services/toastr.service';
+import * as XLSX from 'xlsx';
 declare var $: any;
 import Swal from 'sweetalert2';
 import { Router } from '@angular/router';
@@ -79,7 +80,7 @@ export class ChlseguimientoComponent {
       $.fn.dataTable.ext.search.push((settings: any, data: any, dataIndex: any) => {
 
         const row = settings.aoData[dataIndex]._aData;
-
+        console.log('row',row);
         const chkRojo = ($('#chkRojo') as any).prop('checked');
         const chkAmarillo = ($('#chkAmarillo') as any).prop('checked');
 
@@ -95,9 +96,8 @@ export class ChlseguimientoComponent {
 
         const estado = Number(row.idEstado);
 
-        const esRojo = (hoy >= fechaMaxima && estado === 2);
+        const esRojo = ((row.fechaUltMov>row.fechaMaxima)&&(row.idEstado!=1));
         const esAmarillo = (hoy >= fechaMaxima && (estado === 4 || estado === 9));
-
         if (chkRojo && !chkAmarillo) return esRojo;
         if (chkAmarillo && !chkRojo) return esAmarillo;
         if (chkRojo && chkAmarillo) return esRojo || esAmarillo;
@@ -132,7 +132,7 @@ export class ChlseguimientoComponent {
           $(row).find('td').css('background-color', '');
 
           if (!data.fechaMaxima) return;
-
+          console.log(row,' ',data);
           const hoy = new Date();
           const fechaMaxima = new Date((data.fechaMaxima + '').replace(' ', 'T'));
 
@@ -140,15 +140,15 @@ export class ChlseguimientoComponent {
           fechaMaxima.setHours(0, 0, 0, 0);
 
           const estado = Number(data.idEstado);
-
+          
           if (hoy >= fechaMaxima) {
-
-            if (estado === 2) {
-              $(row).find('td').css('background-color', '#f8d7da'); // 🔴
-            } else if (estado == 4 || estado == 9) {
+            if (estado == 4 || estado == 9) {
               $(row).find('td').css('background-color', '#fff9b2'); // 🟡
             }
           }
+            if ((data.fechaUltMov>data.fechaMaxima)&&(data.idEstado!=1)) {
+              $(row).find('td').css('background-color', '#f8d7da'); // 🔴
+            }
         },
 
         // 🔥 UI CONTROLES
@@ -310,38 +310,38 @@ filter.find('input').css({
 
           { title: 'N°', data: 'id' },
 
-          {
-            title: 'Prioridad / Gestión',
-            data: null,
-            render: function (data: any, type: any, row: any) {
+        //   {
+        //     title: 'Prioridad / Gestión',
+        //     data: null,
+        //     render: function (data: any, type: any, row: any) {
 
-              let icono = '';
-              let color = '';
+        //       let icono = '';
+        //       let color = '';
 
-              switch (row.prioridad) {
-                case 'ALTA': icono = '↑'; color = 'red'; break;
-                case 'MEDIA': icono = '='; color = 'orange'; break;
-                case 'BAJA': icono = '↓'; color = 'green'; break;
-                default: icono = '?';
-              }
+        //       switch (row.prioridad) {
+        //         case 'ALTA': icono = '↑'; color = 'red'; break;
+        //         case 'MEDIA': icono = '='; color = 'orange'; break;
+        //         case 'BAJA': icono = '↓'; color = 'green'; break;
+        //         default: icono = '?';
+        //       }
 
-              let tipo = row.tipoGestion == 1
-                ? 'Emisión Póliza nueva'
-                : row.tipoGestion == 2
-                  ? 'Ingreso Póliza nueva'
-                  : row.tipoGestion == 3
-                    ? 'Renovación de póliza'
-                    : 'Sin definir';
-              return `
-          <div style="font-size:11px">
-            <div style="color:${color}">
-              ${icono} <strong>${row.prioridad}</strong>
-            </div>
-            <div>${tipo}</div>
-          </div>
-        `;
-            }
-          },
+        //       let tipo = row.tipoGestion == 1
+        //         ? 'Emisión Póliza nueva'
+        //         : row.tipoGestion == 2
+        //           ? 'Ingreso Póliza nueva'
+        //           : row.tipoGestion == 3
+        //             ? 'Renovación de póliza'
+        //             : 'Sin definir';
+        //       return `
+        //   <div style="font-size:11px">
+        //     <div style="color:${color}">
+        //       ${icono} <strong>${row.prioridad}</strong>
+        //     </div>
+        //     <div>${tipo}</div>
+        //   </div>
+        // `;
+        //     }
+        //   },
 
           {
             title: '<i class="fas fa-cogs me-1"></i> Opción',
@@ -367,16 +367,17 @@ filter.find('input').css({
               if (this.esEjecutivo) {
                 botones += `<button title="Estimar Entrega" class="btn btn-secondary btn-sm" onclick="estimarEntrega(${full.id})"><i class="fas fa-flag"></i></button>`;
               }
-
+              if (full.idEstado != 1) {
               botones += `<button title="Visualizar" class="btn btn-info btn-sm" onclick="visualizarIngreso(${full.id})"><i class="fas fa-eye"></i></button>`;
-
+              }
               return `<div class="d-flex justify-content-center flex-nowrap" style="gap:5px">${botones}</div>`;
             }
           },
 
           { title: 'Estado', data: 'estado' },
           { title: 'F.Registro', data: 'fechaRegistro' },
-          { title: 'F.Cumpl.', data: 'fechaMaxima' },
+          { title: 'F.Est.Entr.', data: 'fechaMaxima' },
+          { title: 'F.Ultimo.Mov.', data: 'fechaUltMov' },
           { title: 'Cliente', data: 'cliente' },
           { title: 'Ramos', data: 'lstRamos' },
           { title: 'Aseguradora', data: 'aseguradora' },
@@ -533,4 +534,44 @@ filter.find('input').css({
     Swal.hideLoading();
     Swal.close();
   }
+exportar() {
+
+  const table = $('#tablaseg').DataTable();
+
+  // Guardar cantidad actual de registros por página
+  const paginaActual = table.page.len();
+
+  // Mostrar todos los registros
+  table.page.len(-1).draw();
+
+  setTimeout(() => {
+
+    const element = document.getElementById('tablaseg');
+
+    if (element) {
+
+      const ws: XLSX.WorkSheet =
+        XLSX.utils.table_to_sheet(element);
+
+      const wb: XLSX.WorkBook =
+        XLSX.utils.book_new();
+
+      XLSX.utils.book_append_sheet(
+        wb,
+        ws,
+        'Registros'
+      );
+
+      XLSX.writeFile(
+        wb,
+        'registrosChk.xlsx'
+      );
+    }
+
+    // Restaurar paginación original
+    table.page.len(paginaActual).draw();
+
+  }, 300);
+
+}
 }

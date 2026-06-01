@@ -33,4 +33,13 @@ export class PygService {
     const URL_API = environment.apiUrl + "obtenerRegistrosPYGbyID/"+idRegistro;
     return this.httpClient.get(URL_API).pipe(catchError(this.handleError));
   }
+  public obtenerFacturasPYG(form:any){
+    const URL_API = environment.apiUrl + "obtenerFacturasPYG";
+    return this.httpClient.post(URL_API, form).pipe(catchError(this.handleError));
+  }
+  
+    public obtenerFacturasPYGFactura(form:any){
+    const URL_API = environment.apiUrl + "obtenerFacturasPYGFactura";
+    return this.httpClient.post(URL_API, form).pipe(catchError(this.handleError));
+  }
 }

@@ -1779,118 +1779,159 @@ export class ChlingresoComponent {
       });
     }
     if (this.estadoSeleccionado == 4) {//ingresado al dbroker
-      Swal.fire({
-        title: 'Ingresado a la Aseguradora',
-        html: `
+Swal.fire({
+  title: 'Ingresado a la Aseguradora',
+  html: `
     <label style="display:block; margin-bottom:5px;">
       ¿Desea ingresar algún comentario u observación?
     </label>
-      <textarea id="swal-observacion" class="form-control" style="resize:none;text-align:center" placeholder="Ingresa una observación"></textarea>
-
-<div class="form-group" style="margin-top:20px; text-align:left;">
-  
-  <div style="
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:15px;
-    margin-bottom:15px;
-  ">
-    
-    <label 
-      for="swal-envio-cliente"
-      style="
-        font-weight:600;
-        margin:0;
-        flex:1;
-      "
-    >
-      ¿Se envió al cliente?
-    </label>
-
-    <select 
-      id="swal-envio-cliente"
+    <textarea id="swal-observacion"
       class="form-control"
-      style="
-       width:60%;
-        height:38px;
-      "
-    >
-      <option value="1">SI</option>
-      <option value="0" selected>NO</option>
-    </select>
+      style="resize:none;text-align:center"
+      placeholder="Ingresa una observación">
+    </textarea>
 
-  </div>
+    <div class="form-group" style="margin-top:20px; text-align:left;">
 
-  <div style="
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:15px;
-  ">
-    
-    <label 
-      for="swal-enviar-facturas"
-      style="
-        font-weight:600;
-        margin:0;
-        flex:1;
-      "
-    >
-      ¿Se envió la Factura?
-    </label>
+      <!-- ENVIO CLIENTE -->
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:15px;">
+        <label for="swal-envio-cliente"
+          style="font-weight:600;margin:0;flex:1;">
+          ¿Se envió al cliente?
+        </label>
 
-    <select 
-      id="swal-enviar-facturas"
-      class="form-control"
-      style="
-        width:60%;
-        height:38px;
-      "
-    >
-      <option value="1">SI</option>
-      <option value="0" selected>NO</option>
-    </select>
+        <select id="swal-envio-cliente"
+          class="form-control"
+          style="width:60%;height:38px;">
+          <option value="0" selected>NO</option>
+          <option value="1">SI</option>
+        </select>
+      </div>
 
-  </div>
+      <!-- INPUT POLIZA -->
+      <div id="contenedor-poliza" style="display:none;margin-bottom:15px;">
+        <label>Número de póliza</label>
+        <input
+          id="swal-numero-poliza"
+          type="text"
+          class="form-control"
+          placeholder="Ingrese el número de póliza">
+      </div>
 
-</div>
+      <!-- ENVIO FACTURA -->
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:15px;">
+        <label for="swal-enviar-facturas"
+          style="font-weight:600;margin:0;flex:1;">
+          ¿Se envió la Factura?
+        </label>
 
+        <select id="swal-enviar-facturas"
+          class="form-control"
+          style="width:60%;height:38px;">
+          <option value="0" selected>NO</option>
+          <option value="1">SI</option>
+        </select>
+      </div>
+
+      <!-- INPUT FACTURA -->
+      <div id="contenedor-factura" style="display:none;margin-top:15px;">
+        <label>Número de factura</label>
+        <input
+          id="swal-numero-factura"
+          type="text"
+          class="form-control"
+          placeholder="Ingrese el número de factura">
+      </div>
+
+    </div>
   `,
-        showCancelButton: true,
-        confirmButtonText: 'Aceptar',
-        cancelButtonText: 'Cancelar',
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
 
-        preConfirm: () => {
+  showCancelButton: true,
+  confirmButtonText: 'Aceptar',
+  cancelButtonText: 'Cancelar',
+  confirmButtonColor: '#3085d6',
+  cancelButtonColor: '#d33',
 
-          const observacion = (
-            document.getElementById('swal-observacion') as HTMLTextAreaElement
-          ).value;
+  didOpen: () => {
 
-          const envioCliente = (
-            document.getElementById('swal-envio-cliente') as HTMLSelectElement
-          ).value;
+    const envioCliente = document.getElementById(
+      'swal-envio-cliente'
+    ) as HTMLSelectElement;
 
-          const enviarFacturas = (
-            document.getElementById('swal-enviar-facturas') as HTMLSelectElement
-          ).value;
+    const envioFactura = document.getElementById(
+      'swal-enviar-facturas'
+    ) as HTMLSelectElement;
 
-          return {
-            observacion,
-            envioCliente,
-            enviarFacturas
-          };
-        }
+    const contenedorPoliza = document.getElementById('contenedor-poliza');
+    const contenedorFactura = document.getElementById('contenedor-factura');
 
-      }).then((result) => {
+    envioCliente.addEventListener('change', () => {
+      contenedorPoliza!.style.display =
+        envioCliente.value === '1' ? 'block' : 'none';
+    });
+
+    envioFactura.addEventListener('change', () => {
+      contenedorFactura!.style.display =
+        envioFactura.value === '1' ? 'block' : 'none';
+    });
+  },
+
+  preConfirm: () => {
+
+    const observacion = (
+      document.getElementById('swal-observacion') as HTMLTextAreaElement
+    ).value;
+
+    const envioCliente = (
+      document.getElementById('swal-envio-cliente') as HTMLSelectElement
+    ).value;
+
+    const enviarFacturas = (
+      document.getElementById('swal-enviar-facturas') as HTMLSelectElement
+    ).value;
+
+    const numeroPoliza = (
+      document.getElementById('swal-numero-poliza') as HTMLInputElement
+    ).value.trim();
+
+    const numeroFactura = (
+      document.getElementById('swal-numero-factura') as HTMLInputElement
+    ).value.trim();
+
+    // Validar póliza obligatoria
+    if (envioCliente === '1' && !numeroPoliza) {
+      Swal.showValidationMessage(
+        'Debe ingresar el número de póliza.'
+      );
+      return false;
+    }
+
+    // Validar factura obligatoria
+    if (enviarFacturas === '1' && !numeroFactura) {
+      Swal.showValidationMessage(
+        'Debe ingresar el número de factura.'
+      );
+      return false;
+    }
+
+    return {
+      observacion,
+      envioCliente,
+      enviarFacturas,
+      numeroPoliza,
+      numeroFactura
+    };
+  }
+
+}).then((result) => {
 
         if (result.isConfirmed) {
           formd.append('observacion', result.value.observacion);
           formd.append('envioCliente', result.value.envioCliente);
           formd.append('envioFacturas', result.value.enviarFacturas);
-
+          formd.append('numeroPoliza', result.value.numeroPoliza);
+          formd.append('numeroFactura', result.value.numeroFactura);
+          
           this.loadingService.showLoading();
           this.checklistService.accionEjecutivoCheckList(formd).subscribe((res: any) => {
             this.loadingService.hideLoading();

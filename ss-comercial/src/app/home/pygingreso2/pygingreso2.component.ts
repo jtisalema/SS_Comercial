@@ -1,14 +1,16 @@
-import { Component } from '@angular/core';
+import { Component, ElementRef, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AppComponent } from 'src/app/app.component';
 import { AuthService } from 'src/app/services/auth.service';
 import { ToastrService } from 'src/app/services/toastr.service';
+import * as SpanishLanguage from 'src/assets/Spanish.json';
 import { Subject } from 'rxjs';
 import { debounceTime, switchMap, tap } from 'rxjs/operators';
 import { PygService } from 'src/app/services/pyg.service';
 import { ChecklistService } from 'src/app/services/checklist.service';
 import { LoadingService } from 'src/app/services/loading.service';
 import Swal from 'sweetalert2';
+declare var $: any;
 import { ActivatedRoute, Router } from '@angular/router';
 @Component({
   selector: 'app-pygingreso2',
@@ -16,6 +18,7 @@ import { ActivatedRoute, Router } from '@angular/router';
   styleUrls: ['./pygingreso2.component.css']
 })
 export class PygingresoComponent2 {
+  @ViewChild('dataTableFacturas', { static: false }) tableFacturas!: ElementRef;
   ingresoForm!: FormGroup;
   gastoForm!: FormGroup;
   userCurrent: any;
@@ -26,6 +29,9 @@ export class PygingresoComponent2 {
   clientesInput$ = new Subject<string>();
   loadingClientes = false;
   lstRamos: any = [];
+  lstFacturasCliente: any = [];
+  dtOptions: any;
+  dataTable: any;
   /**
    *
    */
@@ -47,6 +53,107 @@ export class PygingresoComponent2 {
     }
     this.obtenerUsuario();
     this.obtenerInformacionInicial();
+    (window as any).seleccionarFactura = this.seleccionarFactura.bind(this);
+  }
+  ramoSeleccionado: any;
+  cargarTablaFacturas() {
+    this.dtOptions = {
+      destroy: true,
+      data: this.lstFacturasCliente.filter(
+        (item: any) => item.seleccionado == 0
+      ),
+      dom:
+        '<"row mb-2"' +
+        '<"col-md-6 text-start"<' +
+        '"custom-toolbar"' +
+        '>>' +
+        '<"col-md-6"f>' +
+        '>' +
+        'rtip',
+
+      initComplete: () => {
+        $('.custom-toolbar').html(`
+    <div class="d-flex align-items-center gap-2">
+      <input
+        id="txtNumeroFactura"
+        type="text"
+        class="form-control form-control-sm"
+        placeholder="Número de factura"
+        style="width: 180px;"
+      >&nbsp;
+&nbsp;
+      <button id="btnConsultar" class="btn btn-primary btn-sm">
+        <i class="fas fa-search"></i> Buscar Otros
+      </button>
+    </div>
+  `);
+
+        $('#btnConsultar').on('click', () => {
+          const numeroFactura = ($('#txtNumeroFactura').val() as string)?.trim();
+
+          if (!numeroFactura) {
+            alert('Ingrese un número de factura');
+            return;
+          }
+
+          this.buscarOtros(numeroFactura);
+        });
+      },
+      info: false,
+      pageLength: 7,
+      lengthChange: false,
+      language: {
+        ...this.GetSpanishLanguage()
+      },
+      columns: [
+        { title: 'N°Fac.', data: 'numero_documento' },
+        { title: 'Cliente', data: 'canal_nombre' },
+        { title: 'Proveedor', data: 'proveedor_nombre' },
+        { title: 'Fecha', data: 'fecha_emision' },
+        { title: 'Observacion', data: 'observacion' },
+
+        {
+          title: 'Valor+IVA',
+          data: 'base_con_iva',
+          render: (data: number) => {
+            return new Intl.NumberFormat('es-EC', {
+              style: 'currency',
+              currency: 'USD'
+            }).format(data);
+          }
+        },
+        {
+          title: '<i class="fas fa-cogs me-1"></i> Opción',
+          searchable: false,
+          render: (data: any, type: any, full: any) => {
+
+            let botones = '';
+            botones += `<button title="asignar" class="btn btn-success btn-sm" onclick="seleccionarFactura(${full.id})"><i class="fas fa-check"></i></button>`;
+
+            return `<div class="d-flex justify-content-center flex-nowrap" style="gap:5px">${botones}</div>`;
+          }
+        }
+      ],
+
+      order: [
+        [0, 'desc']
+      ],
+
+      responsive: false,
+      autoWidth: false,
+      scrollX: true,
+    };
+    this.dataTable = $(this.tableFacturas.nativeElement);
+
+    const dt = this.dataTable.DataTable(this.dtOptions);
+
+    setTimeout(() => {
+      dt.columns.adjust().draw();
+    }, 200);
+    $('#modalFacturas').on('shown.bs.modal', () => {
+      const dt = this.dataTable.DataTable();
+      dt.columns.adjust().draw();
+    });
   }
   obtenerInformacionInicial() {
     this.loadingService.showLoading();
@@ -219,6 +326,16 @@ export class PygingresoComponent2 {
       return totalIngresos + sumaGastos;
     }, 0);
   }
+get totalGastosFacturas(): number {
+  console.log('this.lstIngresosGastos', this.lstIngresosGastos);
+  return this.lstIngresosGastos.reduce((totalFacturas: number, ingreso: any) => {
+    const sumaFacturas = (ingreso.facturas || []).reduce(
+      (total: number, factura: any) => total + Number(factura.valor || 0),
+      0
+    );
+    return totalFacturas + sumaFacturas;
+  }, 0);
+}
   get totalIngresos(): number {
     return this.lstIngresosGastos.reduce((total: any, item: any) => Number(total) + Number(item.comisionAnual), 0);
   }
@@ -258,7 +375,7 @@ export class PygingresoComponent2 {
           porcentajeComision: this.ingresoForm.value.porcentajeComision,
           comision: this.ingresoForm.value.comision,
           comisionAnual: this.ingresoForm.value.comisionAnual,
-          gastos: this.lstGastos
+          gastos: this.lstGastos,
         }
         this.lstIngresosGastos.push(ingreso);
         this.limpiarFormIngreso();
@@ -321,8 +438,8 @@ export class PygingresoComponent2 {
   }
   clienteSeleccionado: any;
   onClienteChange(cliente: any) {
-    this.clienteSeleccionado = cliente;
-    console.log('clienteSeleccionado',this.clienteSeleccionado);
+    this.clienteSeleccionado = cliente;//apellidos , nombnres , id
+    console.log('clienteSeleccionado', this.clienteSeleccionado);
   }
   eliminarIngreso(dato: number) {
 
@@ -351,6 +468,7 @@ export class PygingresoComponent2 {
   }
   editarIngresoGasto: boolean = false;
   indexIGActualizar: any;
+  
   editarIngreso(index: any) {
     this.indexIGActualizar = index;
     this.editarIngresoGasto = true;
@@ -370,12 +488,16 @@ export class PygingresoComponent2 {
       gastos: dato.gastos
     });
     this.lstGastos = dato.gastos;
+    // this.lstGastos = dato.gastos.filter(
+    //   (item: any) => !item.idDetalleFact
+    // );
   }
+
   actualizarIngresoGasto() {
     const ramo = this.lstRamos.find((r: any) => r.cdRamo === this.ingresoForm.value.ramo);
     let ingreso = {
       cliente: this.ingresoForm.getRawValue().cliente,
-      nombreCliente: this.clienteSeleccionado.NOMBRES,
+      nombreCliente: this.clienteSeleccionado?.NOMBRES??'',
       idCliente: this.clienteSeleccionado.ID,
       ramo: this.ingresoForm.value.ramo,
       nombreRamo: ramo.nmRamo,
@@ -401,7 +523,7 @@ export class PygingresoComponent2 {
     this.limpiarFormIngreso();
   }
   getTotalGastos(gastos: any[]): number {
-    return gastos.reduce((total, gasto) => total + Number(gasto.valor), 0);
+    return gastos?.reduce((total, gasto) => total + Number(gasto.valor), 0);
   }
   guardarPYG() {
     if (!this.ingresoForm.getRawValue().cliente) {
@@ -439,9 +561,16 @@ export class PygingresoComponent2 {
     });
   }
   cargarDatosRegistro() {
+    this.clienteSeleccionado = {};
     this.loadingService.showLoading();
     this.pygService.obtenerRegistrosPYGbyID(this.idRegistro).subscribe((res: any) => {
       let respuesta = res.data;
+      if(respuesta){
+      this.clienteSeleccionado.NOMBRES = respuesta.cliente;
+      this.clienteSeleccionado.ID = respuesta.idCliente;
+      }
+      console.log('clienteSeleccionado', this.clienteSeleccionado);
+
       this.loadingService.hideLoading();
       this.ingresoForm.patchValue({
         id: respuesta.id,
@@ -449,12 +578,13 @@ export class PygingresoComponent2 {
       });
       respuesta.ramos.forEach((element: any) => {
         // para las listas 
-        let nombreRamo = this.lstRamos.find((item:any)=>item.cdRamo==element.ramo).nmRamo;
+        let nombreRamo = this.lstRamos.find((item: any) => item.cdRamo == element.ramo).nmRamo;
+        console.log('respuesta',respuesta);
         let ingreso = {
-          cliente: '',
+          cliente: respuesta.idCliente??'',
           nombreCliente: respuesta.cliente ?? '',
           ramo: element.ramo ?? '',
-          nombreRamo: nombreRamo??'',
+          nombreRamo: nombreRamo ?? '',
           inicioVigencia: element.inicioVigencia ?? '',
           finVigencia: element.finVigencia ?? '',
           primaMensual: element.primaMensual ?? '',
@@ -465,13 +595,32 @@ export class PygingresoComponent2 {
           comision: element.primaMensual != null && element.comision != null
             ? (element.primaMensual * element.comision) / 100
             : 0,
-          comisionAnual: element.primaMensual
-            ? element.primaMensual * 12
+          comisionAnual: element.comision
+            ? (element.primaMensual * element.comision) / 100 * 12
             : '',
           gastos: element.gastos
         }
         this.lstIngresosGastos.push(ingreso);
+        //consulto las facturas
+        let formd = new FormData();
+        formd.append('fechaInicio', element.inicioVigencia);
+        formd.append('fechaFin', element.finVigencia);
+        formd.append('idCliente', respuesta.idCliente);
+        this.pygService.obtenerFacturasPYG(formd).subscribe((res: any) => {
+          this.lstFacturasCliente = res.data;
+          this.lstFacturasCliente = Array.from(
+            new Map(this.lstFacturasCliente.map((item: any) => [item.id, item])).values()
+          );
+          console.log('this.lstFacturasCliente', this.lstFacturasCliente);
+          this.cargarTablaFacturas();
+          console.log(res.data);
+        }, (error: any) => {
+          this.loadingService.hideLoading();
+          this.toastrService.error('ERROR', 'No se pudo cargar el registro!');
+          this.router.navigate(['/home/pyg/seguimiento']);
+        });
       });
+
 
     }, (error: any) => {
       this.loadingService.hideLoading();
@@ -479,7 +628,100 @@ export class PygingresoComponent2 {
       this.router.navigate(['/home/pyg/seguimiento']);
     });
   }
-  actualizarPYG(){
+  actualizarPYG() {
     console.log('actualizar');
+  }
+  asignarFacturas(id: any) {
+    this.ramoSeleccionado = this.lstIngresosGastos[id];
+    console.log('ramoSeleccionado', this.ramoSeleccionado);
+    $('#modalFacturas').modal('show');
+  }
+  seleccionarFactura(id: any) {
+    let factura = this.lstFacturasCliente.find(
+      (element: any) => element.id == id
+    );
+
+    if (factura) {
+      factura.seleccionado = 1;
+    }
+
+    let detFactura = {
+      descripcion: factura.observacion,
+      valor: factura.base_con_iva,
+      idDetalleFact: factura.id
+    };
+
+if (!this.ramoSeleccionado.facturas) {
+  this.ramoSeleccionado.facturas = [];
+}
+
+this.ramoSeleccionado.facturas.push(detFactura);
+
+    console.log(this.ramoSeleccionado);
+    // Refrescar tabla
+    this.refrescarTablaFacturas();
+  }
+  GetSpanishLanguage() {
+    return SpanishLanguage;
+  }
+  buscarOtros(numeroFactura: string) {
+    this.loadingService.showLoading();
+    let formd = new FormData();
+    formd.append('numeroFactura', numeroFactura);
+    this.pygService.obtenerFacturasPYGFactura(formd).subscribe((res: any) => {
+      console.log('res', res);
+      setTimeout(() => {
+        if (res.data.length > 0) {
+          this.toastrService.success(
+            'Correcto!',
+            'Datos obtenidos correctamente.'
+          );
+        } else {
+          this.toastrService.warning(
+            'Aviso!',
+            'No se obtuvieron registros con la factura ingresada.'
+          );
+        }
+        this.loadingService.hideLoading();
+        this.lstFacturasCliente = [
+          ...this.lstFacturasCliente,
+          ...res.data.filter(
+            (n: any) => !this.lstFacturasCliente.some((o: any) => o.id == n.id)
+          )
+        ];
+        // Refrescar tabla
+        this.refrescarTablaFacturas();
+      }, 1500);
+    }, (error: any) => {
+      this.loadingService.hideLoading();
+      this.toastrService.error('ERROR', 'No se pudo obtener informacion con la factura ingresada!');
+      this.router.navigate(['/home/pyg/seguimiento']);
+    });
+    console.log('this.lstFacturasCliente', this.lstFacturasCliente);
+  }
+  quitarFactura(facturas: any, ing: any) {
+      console.log('facturas', facturas);
+      console.log('this.lstFacturasCliente', this.lstFacturasCliente);
+    console.log('ing', ing);
+    //actualizar el estado seleccionado
+    let factura = this.lstFacturasCliente.find((element: any) => element.id == facturas.idDetalleFact);
+    console.log(factura);
+    if(factura){
+    factura.seleccionado = 0;
+    ing.facturas = ing.facturas.filter(
+      (item: any) => item.idDetalleFact != facturas.idDetalleFact
+    );
+    }
+    this.refrescarTablaFacturas();
+
+  }
+  refrescarTablaFacturas() {
+    const table = $('#tablaseg').DataTable();
+
+    table.clear();
+    table.rows.add(
+      this.lstFacturasCliente.filter((x: any) => x.seleccionado === 0)
+    );
+    table.draw();
   }
 }

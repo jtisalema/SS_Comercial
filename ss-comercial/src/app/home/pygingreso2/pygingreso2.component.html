@@ -332,12 +332,16 @@
                                                                     <td>
 
                                                                         <button class="btn btn-outline-primary btn-sm"
-                                                                            (click)="editarGasto(i)">
+                                                                            (click)="editarGasto(i)"
+                                                                            title="editar gasto"
+                                                                            *ngIf="!con.idDetalleFact">
                                                                             <i class="fas fa-edit"></i>
                                                                         </button>
 
                                                                         <button class="btn btn-outline-danger btn-sm"
-                                                                            (click)="eliminarGasto(i)">
+                                                                            (click)="eliminarGasto(i)"
+                                                                            title="eliminar gasto"
+                                                                            *ngIf="!con.idDetalleFact">
                                                                             <i class="fas fa-trash-alt"></i>
                                                                         </button>
 
@@ -410,14 +414,25 @@
 
                                                             <!-- Botones al lado derecho -->
                                                             <div class="btn-group btn-group-sm" role="group">
-                                                                <button type="button" class="btn btn-outline-danger"
-                                                                    (click)="eliminarIngreso(i)">
-                                                                    <i class="fas fa-times"></i>
-                                                                </button>
-                                                                <button type="button" class="btn btn-outline-primary"
-                                                                    (click)="editarIngreso(i)">
-                                                                    <i class="fas fa-pencil-alt"></i>
-                                                                </button>
+                                                                <div class="btn-group btn-group-sm" role="group">
+                                                                    <button type="button" class="btn btn-outline-danger"
+                                                                        (click)="eliminarIngreso(i)" title="eliminar">
+                                                                        <i class="fas fa-times"></i>
+                                                                    </button>
+
+                                                                    <button type="button"
+                                                                        class="btn btn-outline-success"
+                                                                        (click)="asignarFacturas(i)" title="asignar">
+                                                                        <i class="fas fa-dollar-sign"></i>
+                                                                    </button>
+
+                                                                    <button type="button"
+                                                                        class="btn btn-outline-primary"
+                                                                        (click)="editarIngreso(i)"
+                                                                        title="editar detalle">
+                                                                        <i class="fas fa-pencil-alt"></i>
+                                                                    </button>
+                                                                </div>
                                                             </div>
                                                         </div>
 
@@ -452,9 +467,16 @@
                                                                     currency }}</strong>
                                                             </div>
                                                         </div>
-
                                                         <!-- Tabla de gastos -->
                                                         <div class="table-responsive">
+                                                            <div class="d-flex align-items-center mb-2">
+                                                                <h6 class="mb-0 text-primary fw-bold"
+                                                                    style="font-size: 12px;">
+                                                                    <i
+                                                                        class="fas fa-file-invoice-dollar me-1"></i>&nbsp;
+                                                                    Gastos Proyectados
+                                                                </h6>
+                                                            </div>
                                                             <table
                                                                 class="table table-sm table-hover align-middle mb-0 table-bordered tabla-gastos"
                                                                 style="font-size: 10px;">
@@ -463,13 +485,25 @@
                                                                     <tr>
                                                                         <th>Descripción</th>
                                                                         <th>Valor</th>
+
                                                                     </tr>
                                                                 </thead>
                                                                 <tbody>
                                                                     <tr *ngFor="let gasto of ing.gastos"
-                                                                        style="text-align: center;font-size: 10px;">
+                                                                        [style.background-color]="gasto.idDetalleFact != null ? '#ffc0cb' : null"
+                                                                        style="text-align: center; font-size: 10px;">
                                                                         <td>{{ gasto.descripcion }}</td>
                                                                         <td>{{ gasto.valor | currency }}</td>
+                                                                        <td *ngIf="gasto.idDetalleFact"
+                                                                            style="background-color: white;border: none;">
+
+                                                                            <button class="btn btn-danger btn-sm"
+                                                                                title="quitar" style="font-size: 10px;"
+                                                                                (click)="quitarFactura(gasto,ing)">
+                                                                                <i class="fas fa-times"></i>
+                                                                            </button>
+
+                                                                        </td>
                                                                     </tr>
                                                                 </tbody>
                                                                 <tfoot>
@@ -481,7 +515,6 @@
       color: #0d6efd;
     ">
                                                                         <td style="padding: 8px;">
-                                                                            <i class="fas fa-calculator me-1"></i>
                                                                             TOTAL
                                                                         </td>
 
@@ -493,15 +526,116 @@
                                                             </table>
                                                         </div>
 
+                                                        <!-- Tabla de facturas -->
+                                                        <div class="table-responsive" *ngIf="ing.facturas?.length>0">
+                                                            <br>
+                                                            <div class="d-flex align-items-center mb-2">
+                                                                <h6 class="mb-0 text-primary fw-bold"
+                                                                    style="font-size: 12px">
+                                                                    <i
+                                                                        class="fas fa-file-invoice-dollar me-1"></i>&nbsp;
+                                                                    <span style="color: red;">Gastos de Facturas</span>
+                                                                </h6>
+                                                            </div>
+                                                            <table
+                                                                class="table table-sm table-hover align-middle mb-0 table-bordered tabla-gastos"
+                                                                style="font-size: 10px;">
+                                                                <thead class="table-primary text-center"
+                                                                    style="font-size: 10px;">
+                                                                    <tr>
+                                                                        <th>Descripción</th>
+                                                                        <th>Valor</th>
+
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <tr *ngFor="let fact of ing.facturas"
+                                                                        [style.background-color]="fact.idDetalleFact != null ? '#ffc0cb' : null"
+                                                                        style="text-align: center; font-size: 10px;">
+                                                                        <td>{{ fact.descripcion }}</td>
+                                                                        <td>{{ fact.valor | currency }}</td>
+                                                                        <td *ngIf="fact.idDetalleFact"
+                                                                            style="background-color: white;border: none;">
+
+                                                                            <button class="btn btn-danger btn-sm"
+                                                                                title="quitar" style="font-size: 10px;"
+                                                                                (click)="quitarFactura(fact,ing)">
+                                                                                <i class="fas fa-times"></i>
+                                                                            </button>
+
+                                                                        </td>
+                                                                    </tr>
+                                                                </tbody>
+                                                                <tfoot>
+                                                                    <tr style="
+      text-align: center;
+      font-size: 11px;
+      font-weight: bold;
+      background-color: #e9f5ff;
+      color: #0d6efd;
+    ">
+                                                                        <td style="padding: 8px;">
+                                                                            TOTAL
+                                                                        </td>
+
+                                                                        <td style="padding: 8px;">
+                                                                            {{ getTotalGastos(ing.facturas) | currency
+                                                                            }}
+                                                                        </td>
+                                                                    </tr>
+                                                                </tfoot>
+                                                            </table>
+                                                        </div>
+                                                        <!-- Tabla de resumen -->
+                                                        <div class="table-responsive" *ngIf="ing.facturas?.length>0">
+                                                            <br>
+                                                            <div
+                                                                class="d-flex justify-content-center align-items-center mb-2">
+                                                                <h6 class="mb-0 text-primary fw-bold"
+                                                                    style="font-size: 12px;">
+                                                                    <span style="color: red;">Resumen de Gastos</span>
+                                                                </h6>
+                                                            </div>
+                                                            <table
+                                                                class="table table-sm table-hover align-middle mb-0 table-bordered tabla-gastos"
+                                                                style="font-size: 10px;">
+                                                                <thead class="table-primary text-center"
+                                                                    style="font-size: 10px;">
+                                                                    <tr>
+                                                                        <th>Gastos Proyectados</th>
+                                                                        <th>Gastos Reales</th>
+                                                                        <th>Restante</th>
+                                                                        <th>% Cumplimiento</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <tr style="text-align: center; font-size: 10px;">
+                                                                        <td>{{ getTotalGastos(ing.gastos) | currency }}
+                                                                        </td>
+                                                                        <td>{{ getTotalGastos(ing.facturas) | currency
+                                                                            }}</td>
+                                                                        <td>{{
+                                                                            getTotalGastos(ing.gastos)-getTotalGastos(ing.facturas)
+                                                                            | currency }}</td>
+                                                                        <td>
+                                                                            {{ ((getTotalGastos(ing.facturas) /
+                                                                            getTotalGastos(ing.gastos)) * 100) |
+                                                                            number:'1.2-2' }}%
+                                                                        </td>
+                                                                    </tr>
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
+
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="card mb-4 p-3 position-relative"
                                             *ngIf="lstIngresosGastos.length > 0">
-                                            <h6 class="card-title titulo-sobre-borde-centrado">PYG</h6>
+                                            <h6 class="card-title titulo-sobre-borde-centrado">Presupuestos</h6>
                                             <div class="table-responsive">
                                                 <div class="table-responsive">
                                                     <table
@@ -576,6 +710,64 @@
                                             <div class="row">
                                             </div>
                                         </div>
+                                        <div class="card mb-4 p-3 position-relative"
+                                            *ngIf="lstIngresosGastos[0]?.facturas?.length > 0">
+                                            <h6 class="card-title titulo-sobre-borde-centrado">Gastos</h6>
+                                            <div class="table-responsive">
+                                                <div class="table-responsive">
+                                                    <table
+                                                        class="table table-sm table-bordered table-hover tabla-resumen align-middle"
+                                                        style="font-size: 10px;">
+
+                                                        <tfoot style="font-size: 10px;">
+
+                                                            <tr class="fila-total-ingresos" style="font-size: 10px;">
+                                                                <td><strong>Total Ingresos</strong></td>
+                                                                <td class="text-end fw-bold text-success"
+                                                                    style="font-weight: bold;">
+                                                                    {{ totalIngresos | currency }}
+                                                                </td>
+                                                            </tr>
+
+                                                            <tr class="fila-gastos" style="font-size: 10px;">
+                                                                <td><strong>Total Gastos Proyectados</strong></td>
+                                                                <td class="text-end fw-bold text-danger"
+                                                                    style="font-weight: bold;">
+                                                                    {{ totalGastos | currency }}
+                                                                </td>
+                                                            </tr>
+                                                            <tr class="fila-gastos" style="font-size: 10px;">
+                                                                <td><strong>Total Gastos Reales</strong></td>
+                                                                <td class="text-end fw-bold text-danger"
+                                                                    style="font-weight: bold;">
+                                                                    {{ totalGastosFacturas | currency }}
+                                                                </td>
+                                                            </tr>
+                                                            <tr class="fila-gastos" style="font-size: 10px;">
+                                                                <td><strong>Restante</strong></td>
+                                                                <td class="text-end fw-bold text-danger"
+                                                                    style="font-weight: bold;">
+                                                                    {{ totalGastos-totalGastosFacturas | currency }}
+                                                                </td>
+                                                            </tr>
+
+                                                            <tr class="fila-porcentaje" style="font-size: 10px;">
+                                                                <td>% Inversión</td>
+<td>
+                                                                            {{ ((totalGastosFacturas /
+                                                                            totalGastos) * 100) |
+                                                                            number:'1.2-2' }}%
+                                                                        </td>
+                                                            </tr>
+
+                                                        </tfoot>
+
+                                                    </table>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                            </div>
+                                        </div>
                                     </div>
 
                                 </div>
@@ -599,4 +791,27 @@
 
         </div>
     </section>
+    <div class="modal fade" id="modalFacturas">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+
+                <!-- HEADER -->
+                <div class="modal-header d-flex justify-content-center position-relative">
+                    <h4 class="modal-title text-center w-100">
+                        Facturas para: {{this.ramoSeleccionado?.nombreRamo}}
+                    </h4>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <table #dataTableFacturas class="table table-bordered table-striped"
+                        style="width: 100%;font-size: 11px;text-align: center;" id="tablaseg">
+                    </table>
+                    <div style="text-align: right;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
