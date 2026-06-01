@@ -121,12 +121,14 @@ export class FianzasComponent {
 
   consultarVencimientos() {
     this.loadingService.showLoading();
-    if (!this.anioSeleccionadoVencimiento) {
+    if (!this.anioSeleccionadoVencimiento && this.anioSeleccionadoVencimiento !== 0) {
       this.toastrService.warning('Año de Vencimientos', 'Por favor, seleccione un año para consultar los vencimientos');
+      this.loadingService.hideLoading();
       return;
     }
-    if (!this.mesSeleccionadoVencimiento) {
+    if (!this.mesSeleccionadoVencimiento && this.mesSeleccionadoVencimiento !== 0) {
       this.toastrService.warning('Mes de Vencimientos', 'Por favor, seleccione un mes para consultar los vencimientos');
+      this.loadingService.hideLoading();
       return;
     }
     try {
