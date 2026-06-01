@@ -76,6 +76,7 @@ export class FianzasComponent {
           }
           this.lstVencimientos = response.resultado as INotificacionesVencimientos[] ?? [];
           this.cargarTablas();
+          this.toastrService.success('Consultar vencimientos', 'Información de vencimientos obtenida correctamente');
         },
         error: (error) => {
           this.toastrService.error('Obtener información', 'Error al obtener los años de vencimientos');
@@ -137,6 +138,7 @@ export class FianzasComponent {
           }
           this.lstVencimientos = response.resultado as INotificacionesVencimientos[] ?? [];
           this.cargarTablas();
+          this.toastrService.success('Consultar vencimientos', 'Información de vencimientos obtenida correctamente');
         },
         error: (error) => {
           this.toastrService.error('Obtener información', 'Error al obtener los vencimientos');
@@ -356,7 +358,9 @@ export class FianzasComponent {
       totValAsegFormat: this.formatoDinero(registro.totValAseg, true),
       vigenciaDesdeFormat: registro.fcDesde ? registro.fcDesde.split('T')[0] : '',
       vigenciaHastaFormat: registro.fcHasta ? registro.fcHasta.split('T')[0] : '',
-      dscObjeto: registro.dscObjeto
+      dscObjeto: registro.dscObjeto,
+      ramo: registro.ramo,
+      nmAlias: registro.nmAlias
     }));
 
     this.loadingService.showLoading();
