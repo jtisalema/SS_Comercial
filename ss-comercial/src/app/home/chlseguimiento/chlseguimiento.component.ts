@@ -80,7 +80,7 @@ export class ChlseguimientoComponent {
       $.fn.dataTable.ext.search.push((settings: any, data: any, dataIndex: any) => {
 
         const row = settings.aoData[dataIndex]._aData;
-        console.log('row',row);
+        console.log('row', row);
         const chkRojo = ($('#chkRojo') as any).prop('checked');
         const chkAmarillo = ($('#chkAmarillo') as any).prop('checked');
 
@@ -96,7 +96,7 @@ export class ChlseguimientoComponent {
 
         const estado = Number(row.idEstado);
 
-        const esRojo = ((row.fechaUltMov>row.fechaMaxima)&&(row.idEstado!=1));
+        const esRojo = ((row.fechaUltMov > row.fechaMaxima) && (row.idEstado != 1));
         const esAmarillo = (hoy >= fechaMaxima && (estado === 4 || estado === 9));
         if (chkRojo && !chkAmarillo) return esRojo;
         if (chkAmarillo && !chkRojo) return esAmarillo;
@@ -132,7 +132,7 @@ export class ChlseguimientoComponent {
           $(row).find('td').css('background-color', '');
 
           if (!data.fechaMaxima) return;
-          console.log(row,' ',data);
+          console.log(row, ' ', data);
           const hoy = new Date();
           const fechaMaxima = new Date((data.fechaMaxima + '').replace(' ', 'T'));
 
@@ -140,15 +140,15 @@ export class ChlseguimientoComponent {
           fechaMaxima.setHours(0, 0, 0, 0);
 
           const estado = Number(data.idEstado);
-          
+
           if (hoy >= fechaMaxima) {
             if (estado == 4 || estado == 9) {
               $(row).find('td').css('background-color', '#fff9b2'); // 🟡
             }
           }
-            if ((data.fechaUltMov>data.fechaMaxima)&&(data.idEstado!=1)) {
-              $(row).find('td').css('background-color', '#f8d7da'); // 🔴
-            }
+          if ((data.fechaUltMov > data.fechaMaxima) && (data.idEstado != 1)) {
+            $(row).find('td').css('background-color', '#f8d7da'); // 🔴
+          }
         },
 
         // 🔥 UI CONTROLES
@@ -198,11 +198,11 @@ export class ChlseguimientoComponent {
 `;
 
             const filter = $(api.table().container()).find('.dataTables_filter');
-$(api.table().container())
-    .find('.dataTables_filter')
-    .parent()
-    .removeClass('col-md-6')
-    .addClass('col-md-12');
+            $(api.table().container())
+              .find('.dataTables_filter')
+              .parent()
+              .removeClass('col-md-6')
+              .addClass('col-md-12');
             // Crear barra superior si no existe
             if (!$('#toolbarFiltros').length) {
 
@@ -224,41 +224,41 @@ $(api.table().container())
 
               // mover buscador dentro de la barra
               $('#toolbarFiltros').append(filter);
-// 🔥 FILTROS
-$('#filtrosExtras').css({
-    display: 'flex',
-    alignItems: 'center',
-    gap: '15px',
-    flexWrap: 'nowrap',
-    whiteSpace: 'nowrap',
-    flex: '0 0 auto'
-});
+              // 🔥 FILTROS
+              $('#filtrosExtras').css({
+                display: 'flex',
+                alignItems: 'center',
+                gap: '15px',
+                flexWrap: 'nowrap',
+                whiteSpace: 'nowrap',
+                flex: '0 0 auto'
+              });
 
-// 🔥 BUSCADOR
-filter.css({
-    display: 'flex',
-    alignItems: 'center',
-    width: 'auto',
-    margin: '0px',
-    float: 'none',
-    whiteSpace: 'nowrap'
-});
+              // 🔥 BUSCADOR
+              filter.css({
+                display: 'flex',
+                alignItems: 'center',
+                width: 'auto',
+                margin: '0px',
+                float: 'none',
+                whiteSpace: 'nowrap'
+              });
 
-// 🔥 LABEL
-filter.find('label').css({
-    display: 'flex',
-    alignItems: 'center',
-    gap: '5px',
-    margin: '0px',
-    whiteSpace: 'nowrap'
-});
+              // 🔥 LABEL
+              filter.find('label').css({
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                margin: '0px',
+                whiteSpace: 'nowrap'
+              });
 
-// 🔥 INPUT
-filter.find('input').css({
-    width: '15vw',
-    maxWidth: '180px',
-    minWidth: '120px'
-});
+              // 🔥 INPUT
+              filter.find('input').css({
+                width: '15vw',
+                maxWidth: '180px',
+                minWidth: '120px'
+              });
 
             }
 
@@ -310,38 +310,38 @@ filter.find('input').css({
 
           { title: 'N°', data: 'id' },
 
-        //   {
-        //     title: 'Prioridad / Gestión',
-        //     data: null,
-        //     render: function (data: any, type: any, row: any) {
+          //   {
+          //     title: 'Prioridad / Gestión',
+          //     data: null,
+          //     render: function (data: any, type: any, row: any) {
 
-        //       let icono = '';
-        //       let color = '';
+          //       let icono = '';
+          //       let color = '';
 
-        //       switch (row.prioridad) {
-        //         case 'ALTA': icono = '↑'; color = 'red'; break;
-        //         case 'MEDIA': icono = '='; color = 'orange'; break;
-        //         case 'BAJA': icono = '↓'; color = 'green'; break;
-        //         default: icono = '?';
-        //       }
+          //       switch (row.prioridad) {
+          //         case 'ALTA': icono = '↑'; color = 'red'; break;
+          //         case 'MEDIA': icono = '='; color = 'orange'; break;
+          //         case 'BAJA': icono = '↓'; color = 'green'; break;
+          //         default: icono = '?';
+          //       }
 
-        //       let tipo = row.tipoGestion == 1
-        //         ? 'Emisión Póliza nueva'
-        //         : row.tipoGestion == 2
-        //           ? 'Ingreso Póliza nueva'
-        //           : row.tipoGestion == 3
-        //             ? 'Renovación de póliza'
-        //             : 'Sin definir';
-        //       return `
-        //   <div style="font-size:11px">
-        //     <div style="color:${color}">
-        //       ${icono} <strong>${row.prioridad}</strong>
-        //     </div>
-        //     <div>${tipo}</div>
-        //   </div>
-        // `;
-        //     }
-        //   },
+          //       let tipo = row.tipoGestion == 1
+          //         ? 'Emisión Póliza nueva'
+          //         : row.tipoGestion == 2
+          //           ? 'Ingreso Póliza nueva'
+          //           : row.tipoGestion == 3
+          //             ? 'Renovación de póliza'
+          //             : 'Sin definir';
+          //       return `
+          //   <div style="font-size:11px">
+          //     <div style="color:${color}">
+          //       ${icono} <strong>${row.prioridad}</strong>
+          //     </div>
+          //     <div>${tipo}</div>
+          //   </div>
+          // `;
+          //     }
+          //   },
 
           {
             title: '<i class="fas fa-cogs me-1"></i> Opción',
@@ -368,7 +368,7 @@ filter.find('input').css({
                 botones += `<button title="Estimar Entrega" class="btn btn-secondary btn-sm" onclick="estimarEntrega(${full.id})"><i class="fas fa-flag"></i></button>`;
               }
               if (full.idEstado != 1) {
-              botones += `<button title="Visualizar" class="btn btn-info btn-sm" onclick="visualizarIngreso(${full.id})"><i class="fas fa-eye"></i></button>`;
+                botones += `<button title="Visualizar" class="btn btn-info btn-sm" onclick="visualizarIngreso(${full.id})"><i class="fas fa-eye"></i></button>`;
               }
               return `<div class="d-flex justify-content-center flex-nowrap" style="gap:5px">${botones}</div>`;
             }
@@ -377,6 +377,13 @@ filter.find('input').css({
           { title: 'Estado', data: 'estado' },
           { title: 'F.Registro', data: 'fechaRegistro' },
           { title: 'F.Est.Entr.', data: 'fechaMaxima' },
+          {
+            title: 'F.Abierto.',
+            data: 'fechaAbierto',
+            render: (data: any) => {
+              return data || '-';
+            }
+          },
           { title: 'F.Ultimo.Mov.', data: 'fechaUltMov' },
           { title: 'Cliente', data: 'cliente' },
           { title: 'Ramos', data: 'lstRamos' },
@@ -534,44 +541,44 @@ filter.find('input').css({
     Swal.hideLoading();
     Swal.close();
   }
-exportar() {
+  exportar() {
 
-  const table = $('#tablaseg').DataTable();
+    const table = $('#tablaseg').DataTable();
 
-  // Guardar cantidad actual de registros por página
-  const paginaActual = table.page.len();
+    // Guardar cantidad actual de registros por página
+    const paginaActual = table.page.len();
 
-  // Mostrar todos los registros
-  table.page.len(-1).draw();
+    // Mostrar todos los registros
+    table.page.len(-1).draw();
 
-  setTimeout(() => {
+    setTimeout(() => {
 
-    const element = document.getElementById('tablaseg');
+      const element = document.getElementById('tablaseg');
 
-    if (element) {
+      if (element) {
 
-      const ws: XLSX.WorkSheet =
-        XLSX.utils.table_to_sheet(element);
+        const ws: XLSX.WorkSheet =
+          XLSX.utils.table_to_sheet(element);
 
-      const wb: XLSX.WorkBook =
-        XLSX.utils.book_new();
+        const wb: XLSX.WorkBook =
+          XLSX.utils.book_new();
 
-      XLSX.utils.book_append_sheet(
-        wb,
-        ws,
-        'Registros'
-      );
+        XLSX.utils.book_append_sheet(
+          wb,
+          ws,
+          'Registros'
+        );
 
-      XLSX.writeFile(
-        wb,
-        'registrosChk.xlsx'
-      );
-    }
+        XLSX.writeFile(
+          wb,
+          'registrosChk.xlsx'
+        );
+      }
 
-    // Restaurar paginación original
-    table.page.len(paginaActual).draw();
+      // Restaurar paginación original
+      table.page.len(paginaActual).draw();
 
-  }, 300);
+    }, 300);
 
-}
+  }
 }

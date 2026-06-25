@@ -49,7 +49,7 @@ form input::placeholder {
     transform: translateY(-50%);
     background-color: white; /* Fondo blanco para que sobresalga del card */
     padding: 0 10px; /* Espaciado horizontal */
-    font-size: 15px;
+    font-size: 12px;
     font-weight: bold;
 }
 .titulo-sobre-borde-2 {
@@ -67,7 +67,7 @@ form input::placeholder {
     transform: translate(-50%, -50%);
     background-color: white;
     padding: 0 10px;
-    font-size: 15px;
+    font-size: 12px;
     font-weight: bold;
 }
 .ng-select-bootstrap {
@@ -151,4 +151,613 @@ ngx-dropzone-preview img {
 .fila-total-general{
   background:#eceff1;
   font-size:14px;
+}
+.ingresos-gastos-wrapper {
+  font-size: 12px;
+}
+
+.card-ramo {
+  border-radius: 16px;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid #e4ebf5 !important;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08) !important;
+}
+
+.card-header-ramo {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+  border-bottom: 1px solid #e8eef7;
+}
+
+.titulo-ramo {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: #eef7ff;
+  color: #0d6efd;
+  font-size: 12px;
+  font-weight: 800;
+  border: 1px solid #cfe8ff;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.subtitulo-ramo {
+  display: block;
+  margin-top: 6px;
+  color: #64748b;
+  font-size: 10px;
+}
+
+.acciones-ramo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
+.acciones-ramo .btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.acciones-ramo .btn i {
+  font-size: 11px;
+}
+
+.card-body-ramo {
+  padding: 14px 16px 16px;
+}
+
+.info-grid-ramo {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 10px;
+  background: #f8fafc;
+  border: 1px solid #edf2f7;
+  border-radius: 14px;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 8px;
+  background: #ffffff;
+  border: 1px solid #edf2f7;
+  border-radius: 10px;
+}
+
+.info-item span {
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.info-item strong {
+  color: #111827;
+  font-size: 10px;
+  font-weight: 800;
+  text-align: right;
+}
+
+.seccion-tabla {
+  margin-top: 14px;
+}
+
+.seccion-titulo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #eef7ff;
+  color: #0d6efd;
+  border: 1px solid #cfe8ff;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.seccion-titulo-danger {
+  background: #fff1f2;
+  color: #dc3545;
+  border-color: #ffcdd2;
+}
+
+.seccion-titulo-resumen {
+  background: #f5f3ff;
+  color: #6f42c1;
+  border-color: #ddd6fe;
+}
+
+.tabla-gastos {
+  font-size: 10px;
+  border: 1px solid #e5edf7;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.tabla-gastos thead th {
+  background: #eaf3ff;
+  color: #0d47a1;
+  font-weight: 800;
+  text-align: center;
+  padding: 8px;
+  border-color: #d7e6f8;
+  white-space: nowrap;
+}
+
+.tabla-gastos tbody td {
+  padding: 8px;
+  border-color: #edf2f7;
+  color: #334155;
+}
+
+.tabla-gastos tbody tr:hover {
+  background: #f8fbff;
+}
+
+.fila-asignada {
+  background: #fff1f3 !important;
+}
+
+.fila-factura {
+  background: #fff1f3;
+}
+
+.fila-total td {
+  background: #e9f5ff;
+  color: #0d6efd;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 9px 8px;
+}
+
+.fila-porcentaje td {
+  background: #fff8e6;
+  color: #9a6700;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.fila-total-general td {
+  background: #f3f4f6;
+  color: #111827;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.btn-quitar {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border-radius: 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-quitar i {
+  font-size: 10px;
+}
+
+.tabla-resumen tbody td {
+  text-align: center;
+  font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  .card-header-ramo {
+    flex-direction: column;
+  }
+
+  .acciones-ramo {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .info-grid-ramo {
+    grid-template-columns: 1fr;
+  }
+}
+.tabla-resumen-ejecutiva {
+  width: 100%;
+  font-size: 9px;
+  border-collapse: separate;
+  border-spacing: 0 5px;
+  background: transparent;
+}
+
+.tabla-resumen-ejecutiva td {
+  padding: 6px 8px;
+  border: none;
+  background: #ffffff;
+  vertical-align: middle;
+}
+
+.tabla-resumen-ejecutiva tr td:first-child {
+  border-radius: 9px 0 0 9px;
+}
+
+.tabla-resumen-ejecutiva tr td:last-child {
+  border-radius: 0 9px 9px 0;
+}
+
+.resumen-row td {
+  border-left: 1px solid #edf2f7;
+  border-top: 1px solid #edf2f7;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.resumen-row td:last-child {
+  border-right: 1px solid #edf2f7;
+}
+
+.resumen-concepto {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #334155;
+}
+
+.resumen-icono {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  border-radius: 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.resumen-icono i {
+  font-size: 10px;
+}
+
+.resumen-label {
+  display: block;
+  color: #64748b;
+  font-size: 8.5px;
+  line-height: 1.1;
+}
+
+.resumen-ramo {
+  display: block;
+  color: #1f2937;
+  font-size: 9px;
+  line-height: 1.1;
+}
+
+.resumen-valor {
+  font-size: 9px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.resumen-valor-final {
+  font-size: 10px;
+  font-weight: 900;
+  color: #111827;
+  white-space: nowrap;
+}
+
+.bg-success-soft {
+  background: #ecfdf5;
+  color: #198754;
+}
+
+.bg-danger-soft {
+  background: #fff1f2;
+  color: #dc3545;
+}
+
+.bg-primary-soft {
+  background: #eff6ff;
+  color: #0d6efd;
+}
+
+.bg-warning-soft {
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.bg-dark-soft {
+  background: #f1f5f9;
+  color: #111827;
+}
+
+.resumen-total-ingresos td {
+  background: #fbfffd;
+}
+
+.resumen-gastos td {
+  background: #fffafa;
+}
+
+.resumen-retorno td {
+  background: #fbfdff;
+}
+
+.resumen-porcentaje td {
+  background: #fffef7;
+}
+
+.resumen-final td {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.tabla-resumen-ejecutiva tbody tr:hover td,
+.tabla-resumen-ejecutiva tfoot tr:hover td {
+  background: #f8fafc;
+}
+.filtros-ejecutivos {
+  font-size: 11px;
+}
+
+.filtro-item {
+  background: #ffffff;
+  border: 1px solid #edf2f7;
+  border-radius: 10px;
+  padding: 8px;
+  height: 100%;
+}
+
+.filtro-label {
+  display: block;
+  margin-bottom: 5px;
+  color: #64748b;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.filtro-control {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.filtro-icono {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.filtro-icono i {
+  font-size: 12px;
+}
+
+.filtro-input {
+  height: 28px;
+  min-height: 28px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #334155;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: none;
+  padding: 4px 8px;
+}
+
+.filtro-input:focus {
+  border-color: #cbd5e1;
+  box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.08);
+}
+
+.filtro-input:disabled {
+  background: #f8fafc;
+  color: #475569;
+  opacity: 1;
+}
+
+.bg-success-soft {
+  background: #ecfdf5;
+  color: #198754;
+}
+
+.bg-danger-soft {
+  background: #fff1f2;
+  color: #dc3545;
+}
+
+.bg-primary-soft {
+  background: #eff6ff;
+  color: #0d6efd;
+}
+
+.bg-warning-soft {
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.bg-dark-soft {
+  background: #f1f5f9;
+  color: #111827;
+}
+
+@media (max-width: 768px) {
+  .filtros-ejecutivos {
+    row-gap: 8px;
+  }
+
+  .filtro-item {
+    padding: 7px;
+  }
+}
+.btn-asignar-factura {
+  width: auto !important;
+  min-width: max-content;
+  height: 28px;
+  padding: 4px 12px !important;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #198754;
+  background: #ecfdf5;
+  border: 1px solid #bbf7d0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.btn-asignar-factura i {
+  font-size: 12px;
+}
+
+.btn-asignar-factura:hover {
+  color: #ffffff;
+  background: #198754;
+  border-color: #198754;
+}
+.tabla-resumen-ejecutiva {
+  width: 100%;
+  font-size: 9px;
+  border-collapse: separate;
+  border-spacing: 0 5px;
+  background: transparent;
+}
+
+.tabla-resumen-ejecutiva td {
+  padding: 6px 8px;
+  border: none;
+  background: #ffffff;
+  vertical-align: middle;
+}
+
+.tabla-resumen-ejecutiva tr td:first-child {
+  border-radius: 9px 0 0 9px;
+}
+
+.tabla-resumen-ejecutiva tr td:last-child {
+  border-radius: 0 9px 9px 0;
+}
+
+.resumen-row td {
+  border-left: 1px solid #edf2f7;
+  border-top: 1px solid #edf2f7;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.resumen-row td:last-child {
+  border-right: 1px solid #edf2f7;
+}
+
+.resumen-concepto {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #334155;
+}
+
+.resumen-icono {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  border-radius: 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.resumen-icono i {
+  font-size: 10px;
+}
+
+.resumen-label {
+  display: block;
+  color: #64748b;
+  font-size: 8.5px;
+  line-height: 1.1;
+}
+
+.resumen-ramo {
+  display: block;
+  color: #1f2937;
+  font-size: 9px;
+  line-height: 1.1;
+}
+
+.resumen-valor {
+  font-size: 9px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.resumen-valor-final {
+  font-size: 10px;
+  font-weight: 900;
+  color: #111827;
+  white-space: nowrap;
+}
+
+.bg-success-soft {
+  background: #ecfdf5;
+  color: #198754;
+}
+
+.bg-danger-soft {
+  background: #fff1f2;
+  color: #dc3545;
+}
+
+.bg-primary-soft {
+  background: #eff6ff;
+  color: #0d6efd;
+}
+
+.bg-warning-soft {
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.bg-dark-soft {
+  background: #f1f5f9;
+  color: #111827;
+}
+
+.resumen-total-ingresos td {
+  background: #fbfffd;
+}
+
+.resumen-gastos td {
+  background: #fffafa;
+}
+
+.resumen-retorno td {
+  background: #fbfdff;
+}
+
+.resumen-porcentaje td {
+  background: #fffef7;
+}
+
+.resumen-final td {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.tabla-resumen-ejecutiva tbody tr:hover td,
+.tabla-resumen-ejecutiva tfoot tr:hover td {
+  background: #f8fafc;
 }

@@ -156,4 +156,8 @@ export class ChecklistService {
     formData.append('url', url);
     return await this.httpClient.post(urlApi, formData, { responseType: 'blob' }).pipe(catchError(this.handleError)).toPromise();
   }
+    public obtenerContactosIngresados(datos:any) {
+    const URL_API = environment.apiUrl + "obtenerContactosIngresados";
+    return this.httpClient.post(URL_API,datos).pipe(catchError(this.handleError));
+  }
 }

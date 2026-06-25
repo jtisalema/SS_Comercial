@@ -32,6 +32,13 @@ export class PygingresoComponent2 {
   lstFacturasCliente: any = [];
   dtOptions: any;
   dataTable: any;
+  objCliente: any;
+  esFinanciero: boolean = false;
+  clientess = [
+    { id: null, nombre: 'Todos' },
+    { id: 1, nombre: 'Juan' },
+    { id: 2, nombre: 'María' }
+  ];
   /**
    *
    */
@@ -55,7 +62,9 @@ export class PygingresoComponent2 {
     this.obtenerInformacionInicial();
     (window as any).seleccionarFactura = this.seleccionarFactura.bind(this);
   }
+
   ramoSeleccionado: any;
+  mostrarCamposFactura: boolean = false;
   cargarTablaFacturas() {
     this.dtOptions = {
       destroy: true,
@@ -63,30 +72,83 @@ export class PygingresoComponent2 {
         (item: any) => item.seleccionado == 0
       ),
       dom:
+        '<"row mb-2 align-items-center"' +
+        '<"col-md-6 text-start"<"custom-toolbar-main">>' +
+        '<"col-md-6 text-end"f>' +
+        '>' +
         '<"row mb-2"' +
-        '<"col-md-6 text-start"<' +
-        '"custom-toolbar"' +
-        '>>' +
-        '<"col-md-6"f>' +
+        '<"col-12"<"custom-toolbar-manual">>' +
         '>' +
         'rtip',
 
       initComplete: () => {
-        $('.custom-toolbar').html(`
-    <div class="d-flex align-items-center gap-2">
+        $('.custom-toolbar-main').html(`
+    <div class="d-flex align-items-center gap-2 flex-wrap">
       <input
         id="txtNumeroFactura"
         type="text"
         class="form-control form-control-sm"
         placeholder="Número de factura"
         style="width: 180px;"
-      >&nbsp;
+      >
 &nbsp;
-      <button id="btnConsultar" class="btn btn-primary btn-sm">
-        <i class="fas fa-search"></i> Buscar Otros
+      <button id="btnConsultar" class="btn btn-primary btn-sm" style="font-weight:bold">
+        <i class="fas fa-search"></i> Buscar
+      </button>
+&nbsp;
+      <button id="btnAgregar" class="btn btn-warning btn-sm" style="color:white;font-weight:bold">
+        <i class="fas fa-plus-circle"></i> Agregar
       </button>
     </div>
   `);
+
+        $('.custom-toolbar-manual').html(`
+  <div id="rowFacturaManual" class="row g-2 align-items-center w-100" style="display:none;">
+
+    <div class="col-12">
+      <h6 class="mb-1 fw-bold">
+        Datos para la Factura
+      </h6>
+    </div>
+
+    <div class="col-md-4">
+      <input
+        id="txtDescripcion"
+        type="text"
+        class="form-control form-control-sm"
+        placeholder="Descripción"
+      >
+    </div>
+
+    <div class="col-md-3">
+      <input
+        id="txtFecha"
+        type="date"
+        class="form-control form-control-sm"
+      >
+    </div>
+
+    <div class="col-md-3">
+      <input
+        id="txtValor"
+        type="number"
+        class="form-control form-control-sm"
+        placeholder="Ingrese el Valor"
+      >
+    </div>
+
+    <div class="col-md-2 d-flex gap-2">
+      <button id="btnAceptarFactura" class="btn btn-success btn-sm">
+        Aceptar
+      </button>
+&nbsp;
+      <button id="btnCancelarFactura" class="btn btn-warning btn-sm">
+        Cancelar
+      </button>
+    </div>
+
+  </div>
+`);
 
         $('#btnConsultar').on('click', () => {
           const numeroFactura = ($('#txtNumeroFactura').val() as string)?.trim();
@@ -98,6 +160,57 @@ export class PygingresoComponent2 {
 
           this.buscarOtros(numeroFactura);
         });
+
+        $('#btnAgregar').on('click', () => {
+          $('#rowFacturaManual').slideDown(150);
+        });
+
+        $('#btnCancelarFactura').on('click', () => {
+          $('#rowFacturaManual').slideUp(150);
+          $('#txtDescripcion').val('');
+          $('#txtFecha').val('');
+          $('#txtValor').val('');
+        });
+
+        $('#btnAceptarFactura').on('click', () => {
+          const descripcion = ($('#txtDescripcion').val() as string)?.trim();
+          const fecha = ($('#txtFecha').val() as string)?.trim();
+          const valor = ($('#txtValor').val() as string)?.trim();
+
+          if (!descripcion || !fecha || !valor) {
+            alert('Debe ingresar descripción, fecha y valor');
+            return;
+          }
+
+          console.log({
+            descripcion,
+            fecha,
+            valor
+          });
+          let detFactura = {
+            idRamo: this.ramoSeleccionado.idRamo,
+            descripcion: descripcion,
+            valor: valor,
+            idDetalleFact: '',
+            fechaFactura: fecha,
+            numero_documento: '',
+          };
+
+          if (!this.ramoSeleccionado.facturas) {
+            this.ramoSeleccionado.facturas = [];
+          }
+          console.log('reamoSeleccionado', this.ramoSeleccionado);
+          this.ramoSeleccionado.facturas.push(detFactura);
+
+          this.toastrService.success(
+            'Correcto!',
+            'Datos de factura agregados correctamente.'
+          );
+          $('#rowFacturaManual').slideUp(150);
+          $('#txtDescripcion').val('');
+          $('#txtFecha').val('');
+          $('#txtValor').val('');
+        });
       },
       info: false,
       pageLength: 7,
@@ -106,20 +219,53 @@ export class PygingresoComponent2 {
         ...this.GetSpanishLanguage()
       },
       columns: [
-        { title: 'N°Fac.', data: 'numero_documento' },
-        { title: 'Cliente', data: 'canal_nombre' },
-        { title: 'Proveedor', data: 'proveedor_nombre' },
-        { title: 'Fecha', data: 'fecha_emision' },
-        { title: 'Observacion', data: 'observacion' },
+        {
+          title: 'N°Fac.',
+          data: 'numero_documento',
+          render: function (data: any, type: any, row: any) {
+            if (data === null || data === undefined || data === '') {
+              return 'Asiento Contable ';
+            }
 
+            return 'Factura ' + data;
+          }
+        },
+        { title: 'Centro Costos', data: 'canal_nombre' },
+        {
+          title: 'Proveedor/Cliente',
+          data: 'proveedor_nombre',
+          render: (data: any, type: any, row: any) => {
+            const proveedor = data?.trim();
+            const cliente = row.cliente_nombre?.trim();
+            const referencia = row.referencia?.trim();
+
+            return proveedor || cliente || referencia || '';
+          }
+        },
+        {
+          title: 'Fecha',
+          data: 'fecha_emision',
+          render: (data: any, type: any, row: any) => {
+            return data || row.fecha;
+          }
+        },
+        {
+          title: 'Observacion',
+          data: 'observacion',
+          render: (data: any, type: any, row: any) => {
+            return data || row.nombre_cuenta || '';
+          }
+        },
         {
           title: 'Valor+IVA',
           data: 'base_con_iva',
-          render: (data: number) => {
+          render: (data: any, type: any, row: any) => {
+            const valor = data ?? row.valor_debe; // preguntar si en asientos contables va voler_debe o valor_haber
+
             return new Intl.NumberFormat('es-EC', {
               style: 'currency',
               currency: 'USD'
-            }).format(data);
+            }).format(valor || 0);
           }
         },
         {
@@ -164,7 +310,7 @@ export class PygingresoComponent2 {
       ramo: [null, Validators.required],
       nombreRamo: [],
       inicioVigencia: [new Date().toISOString().split('T')[0], Validators.required],
-      finVigencia: ['', Validators.required],
+      finVigencia: [new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0], Validators.required],
       primaMensual: ['', Validators.required],
       primaAnual: ['', Validators.required],
       porcentajeComision: ['', Validators.required],
@@ -200,8 +346,34 @@ export class PygingresoComponent2 {
   }
   async obtenerUsuario() {
     this.userCurrent = await this.authService.getUserInfor();
+    if (this.userCurrent.get_roles.id == 32) {
+      this.esFinanciero = true;
+    }
     if (this.idRegistro) {
-      this.cargarDatosRegistro();
+      this.pygService.obtenerFiltrosPYG(this.idRegistro).subscribe((res: any) => {
+        console.log('filtros', res);
+        let listaRamos = res.ramos;//[20, 27, 38, 55, 59, 60]
+        let ramos = listaRamos.map((id: number) => {
+          const ramo = this.lstRamos.find((item: any) => item.cdRamo == id);
+
+          return {
+            id: id,
+            nombre: ramo ? ramo.nmRamo : ''
+          };
+        });
+        let anios = res.anios
+          .sort((a: number, b: number) => b - a)
+          .map((anio: number) => ({
+            id: anio,
+            value: anio
+          }));
+        this.selectVigencia = anios[0]?.value;
+        console.log('ramos', ramos);
+        this.lstRamosCargados = ramos;
+        this.lstAniosCargados = anios;
+        this.cargarDatosRegistro();
+      });
+
     }
   }
   formatearMoneda() {
@@ -326,16 +498,15 @@ export class PygingresoComponent2 {
       return totalIngresos + sumaGastos;
     }, 0);
   }
-get totalGastosFacturas(): number {
-  console.log('this.lstIngresosGastos', this.lstIngresosGastos);
-  return this.lstIngresosGastos.reduce((totalFacturas: number, ingreso: any) => {
-    const sumaFacturas = (ingreso.facturas || []).reduce(
-      (total: number, factura: any) => total + Number(factura.valor || 0),
-      0
-    );
-    return totalFacturas + sumaFacturas;
-  }, 0);
-}
+  get totalGastosFacturas(): number {
+    return this.lstIngresosGastos.reduce((totalFacturas: number, ingreso: any) => {
+      const sumaFacturas = (ingreso.facturas || []).reduce(
+        (total: number, factura: any) => total + Number(factura.valor || 0),
+        0
+      );
+      return totalFacturas + sumaFacturas;
+    }, 0);
+  }
   get totalIngresos(): number {
     return this.lstIngresosGastos.reduce((total: any, item: any) => Number(total) + Number(item.comisionAnual), 0);
   }
@@ -363,6 +534,7 @@ get totalGastosFacturas(): number {
       if (this.ingresoForm.valid) {
         const ramo = this.lstRamos.find((r: any) => r.cdRamo === this.ingresoForm.value.ramo);
         let ingreso = {
+          idIngreso: '',
           cliente: this.ingresoForm.getRawValue().cliente,
           nombreCliente: this.clienteSeleccionado.NOMBRES,
           idCliente: this.clienteSeleccionado.ID,
@@ -436,10 +608,17 @@ get totalGastosFacturas(): number {
     }
     return (this.totalGastos / this.totalIngresos) * 100;
   }
+  calcularPorcentajeGastosxRamo(gastos: any[], comision: any): number {
+    let totalGastos = gastos?.reduce((total, gasto) => total + Number(gasto.valor), 0);
+    return (totalGastos / comision) * 100;
+  }
+  calcularRestanteGastosxRamo(gastos: any[], comision: any): number {
+    let totalGastos = gastos?.reduce((total, gasto) => total + Number(gasto.valor), 0);
+    return comision - totalGastos;
+  }
   clienteSeleccionado: any;
   onClienteChange(cliente: any) {
     this.clienteSeleccionado = cliente;//apellidos , nombnres , id
-    console.log('clienteSeleccionado', this.clienteSeleccionado);
   }
   eliminarIngreso(dato: number) {
 
@@ -468,7 +647,7 @@ get totalGastosFacturas(): number {
   }
   editarIngresoGasto: boolean = false;
   indexIGActualizar: any;
-  
+
   editarIngreso(index: any) {
     this.indexIGActualizar = index;
     this.editarIngresoGasto = true;
@@ -497,7 +676,7 @@ get totalGastosFacturas(): number {
     const ramo = this.lstRamos.find((r: any) => r.cdRamo === this.ingresoForm.value.ramo);
     let ingreso = {
       cliente: this.ingresoForm.getRawValue().cliente,
-      nombreCliente: this.clienteSeleccionado?.NOMBRES??'',
+      nombreCliente: this.clienteSeleccionado?.NOMBRES ?? '',
       idCliente: this.clienteSeleccionado.ID,
       ramo: this.ingresoForm.value.ramo,
       nombreRamo: ramo.nmRamo,
@@ -560,106 +739,206 @@ get totalGastosFacturas(): number {
       this.toastrService.error('ERROR', 'No se pudo actualizar el registro!');
     });
   }
+
+  lstRamosCargados: any = [];
+  lstAniosCargados: any = [];
+  selectRamo: any = 999;
+  selectVigencia: any;
+  tieneFacturas(): boolean {
+    return this.lstIngresosGastos?.some((item: any) => item.facturas?.length > 0);
+  }
   cargarDatosRegistro() {
+    this.lstFacturasBorradas = [];
+    this.lstIngresosGastos = [];
     this.clienteSeleccionado = {};
     this.loadingService.showLoading();
-    this.pygService.obtenerRegistrosPYGbyID(this.idRegistro).subscribe((res: any) => {
-      let respuesta = res.data;
-      if(respuesta){
-      this.clienteSeleccionado.NOMBRES = respuesta.cliente;
-      this.clienteSeleccionado.ID = respuesta.idCliente;
-      }
-      console.log('clienteSeleccionado', this.clienteSeleccionado);
+    if (this.esFinanciero) {
+      let formD = new FormData();
+      formD.append('idRegistro', this.idRegistro);
+      formD.append('ramo', this.selectRamo);
+      formD.append('vigencia', this.selectVigencia);
+      formD.append('cliente', this.clienteSeleccionado.ID);
 
-      this.loadingService.hideLoading();
-      this.ingresoForm.patchValue({
-        id: respuesta.id,
-        cliente: respuesta.cliente ?? '',
-      });
-      respuesta.ramos.forEach((element: any) => {
-        // para las listas 
-        let nombreRamo = this.lstRamos.find((item: any) => item.cdRamo == element.ramo).nmRamo;
-        console.log('respuesta',respuesta);
-        let ingreso = {
-          cliente: respuesta.idCliente??'',
-          nombreCliente: respuesta.cliente ?? '',
-          ramo: element.ramo ?? '',
-          nombreRamo: nombreRamo ?? '',
-          inicioVigencia: element.inicioVigencia ?? '',
-          finVigencia: element.finVigencia ?? '',
-          primaMensual: element.primaMensual ?? '',
-          primaAnual: element.primaMensual
-            ? element.primaMensual * 12
-            : '',
-          porcentajeComision: element.comision ?? '',
-          comision: element.primaMensual != null && element.comision != null
-            ? (element.primaMensual * element.comision) / 100
-            : 0,
-          comisionAnual: element.comision
-            ? (element.primaMensual * element.comision) / 100 * 12
-            : '',
-          gastos: element.gastos
+      this.pygService.obtenerRegistrosPYGFinanciero(formD).subscribe((res: any) => {
+        let respuesta = res.data;
+        console.log('respuestaFinanciero', respuesta);
+        if (respuesta) {
+          this.clienteSeleccionado.NOMBRES = respuesta.cliente;
+          this.clienteSeleccionado.ID = respuesta.idCliente;
+          this.objCliente = {
+            id: respuesta.idCliente,
+            nombre: respuesta.cliente
+          }
         }
-        this.lstIngresosGastos.push(ingreso);
+
+        this.ingresoForm.patchValue({
+          id: respuesta.id,
+          cliente: respuesta.cliente ?? '',
+        });
+        respuesta.ramos.forEach((element: any) => {
+          // para las listas 
+          let nombreRamo = this.lstRamos.find((item: any) => item.cdRamo == element.ramo).nmRamo;
+
+          let ingreso = {
+            idIngreso: respuesta.idRegistro,
+            cliente: respuesta.idCliente ?? '',
+            nombreCliente: respuesta.cliente ?? '',
+            ramo: element.ramo ?? '',
+            idRamo: element.idRegistroReg ?? '',
+            nombreRamo: nombreRamo ?? '',
+            inicioVigencia: element.inicioVigencia ?? '',
+            finVigencia: element.finVigencia ?? '',
+            primaMensual: element.primaMensual ?? '',
+            primaAnual: element.primaMensual
+              ? element.primaMensual * 12
+              : '',
+            porcentajeComision: element.comision ?? '',
+            comision: element.primaMensual != null && element.comision != null
+              ? (element.primaMensual * element.comision) / 100
+              : 0,
+            comisionAnual: element.comision
+              ? (element.primaMensual * element.comision) / 100 * 12
+              : '',
+            gastos: element.gastos,
+            facturas: element.facturas
+          }
+          this.lstIngresosGastos.push(ingreso);
+        });
         //consulto las facturas
         let formd = new FormData();
-        formd.append('fechaInicio', element.inicioVigencia);
-        formd.append('fechaFin', element.finVigencia);
         formd.append('idCliente', respuesta.idCliente);
         this.pygService.obtenerFacturasPYG(formd).subscribe((res: any) => {
           this.lstFacturasCliente = res.data;
           this.lstFacturasCliente = Array.from(
             new Map(this.lstFacturasCliente.map((item: any) => [item.id, item])).values()
           );
-          console.log('this.lstFacturasCliente', this.lstFacturasCliente);
           this.cargarTablaFacturas();
-          console.log(res.data);
         }, (error: any) => {
           this.loadingService.hideLoading();
           this.toastrService.error('ERROR', 'No se pudo cargar el registro!');
           this.router.navigate(['/home/pyg/seguimiento']);
         });
+
+      }, (error: any) => {
+        this.loadingService.hideLoading();
+        this.toastrService.error('ERROR', 'No se pudo cargar el registro!');
+        this.router.navigate(['/home/pyg/seguimiento']);
       });
+      setTimeout(() => {
+        this.loadingService.hideLoading();
+      }, 1000);
+    } else {
+      this.pygService.obtenerRegistrosPYGbyID(this.idRegistro).subscribe((res: any) => {
+        let respuesta = res.data;
+        console.log('respuesta', respuesta);
+        if (respuesta) {
+          this.clienteSeleccionado.NOMBRES = respuesta.cliente;
+          this.clienteSeleccionado.ID = respuesta.idCliente;
+          this.objCliente = {
+            id: respuesta.idCliente,
+            nombre: respuesta.cliente
+          }
+        }
+
+        this.ingresoForm.patchValue({
+          id: respuesta.id,
+          cliente: respuesta.cliente ?? '',
+        });
+        respuesta.ramos.forEach((element: any) => {
+          // para las listas 
+          let nombreRamo = this.lstRamos.find((item: any) => item.cdRamo == element.ramo).nmRamo;
+          let ramoCargado = {
+            id: element.ramo,
+            nombre: nombreRamo
+          }
+          this.lstRamosCargados.push(ramoCargado);
+          console.log('lstRamosCargados', this.lstRamosCargados);
+          let ingreso = {
+            idIngreso: respuesta.idRegistro,
+            cliente: respuesta.idCliente ?? '',
+            nombreCliente: respuesta.cliente ?? '',
+            ramo: element.ramo ?? '',
+            idRamo: element.id ?? '',
+            nombreRamo: nombreRamo ?? '',
+            inicioVigencia: element.inicioVigencia ?? '',
+            finVigencia: element.finVigencia ?? '',
+            primaMensual: element.primaMensual ?? '',
+            primaAnual: element.primaMensual
+              ? element.primaMensual * 12
+              : '',
+            porcentajeComision: element.comision ?? '',
+            comision: element.primaMensual != null && element.comision != null
+              ? (element.primaMensual * element.comision) / 100
+              : 0,
+            comisionAnual: element.comision
+              ? (element.primaMensual * element.comision) / 100 * 12
+              : '',
+            gastos: element.gastos,
+            facturas: element.facturas
+          }
+          this.lstIngresosGastos.push(ingreso);
+        });
+        //consulto las facturas
+        let formd = new FormData();
+        formd.append('idCliente', respuesta.idCliente);
+        this.pygService.obtenerFacturasPYG(formd).subscribe((res: any) => {
+          this.lstFacturasCliente = res.data;
+          this.lstFacturasCliente = Array.from(
+            new Map(this.lstFacturasCliente.map((item: any) => [item.id, item])).values()
+          );
+          this.cargarTablaFacturas();
+        }, (error: any) => {
+          this.loadingService.hideLoading();
+          this.toastrService.error('ERROR', 'No se pudo cargar el registro!');
+          this.router.navigate(['/home/pyg/seguimiento']);
+        });
+        setTimeout(() => {
+          this.loadingService.hideLoading();
+        }, 1000);
+      }, (error: any) => {
+        this.loadingService.hideLoading();
+        this.toastrService.error('ERROR', 'No se pudo cargar el registro!');
+        this.router.navigate(['/home/pyg/seguimiento']);
+      });
+    }
 
 
-    }, (error: any) => {
-      this.loadingService.hideLoading();
-      this.toastrService.error('ERROR', 'No se pudo cargar el registro!');
-      this.router.navigate(['/home/pyg/seguimiento']);
-    });
   }
   actualizarPYG() {
     console.log('actualizar');
   }
   asignarFacturas(id: any) {
     this.ramoSeleccionado = this.lstIngresosGastos[id];
-    console.log('ramoSeleccionado', this.ramoSeleccionado);
     $('#modalFacturas').modal('show');
   }
   seleccionarFactura(id: any) {
     let factura = this.lstFacturasCliente.find(
       (element: any) => element.id == id
     );
-
     if (factura) {
       factura.seleccionado = 1;
     }
-
     let detFactura = {
+      idRamo: this.ramoSeleccionado.idRamo,
       descripcion: factura.observacion,
       valor: factura.base_con_iva,
-      idDetalleFact: factura.id
+      idDetalleFact: factura.id,
+      fechaFactura: factura.fecha_emision,
+      numero_documento: factura.numero_documento,
     };
 
-if (!this.ramoSeleccionado.facturas) {
-  this.ramoSeleccionado.facturas = [];
-}
+    if (!this.ramoSeleccionado.facturas) {
+      this.ramoSeleccionado.facturas = [];
+    }
+    console.log('reamoSeleccionado', this.ramoSeleccionado);
+    this.ramoSeleccionado.facturas.push(detFactura);
 
-this.ramoSeleccionado.facturas.push(detFactura);
-
-    console.log(this.ramoSeleccionado);
     // Refrescar tabla
     this.refrescarTablaFacturas();
+    this.toastrService.success(
+      'Correcto!',
+      'Datos de factura agregados correctamente.'
+    );
   }
   GetSpanishLanguage() {
     return SpanishLanguage;
@@ -669,7 +948,6 @@ this.ramoSeleccionado.facturas.push(detFactura);
     let formd = new FormData();
     formd.append('numeroFactura', numeroFactura);
     this.pygService.obtenerFacturasPYGFactura(formd).subscribe((res: any) => {
-      console.log('res', res);
       setTimeout(() => {
         if (res.data.length > 0) {
           this.toastrService.success(
@@ -697,21 +975,34 @@ this.ramoSeleccionado.facturas.push(detFactura);
       this.toastrService.error('ERROR', 'No se pudo obtener informacion con la factura ingresada!');
       this.router.navigate(['/home/pyg/seguimiento']);
     });
-    console.log('this.lstFacturasCliente', this.lstFacturasCliente);
   }
-  quitarFactura(facturas: any, ing: any) {
-      console.log('facturas', facturas);
-      console.log('this.lstFacturasCliente', this.lstFacturasCliente);
+  quitarFactura(facturas: any, ing: any, index: any) {
+    console.log('facti', facturas);
     console.log('ing', ing);
-    //actualizar el estado seleccionado
-    let factura = this.lstFacturasCliente.find((element: any) => element.id == facturas.idDetalleFact);
-    console.log(factura);
-    if(factura){
-    factura.seleccionado = 0;
-    ing.facturas = ing.facturas.filter(
-      (item: any) => item.idDetalleFact != facturas.idDetalleFact
-    );
+    let factEscogida = ing.facturas[index];
+    console.log('factEscogida', factEscogida);
+    if (factEscogida?.idDetalleFact) {
+      //actualizar el estado seleccionado
+      let factura = this.lstFacturasCliente.find((element: any) => element.id == facturas.idDetalleFact);
+      if (factura) {
+        factura.seleccionado = 0;
+        ing.facturas = ing.facturas.filter(
+          (item: any) => item.idDetalleFact != facturas.idDetalleFact
+        );
+      }
+    } else {
+      const idFactura = ing.facturas[index]?.id;
+
+      if (idFactura != null) {
+        this.lstFacturasBorradas.push(idFactura);
+              console.log('this.lstFacturasBorradas', this.lstFacturasBorradas);
+      ing.facturas = ing.facturas.filter(
+        (_: any, i: number) => i !== index
+      );
+      }
+
     }
+
     this.refrescarTablaFacturas();
 
   }
@@ -723,5 +1014,15 @@ this.ramoSeleccionado.facturas.push(detFactura);
       this.lstFacturasCliente.filter((x: any) => x.seleccionado === 0)
     );
     table.draw();
+  }
+  lstFacturasBorradas: any = [];
+  guardarPyGFacturas() {
+
+    let formD = new FormData();
+    console.log(this.lstIngresosGastos);
+    formD.append('datos', JSON.stringify(this.lstIngresosGastos));
+    formD.append('facturasBorradas', this.lstFacturasBorradas);
+    this.pygService.guardarFacturasPYG(formD).subscribe((res: any) => {
+    });
   }
 }

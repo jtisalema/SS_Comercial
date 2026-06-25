@@ -67,7 +67,7 @@
                 </ul>
             </li>
             <!-- PRESUPUESTO Y GASTOS -->
-            <li class="nav-item has-treeview" routerLinkActive="menu-open" *ngIf="rolUsuario == 18">
+            <li class="nav-item has-treeview" routerLinkActive="menu-open" *ngIf="rolUsuario == 18 || rolUsuario == 32">
                 <a href="javascript:void(0)" class="nav-link d-flex align-items-center">
                     <i class="nav-icon fas fa-cash-register" style="color: white;"></i>
                     <p class="flex-grow-1 ml-2" style="color: white;">
@@ -77,7 +77,7 @@
                 </a>
                 <ul class="nav nav-treeview">
                     <!-- Ingreso -->
-                    <li class="nav-item" *ngIf="rolUsuario == 18">
+                    <li class="nav-item" *ngIf="rolUsuario == 18 || rolUsuario == 32">
                         <a routerLink="/home/pyg/ingreso2" class="nav-link d-flex align-items-center"
                             routerLinkActive="active" (click)="SetActive($event)">
                             <i class="nav-icon fas fa-plus-square" style="color: white;"></i>
@@ -85,7 +85,7 @@
                         </a>
                     </li>
                     <!-- Listado / Seguimiento -->
-                    <li class="nav-item" *ngIf="rolUsuario == 18">
+                    <li class="nav-item" *ngIf="rolUsuario == 18 || rolUsuario == 32">
                         <a routerLink="/home/pyg/seguimiento" class="nav-link d-flex align-items-center"
                             routerLinkActive="active" (click)="SetActive($event)">
                             <i class="nav-icon fas fa-clipboard-list" style="color: white;"></i>

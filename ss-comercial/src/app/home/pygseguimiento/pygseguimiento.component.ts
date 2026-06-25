@@ -63,7 +63,10 @@ export class PygseguimientoComponent {
             title: '<i class="fas fa-hashtag me-1"></i> Ramos',
             data: 'ramosTexto'
           },
-
+{
+            title: '<i class="fas fa-hashtag me-1"></i> Usuario',
+            data: 'nombreUsuario'
+          },
           {
             title: '<i class="fas fa-cogs me-1"></i> Opción',
             searchable: false,

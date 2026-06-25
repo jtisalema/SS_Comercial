@@ -1,7 +1,7 @@
 import { Component, ElementRef, Renderer2, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { debounceTime, Subject, switchMap, tap } from 'rxjs';
+import { debounceTime, Subject, switchMap, tap ,firstValueFrom} from 'rxjs';
 import { AppComponent } from 'src/app/app.component';
 import { AuthService } from 'src/app/services/auth.service';
 import { ChecklistService } from 'src/app/services/checklist.service';
@@ -539,13 +539,13 @@ export class ChlingresoComponent {
     });
   }
   lstContactosSugeridos: any = [];
-  consultarInformacionTitular() {
+  async consultarInformacionTitular() {
     this.lstContactos = [];
     this.editcontacto = null;
     if (this.ingresoForm.value.identificacion.length > 4) {
       this.loadingService.showLoading();
-      this.checklistService.obtenerClientebyCedula(this.ingresoForm.value.identificacion).subscribe((res: any) => {
-        setTimeout(() => {
+      this.checklistService.obtenerClientebyCedula(this.ingresoForm.value.identificacion).subscribe(async (res: any) => {
+        setTimeout(async () => {
           this.loadingService.hideLoading();
           this.toastrService.success('Correcto', 'Información obtenida!');
           this.esInfoDbroker = false;
@@ -557,59 +557,61 @@ export class ChlingresoComponent {
               direccion: res.resultado[0]?.direccion,
               ciudad: res.resultado[0]?.nombreCiudad
             });
+            let contactosAnteriores = await  this.obtenerContactosIngresados();
 
-            this.lstContactos = [];
-            if (res.resultado[0]?.informacionContactos.length > 0) {
-              res.resultado[0]?.informacionContactos?.forEach((element: any) => {
+            if (contactosAnteriores < 1) {
+              this.lstContactos = [];
+              if (res.resultado[0]?.informacionContactos.length > 0) {
+                res.resultado[0]?.informacionContactos?.forEach((element: any) => {
 
-                let emailIndividual = '';
-                let celularIndividual = '';
-                let telefonoTrabajoIndividual = '';
-                let telefonoConvencionalIndividual = '';
-                let tipoContactabilidad = [{ nombre: 'TELEF - REF.CELULAR', campo: 'celular' }, { nombre: 'CORREO ELECTRONICO', campo: 'email' },
-                { nombre: 'TELEF - REF.CONVEN', campo: 'telefonoConvencional' }, { nombre: 'TELEF - OFICINA', campo: 'telefonoTrabajo' },
-                { nombre: 'TELEF - DOMICILIO', campo: 'telefonoConvencional' }, { nombre: 'TELEF - CELULAR', campo: 'celular' }
-                ];
+                  let emailIndividual = '';
+                  let celularIndividual = '';
+                  let telefonoTrabajoIndividual = '';
+                  let telefonoConvencionalIndividual = '';
+                  let tipoContactabilidad = [{ nombre: 'TELEF - REF.CELULAR', campo: 'celular' }, { nombre: 'CORREO ELECTRONICO', campo: 'email' },
+                  { nombre: 'TELEF - REF.CONVEN', campo: 'telefonoConvencional' }, { nombre: 'TELEF - OFICINA', campo: 'telefonoTrabajo' },
+                  { nombre: 'TELEF - DOMICILIO', campo: 'telefonoConvencional' }, { nombre: 'TELEF - CELULAR', campo: 'celular' }
+                  ];
 
-                element.listaContactos.forEach((contacto: any) => {
-                  const match = tipoContactabilidad.find(
-                    t => t.nombre === contacto.tipoContacto?.toUpperCase()
-                  );
+                  element.listaContactos.forEach((contacto: any) => {
+                    const match = tipoContactabilidad.find(
+                      t => t.nombre === contacto.tipoContacto?.toUpperCase()
+                    );
 
-                  if (match) {
-                    switch (match.campo) {
-                      case 'email':
-                        emailIndividual = contacto.valorContacto;
-                        break;
-                      case 'celular':
-                        celularIndividual = contacto.valorContacto;
-                        break;
-                      case 'telefonoTrabajo':
-                        telefonoTrabajoIndividual = contacto.valorContacto;
-                        break;
-                      case 'telefonoConvencional':
-                        telefonoConvencionalIndividual = contacto.valorContacto;
-                        break;
+                    if (match) {
+                      switch (match.campo) {
+                        case 'email':
+                          emailIndividual = contacto.valorContacto;
+                          break;
+                        case 'celular':
+                          celularIndividual = contacto.valorContacto;
+                          break;
+                        case 'telefonoTrabajo':
+                          telefonoTrabajoIndividual = contacto.valorContacto;
+                          break;
+                        case 'telefonoConvencional':
+                          telefonoConvencionalIndividual = contacto.valorContacto;
+                          break;
+                      }
                     }
+                  });
+
+                  let contactoSugerido = {
+                    cargo: element.cargoEjecutivo ?? '',
+                    nombre: element.nombreEjecutivo ?? '',
+                    email: emailIndividual,
+                    //
+                    celular: celularIndividual,
+                    telefonoTrabajo: telefonoTrabajoIndividual,
+                    telefonoConvencional: telefonoConvencionalIndividual,
+                    regalo: 0,
+                    usuarioWeb: 1,
+                    advertencia: 1
                   }
+                  this.lstContactos.push(contactoSugerido);
                 });
-
-                let contactoSugerido = {
-                  cargo: element.cargoEjecutivo ?? '',
-                  nombre: element.nombreEjecutivo ?? '',
-                  email: emailIndividual,
-                  //
-                  celular: celularIndividual,
-                  telefonoTrabajo: telefonoTrabajoIndividual,
-                  telefonoConvencional: telefonoConvencionalIndividual,
-                  regalo: 0,
-                  usuarioWeb: 1,
-                  advertencia: 1
-                }
-                this.lstContactos.push(contactoSugerido);
-              });
+              }
             }
-
           } else {
             //si no hay datos consulto en el databook
             let formD = new FormData();
@@ -859,6 +861,7 @@ export class ChlingresoComponent {
       this.toastrService.error('ERROR', 'No se pudo consultar la Información!');
     });
     this.obtenerEjecutivoAsignado();
+    this.obtenerContactosIngresados();
   }
   onChangeSubareaManual(id: Number) {
     //si es fianzas se habilita tasa y se pone obligatorio
@@ -1031,7 +1034,7 @@ export class ChlingresoComponent {
       subArea: "",
     });
     //obtener los ramos del area seleccionada
-    if (Number((event.target as HTMLSelectElement).value) == 3) { // si es fianzas obtengo todos los ramos
+    // if (Number((event.target as HTMLSelectElement).value) == 3) { // si es fianzas obtengo todos los ramos
       this.checklistService.obtenerRamos().subscribe((res: any) => {
         this.lstRamos = res.resultado;
         this.lstRamos.push(this.programaSeguros);
@@ -1039,14 +1042,14 @@ export class ChlingresoComponent {
       }, (error: any) => {
         this.toastrService.error('ERROR', 'No se pudo obtener los ramos!');
       });
-    } else {
-      this.checklistService.obtenerRamosbyArea(Number((event.target as HTMLSelectElement).value)).subscribe((res: any) => {
-        this.lstRamos = res.resultado;
-        this.lstRamos.push(this.programaSeguros);
-      }, (error: any) => {
-        this.toastrService.error('ERROR', 'No se pudo obtener los ramos!');
-      });
-    }
+    // } else {
+    //   this.checklistService.obtenerRamosbyArea(Number((event.target as HTMLSelectElement).value)).subscribe((res: any) => {
+    //     this.lstRamos = res.resultado;
+    //     this.lstRamos.push(this.programaSeguros);
+    //   }, (error: any) => {
+    //     this.toastrService.error('ERROR', 'No se pudo obtener los ramos!');
+    //   });
+    // }
 
   }
   onChangeAreaManual(areaId: number) {
@@ -1056,21 +1059,21 @@ export class ChlingresoComponent {
 
     this.ingresoForm.patchValue({ subArea: "" });
     //obtener los ramos del area seleccionada
-    if (areaId == 3) {
+    //if (areaId == 3) {
       this.checklistService.obtenerRamos().subscribe((res: any) => {
         this.lstRamos = res.resultado;
         this.lstRamos.push(this.programaSeguros);
       }, (error: any) => {
         this.toastrService.error('ERROR', 'No se pudo obtener los ramos!');
       });
-    } else {
-      this.checklistService.obtenerRamosbyArea(areaId).subscribe((res: any) => {
-        this.lstRamos = res.resultado;
-        this.lstRamos.push(this.programaSeguros);
-      }, (error: any) => {
-        this.toastrService.error('ERROR', 'No se pudo obtener los ramos!');
-      });
-    }
+    // } else {
+    //   this.checklistService.obtenerRamosbyArea(areaId).subscribe((res: any) => {
+    //     this.lstRamos = res.resultado;
+    //     this.lstRamos.push(this.programaSeguros);
+    //   }, (error: any) => {
+    //     this.toastrService.error('ERROR', 'No se pudo obtener los ramos!');
+    //   });
+    // }
   }
   pasarPagador() {
     if (this.ingresoForm.value.pagador == 0) {
@@ -1085,7 +1088,7 @@ export class ChlingresoComponent {
     if (this.ingresoForm.invalid) {
       this.appComponent.validateAllFormFields(this.ingresoForm);
       const camposInvalidos = this.obtenerCamposInvalidos();
-      console.log('camposInvalidos', camposInvalidos);
+
       this.toastrService.error(
         'Error al enviar CheckList',
         'No se llenaron todos los campos necesarios.'
@@ -1779,9 +1782,9 @@ export class ChlingresoComponent {
       });
     }
     if (this.estadoSeleccionado == 4) {//ingresado al dbroker
-Swal.fire({
-  title: 'Ingresado a la Aseguradora',
-  html: `
+      Swal.fire({
+        title: 'Ingresado a la Aseguradora',
+        html: `
     <label style="display:block; margin-bottom:5px;">
       ¿Desea ingresar algún comentario u observación?
     </label>
@@ -1846,84 +1849,84 @@ Swal.fire({
     </div>
   `,
 
-  showCancelButton: true,
-  confirmButtonText: 'Aceptar',
-  cancelButtonText: 'Cancelar',
-  confirmButtonColor: '#3085d6',
-  cancelButtonColor: '#d33',
+        showCancelButton: true,
+        confirmButtonText: 'Aceptar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
 
-  didOpen: () => {
+        didOpen: () => {
 
-    const envioCliente = document.getElementById(
-      'swal-envio-cliente'
-    ) as HTMLSelectElement;
+          const envioCliente = document.getElementById(
+            'swal-envio-cliente'
+          ) as HTMLSelectElement;
 
-    const envioFactura = document.getElementById(
-      'swal-enviar-facturas'
-    ) as HTMLSelectElement;
+          const envioFactura = document.getElementById(
+            'swal-enviar-facturas'
+          ) as HTMLSelectElement;
 
-    const contenedorPoliza = document.getElementById('contenedor-poliza');
-    const contenedorFactura = document.getElementById('contenedor-factura');
+          const contenedorPoliza = document.getElementById('contenedor-poliza');
+          const contenedorFactura = document.getElementById('contenedor-factura');
 
-    envioCliente.addEventListener('change', () => {
-      contenedorPoliza!.style.display =
-        envioCliente.value === '1' ? 'block' : 'none';
-    });
+          envioCliente.addEventListener('change', () => {
+            contenedorPoliza!.style.display =
+              envioCliente.value === '1' ? 'block' : 'none';
+          });
 
-    envioFactura.addEventListener('change', () => {
-      contenedorFactura!.style.display =
-        envioFactura.value === '1' ? 'block' : 'none';
-    });
-  },
+          envioFactura.addEventListener('change', () => {
+            contenedorFactura!.style.display =
+              envioFactura.value === '1' ? 'block' : 'none';
+          });
+        },
 
-  preConfirm: () => {
+        preConfirm: () => {
 
-    const observacion = (
-      document.getElementById('swal-observacion') as HTMLTextAreaElement
-    ).value;
+          const observacion = (
+            document.getElementById('swal-observacion') as HTMLTextAreaElement
+          ).value;
 
-    const envioCliente = (
-      document.getElementById('swal-envio-cliente') as HTMLSelectElement
-    ).value;
+          const envioCliente = (
+            document.getElementById('swal-envio-cliente') as HTMLSelectElement
+          ).value;
 
-    const enviarFacturas = (
-      document.getElementById('swal-enviar-facturas') as HTMLSelectElement
-    ).value;
+          const enviarFacturas = (
+            document.getElementById('swal-enviar-facturas') as HTMLSelectElement
+          ).value;
 
-    const numeroPoliza = (
-      document.getElementById('swal-numero-poliza') as HTMLInputElement
-    ).value.trim();
+          const numeroPoliza = (
+            document.getElementById('swal-numero-poliza') as HTMLInputElement
+          ).value.trim();
 
-    const numeroFactura = (
-      document.getElementById('swal-numero-factura') as HTMLInputElement
-    ).value.trim();
+          const numeroFactura = (
+            document.getElementById('swal-numero-factura') as HTMLInputElement
+          ).value.trim();
 
-    // Validar póliza obligatoria
-    if (envioCliente === '1' && !numeroPoliza) {
-      Swal.showValidationMessage(
-        'Debe ingresar el número de póliza.'
-      );
-      return false;
-    }
+          // Validar póliza obligatoria
+          if (envioCliente === '1' && !numeroPoliza) {
+            Swal.showValidationMessage(
+              'Debe ingresar el número de póliza.'
+            );
+            return false;
+          }
 
-    // Validar factura obligatoria
-    if (enviarFacturas === '1' && !numeroFactura) {
-      Swal.showValidationMessage(
-        'Debe ingresar el número de factura.'
-      );
-      return false;
-    }
+          // Validar factura obligatoria
+          if (enviarFacturas === '1' && !numeroFactura) {
+            Swal.showValidationMessage(
+              'Debe ingresar el número de factura.'
+            );
+            return false;
+          }
 
-    return {
-      observacion,
-      envioCliente,
-      enviarFacturas,
-      numeroPoliza,
-      numeroFactura
-    };
-  }
+          return {
+            observacion,
+            envioCliente,
+            enviarFacturas,
+            numeroPoliza,
+            numeroFactura
+          };
+        }
 
-}).then((result) => {
+      }).then((result) => {
 
         if (result.isConfirmed) {
           formd.append('observacion', result.value.observacion);
@@ -1931,7 +1934,7 @@ Swal.fire({
           formd.append('envioFacturas', result.value.enviarFacturas);
           formd.append('numeroPoliza', result.value.numeroPoliza);
           formd.append('numeroFactura', result.value.numeroFactura);
-          
+
           this.loadingService.showLoading();
           this.checklistService.accionEjecutivoCheckList(formd).subscribe((res: any) => {
             this.loadingService.hideLoading();
@@ -2259,5 +2262,69 @@ Swal.fire({
   eliminarDetallePrima(i: any) {
     this.lstPrimasMasivos.splice(i, 1);
   }
+async obtenerContactosIngresados(): Promise<number> {
 
+  let items: any[] = [];
+
+  try {
+
+    if (
+      this.ingresoForm.value.identificacion 
+      //&&      this.ingresoForm.value.subArea
+    ) {
+
+      const formd = new FormData();
+      formd.append('identificacion', this.ingresoForm.value.identificacion);
+      formd.append('subArea', this.ingresoForm.value.subArea);
+
+      const res: any = await firstValueFrom(
+        this.checklistService.obtenerContactosIngresados(formd)
+      );
+
+      items = res?.data || [];
+      if(items.length>0){
+        this.lstContactos = this.lstContactos.filter(
+  (contacto: any) => contacto.advertencia !== 1
+);
+      }
+      items.forEach((element: any) => {
+
+        const nombreContacto = this.lstTipoContacto.find(
+          (item: any) => item.id == element.tipoContacto
+        );
+
+        const contacto = {
+          identificacion: element.identificacion,
+          cargo: element.cargo,
+          nombre: element.nombres,
+          fechaNacimiento: element.fechaNacimiento,
+          email: element.email,
+          regalo: element.regalo,
+          // tipoContacto: element.tipoContacto,
+          // nombreContacto: nombreContacto?.nombre,
+          usuarioWeb: element.usuarioWeb,
+          celular: element.celular,
+          telefonoTrabajo: element.telefonoTrabajo,
+          telefonoConvencional: element.telefonoConvencional,
+          advertencia: 1
+        };
+
+        // Validar si ya existe
+        const existe = this.lstContactos.some(
+          (c: any) => c.identificacion === contacto.identificacion
+        );
+
+        if (!existe) {
+          this.lstContactos.push(contacto);
+        }
+      });
+    }
+
+    return items.length;
+
+  } catch (error) {
+    console.error('Error al obtener contactos ingresados:', error);
+    return 0;
+  }
+}
 }

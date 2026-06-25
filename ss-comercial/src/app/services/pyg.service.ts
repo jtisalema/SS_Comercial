@@ -33,6 +33,14 @@ export class PygService {
     const URL_API = environment.apiUrl + "obtenerRegistrosPYGbyID/"+idRegistro;
     return this.httpClient.get(URL_API).pipe(catchError(this.handleError));
   }
+        public obtenerRegistrosPYGFinanciero(formData:FormData) {
+    const URL_API = environment.apiUrl + "obtenerRegistrosPYGFinanciero";
+    return this.httpClient.post(URL_API, formData).pipe(catchError(this.handleError));
+  }
+        public obtenerFiltrosPYG(idCliente:string) {
+    const URL_API = environment.apiUrl + "obtenerFiltrosPYG/"+idCliente;
+    return this.httpClient.get(URL_API).pipe(catchError(this.handleError));
+  }
   public obtenerFacturasPYG(form:any){
     const URL_API = environment.apiUrl + "obtenerFacturasPYG";
     return this.httpClient.post(URL_API, form).pipe(catchError(this.handleError));
@@ -40,6 +48,11 @@ export class PygService {
   
     public obtenerFacturasPYGFactura(form:any){
     const URL_API = environment.apiUrl + "obtenerFacturasPYGFactura";
+    return this.httpClient.post(URL_API, form).pipe(catchError(this.handleError));
+  }
+
+    public guardarFacturasPYG(form: any) {
+    const URL_API = environment.apiUrl + "guardarFacturasPYG";
     return this.httpClient.post(URL_API, form).pipe(catchError(this.handleError));
   }
 }

@@ -10,12 +10,12 @@
 
                             <h3 class="card-title mb-0" style="font-weight: bold;">
                                 <i class="fas fa-user-alt me-2"></i>
-                                PYG Ingreso 2
+                                PYG Ingreso
                             </h3>
 
                         </div>
                         <div class="card-body">
-                            <form [formGroup]="ingresoForm">
+                            <form [formGroup]="ingresoForm" *ngIf="!esFinanciero">
                                 <div class="card mb-4 p-3 position-relative">
                                     <h6 class="card-title titulo-sobre-borde">Información del Cliente</h6>
                                     <div class="row mb-3">
@@ -389,381 +389,571 @@
                                     </div>
                                 </div>
                             </form>
+                            <!-- Esta Seccion solo para el usuario Financiero -->
+                            <div class="card mb-4 p-3 position-relative">
+                                <h6 class="card-title titulo-sobre-borde">Información del Cliente</h6>
+<div class="row mb-3 filtros-ejecutivos">
+
+  <div class="col-md-4">
+    <div class="filtro-item">
+      <label for="identificacion" class="filtro-label">
+        Cliente
+      </label>
+
+      <div class="filtro-control">
+        <span class="filtro-icono bg-primary-soft">
+          <i class="bi bi-person"></i>
+        </span>
+
+        <input
+          type="text"
+          class="form-control filtro-input"
+          [value]="objCliente?.nombre"
+          disabled
+        >
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="filtro-item">
+      <label for="finVigencia" class="filtro-label">
+        Ramos
+      </label>
+
+      <div class="filtro-control">
+        <span class="filtro-icono bg-success-soft">
+          <i class="bi bi-diagram-3"></i>
+        </span>
+
+        <select
+          class="form-control filtro-input"
+          [(ngModel)]="selectRamo"
+          (change)="cargarDatosRegistro()"
+        >
+          <option value="999" selected>Todos</option>
+          <option *ngFor="let r of lstRamosCargados" [value]="r.id">
+            {{ r.nombre }}
+          </option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="filtro-item">
+      <label for="finVigencia" class="filtro-label">
+        Vigencia desde
+      </label>
+
+      <div class="filtro-control">
+        <span class="filtro-icono bg-warning-soft">
+          <i class="bi bi-calendar3"></i>
+        </span>
+
+        <select
+          class="form-control filtro-input"
+          [(ngModel)]="selectVigencia"
+          (change)="cargarDatosRegistro()"
+        >
+          <option *ngFor="let r of lstAniosCargados" [value]="r.id">
+            {{ r.value }}
+          </option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+</div>
+                            </div>
                             <div>
                                 <div class="row">
-                                    <div class="col-md-8">
+                                    <div class="col-md-9">
                                         <div class="card mb-4 p-3 position-relative"
                                             *ngIf="lstIngresosGastos.length > 0">
                                             <h6 class="card-title titulo-sobre-borde-centrado">Detalles Gastos por Ramo
                                             </h6>
 
-                                            <div class="row">
+<div class="row g-3 ingresos-gastos-wrapper">
 
-                                                <div class="col-md-6 mb-3"
-                                                    *ngFor="let ing of lstIngresosGastos; let i = index"
-                                                    style="font-size:12px;">
-                                                    <div class="card shadow-sm border-0 h-100 p-3">
+  <div
+    class="mb-3"
+    *ngFor="let ing of lstIngresosGastos; let i = index"
+    [ngClass]="{
+      'col-md-12': lstIngresosGastos.length === 1 || 
+                   (lstIngresosGastos.length % 2 !== 0 && i === lstIngresosGastos.length - 1),
+      'col-md-6': !(lstIngresosGastos.length === 1 || 
+                    (lstIngresosGastos.length % 2 !== 0 && i === lstIngresosGastos.length - 1))
+    }"
+  >
 
-                                                        <!-- Contenedor flex para título + botones -->
-                                                        <div
-                                                            class="d-flex justify-content-between align-items-center mb-2">
-                                                            <h6 class="card-title titulo-sobre-borde-2 mb-0 text-info"
-                                                                style="font-size: 12px;">
-                                                                {{ ing.nombreRamo }}
-                                                            </h6>
+    <div class="card card-ramo shadow-sm border-0 h-100">
 
-                                                            <!-- Botones al lado derecho -->
-                                                            <div class="btn-group btn-group-sm" role="group">
-                                                                <div class="btn-group btn-group-sm" role="group">
-                                                                    <button type="button" class="btn btn-outline-danger"
-                                                                        (click)="eliminarIngreso(i)" title="eliminar">
-                                                                        <i class="fas fa-times"></i>
-                                                                    </button>
+      <div class="card-header-ramo">
+        <div>
+          <h6 class="titulo-ramo mb-0">
+            {{ ing.nombreRamo }}
+          </h6>
+          <small class="subtitulo-ramo">
+            Detalle de ingresos, gastos y facturas
+          </small>
+        </div>
 
-                                                                    <button type="button"
-                                                                        class="btn btn-outline-success"
-                                                                        (click)="asignarFacturas(i)" title="asignar">
-                                                                        <i class="fas fa-dollar-sign"></i>
-                                                                    </button>
+        <div class="acciones-ramo">
+          <button
+            type="button"
+            class="btn btn-outline-danger btn-sm"
+            *ngIf="!esFinanciero"
+            (click)="eliminarIngreso(i)"
+            title="Eliminar"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+<button
+  type="button"
+  class="btn btn-asignar-factura"
+  (click)="asignarFacturas(i)"
+  title="Asignar factura"
+>
+  <i class="bi bi-receipt-cutoff me-1"></i>
+  Asignar
+</button>
 
-                                                                    <button type="button"
-                                                                        class="btn btn-outline-primary"
-                                                                        (click)="editarIngreso(i)"
-                                                                        title="editar detalle">
-                                                                        <i class="fas fa-pencil-alt"></i>
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-                                                        </div>
+          <button
+            type="button"
+            *ngIf="!esFinanciero"
+            class="btn btn-outline-primary btn-sm"
+            (click)="editarIngreso(i)"
+            title="Editar detalle"
+          >
+            <i class="fas fa-pencil-alt"></i>
+          </button>
+        </div>
+      </div>
 
-                                                        <!-- Información principal -->
-                                                        <div class="row g-2 mb-2" style="font-size: 10px;">
-                                                            <div class="col-6 d-flex justify-content-between">
-                                                                <span class="text-muted">Inicio Vigencia:</span>
-                                                                <strong>{{ ing.inicioVigencia }}</strong>
-                                                            </div>
-                                                            <div class="col-6 d-flex justify-content-between">
-                                                                <span class="text-muted">Fin Vigencia:</span>
-                                                                <strong>{{ ing.finVigencia }}</strong>
-                                                            </div>
-                                                            <div class="col-6 d-flex justify-content-between">
-                                                                <span class="text-muted">Prima Mensual:</span>
-                                                                <strong class="text-success">{{ ing.primaMensual |
-                                                                    currency }}</strong>
-                                                            </div>
-                                                            <div class="col-6 d-flex justify-content-between">
-                                                                <span class="text-muted">Comisión Mensual:</span>
-                                                                <strong class="text-info">{{ ing.comision | currency
-                                                                    }}</strong>
-                                                            </div>
-                                                            <div class="col-6 d-flex justify-content-between">
-                                                                <span class="text-muted">Prima Anual:</span>
-                                                                <strong class="text-success">{{ ing.primaAnual |
-                                                                    currency }}</strong>
-                                                            </div>
-                                                            <div class="col-6 d-flex justify-content-between">
-                                                                <span class="text-muted">Comisión Anual:</span>
-                                                                <strong class="text-info">{{ ing.comisionAnual |
-                                                                    currency }}</strong>
-                                                            </div>
-                                                        </div>
-                                                        <!-- Tabla de gastos -->
-                                                        <div class="table-responsive">
-                                                            <div class="d-flex align-items-center mb-2">
-                                                                <h6 class="mb-0 text-primary fw-bold"
-                                                                    style="font-size: 12px;">
-                                                                    <i
-                                                                        class="fas fa-file-invoice-dollar me-1"></i>&nbsp;
-                                                                    Gastos Proyectados
-                                                                </h6>
-                                                            </div>
-                                                            <table
-                                                                class="table table-sm table-hover align-middle mb-0 table-bordered tabla-gastos"
-                                                                style="font-size: 10px;">
-                                                                <thead class="table-primary text-center"
-                                                                    style="font-size: 10px;">
-                                                                    <tr>
-                                                                        <th>Descripción</th>
-                                                                        <th>Valor</th>
+      <div class="card-body-ramo">
 
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                    <tr *ngFor="let gasto of ing.gastos"
-                                                                        [style.background-color]="gasto.idDetalleFact != null ? '#ffc0cb' : null"
-                                                                        style="text-align: center; font-size: 10px;">
-                                                                        <td>{{ gasto.descripcion }}</td>
-                                                                        <td>{{ gasto.valor | currency }}</td>
-                                                                        <td *ngIf="gasto.idDetalleFact"
-                                                                            style="background-color: white;border: none;">
+        <div class="info-grid-ramo mb-3">
 
-                                                                            <button class="btn btn-danger btn-sm"
-                                                                                title="quitar" style="font-size: 10px;"
-                                                                                (click)="quitarFactura(gasto,ing)">
-                                                                                <i class="fas fa-times"></i>
-                                                                            </button>
+          <div class="info-item">
+            <span>Inicio Vigencia</span>
+            <strong>{{ ing.inicioVigencia }}</strong>
+          </div>
 
-                                                                        </td>
-                                                                    </tr>
-                                                                </tbody>
-                                                                <tfoot>
-                                                                    <tr style="
-      text-align: center;
-      font-size: 11px;
-      font-weight: bold;
-      background-color: #e9f5ff;
-      color: #0d6efd;
-    ">
-                                                                        <td style="padding: 8px;">
-                                                                            TOTAL
-                                                                        </td>
+          <div class="info-item">
+            <span>Fin Vigencia</span>
+            <strong>{{ ing.finVigencia }}</strong>
+          </div>
 
-                                                                        <td style="padding: 8px;">
-                                                                            {{ getTotalGastos(ing.gastos) | currency }}
-                                                                        </td>
-                                                                    </tr>
-                                                                </tfoot>
-                                                            </table>
-                                                        </div>
+          <div class="info-item">
+            <span>Prima Mensual</span>
+            <strong class="text-success">{{ ing.primaMensual | currency }}</strong>
+          </div>
 
-                                                        <!-- Tabla de facturas -->
-                                                        <div class="table-responsive" *ngIf="ing.facturas?.length>0">
-                                                            <br>
-                                                            <div class="d-flex align-items-center mb-2">
-                                                                <h6 class="mb-0 text-primary fw-bold"
-                                                                    style="font-size: 12px">
-                                                                    <i
-                                                                        class="fas fa-file-invoice-dollar me-1"></i>&nbsp;
-                                                                    <span style="color: red;">Gastos de Facturas</span>
-                                                                </h6>
-                                                            </div>
-                                                            <table
-                                                                class="table table-sm table-hover align-middle mb-0 table-bordered tabla-gastos"
-                                                                style="font-size: 10px;">
-                                                                <thead class="table-primary text-center"
-                                                                    style="font-size: 10px;">
-                                                                    <tr>
-                                                                        <th>Descripción</th>
-                                                                        <th>Valor</th>
+          <div class="info-item">
+            <span>Comisión Mensual</span>
+            <strong class="text-info">{{ ing.comision | currency }}</strong>
+          </div>
 
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                    <tr *ngFor="let fact of ing.facturas"
-                                                                        [style.background-color]="fact.idDetalleFact != null ? '#ffc0cb' : null"
-                                                                        style="text-align: center; font-size: 10px;">
-                                                                        <td>{{ fact.descripcion }}</td>
-                                                                        <td>{{ fact.valor | currency }}</td>
-                                                                        <td *ngIf="fact.idDetalleFact"
-                                                                            style="background-color: white;border: none;">
+          <div class="info-item">
+            <span>Prima Anual</span>
+            <strong class="text-success">{{ ing.primaAnual | currency }}</strong>
+          </div>
 
-                                                                            <button class="btn btn-danger btn-sm"
-                                                                                title="quitar" style="font-size: 10px;"
-                                                                                (click)="quitarFactura(fact,ing)">
-                                                                                <i class="fas fa-times"></i>
-                                                                            </button>
+          <div class="info-item">
+            <span>Comisión Anual</span>
+            <strong class="text-info">{{ ing.comisionAnual | currency }}</strong>
+          </div>
 
-                                                                        </td>
-                                                                    </tr>
-                                                                </tbody>
-                                                                <tfoot>
-                                                                    <tr style="
-      text-align: center;
-      font-size: 11px;
-      font-weight: bold;
-      background-color: #e9f5ff;
-      color: #0d6efd;
-    ">
-                                                                        <td style="padding: 8px;">
-                                                                            TOTAL
-                                                                        </td>
+        </div>
 
-                                                                        <td style="padding: 8px;">
-                                                                            {{ getTotalGastos(ing.facturas) | currency
-                                                                            }}
-                                                                        </td>
-                                                                    </tr>
-                                                                </tfoot>
-                                                            </table>
-                                                        </div>
-                                                        <!-- Tabla de resumen -->
-                                                        <div class="table-responsive" *ngIf="ing.facturas?.length>0">
-                                                            <br>
-                                                            <div
-                                                                class="d-flex justify-content-center align-items-center mb-2">
-                                                                <h6 class="mb-0 text-primary fw-bold"
-                                                                    style="font-size: 12px;">
-                                                                    <span style="color: red;">Resumen de Gastos</span>
-                                                                </h6>
-                                                            </div>
-                                                            <table
-                                                                class="table table-sm table-hover align-middle mb-0 table-bordered tabla-gastos"
-                                                                style="font-size: 10px;">
-                                                                <thead class="table-primary text-center"
-                                                                    style="font-size: 10px;">
-                                                                    <tr>
-                                                                        <th>Gastos Proyectados</th>
-                                                                        <th>Gastos Reales</th>
-                                                                        <th>Restante</th>
-                                                                        <th>% Cumplimiento</th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                    <tr style="text-align: center; font-size: 10px;">
-                                                                        <td>{{ getTotalGastos(ing.gastos) | currency }}
-                                                                        </td>
-                                                                        <td>{{ getTotalGastos(ing.facturas) | currency
-                                                                            }}</td>
-                                                                        <td>{{
-                                                                            getTotalGastos(ing.gastos)-getTotalGastos(ing.facturas)
-                                                                            | currency }}</td>
-                                                                        <td>
-                                                                            {{ ((getTotalGastos(ing.facturas) /
-                                                                            getTotalGastos(ing.gastos)) * 100) |
-                                                                            number:'1.2-2' }}%
-                                                                        </td>
-                                                                    </tr>
-                                                                </tbody>
-                                                            </table>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
+        <div class="seccion-tabla">
+
+          <div class="seccion-titulo">
+            <i class="fas fa-file-invoice-dollar"></i>
+            <span>Gastos Proyectados</span>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle mb-0 tabla-gastos">
+              <thead>
+                <tr>
+                  <th>Descripción</th>
+                  <th class="text-end">Valor</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr
+                  *ngFor="let gasto of ing.gastos"
+                  [ngClass]="{ 'fila-asignada': gasto.idDetalleFact != null }"
+                >
+                  <td>{{ gasto.descripcion }}</td>
+                  <td class="text-end">{{ gasto.valor | currency }}</td>
+                </tr>
+              </tbody>
+
+              <tfoot>
+                <tr class="fila-total">
+                  <td>TOTAL</td>
+                  <td class="text-end">
+                    {{ getTotalGastos(ing.gastos) | currency }}
+                  </td>
+                </tr>
+
+                <tr class="fila-porcentaje">
+                  <td>% Inversión</td>
+                  <td class="text-end fw-bold">
+                    {{
+                      calcularPorcentajeGastosxRamo(
+                        ing.gastos,
+                        ing.comisionAnual
+                      ) | number:'1.2-2'
+                    }} %
+                  </td>
+                </tr>
+
+                <tr class="fila-total-general">
+                  <td>Valor Restante</td>
+                  <td class="text-end fw-bold">
+                    {{
+                      calcularRestanteGastosxRamo(
+                        ing.gastos,
+                        ing.comisionAnual
+                      ) | currency
+                    }}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+        </div>
+
+        <div class="seccion-tabla" *ngIf="ing.facturas?.length > 0">
+
+          <div class="seccion-titulo seccion-titulo-danger">
+            <i class="fas fa-receipt"></i>
+            <span>Gastos Facturas</span>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle mb-0 tabla-gastos">
+              <thead>
+                <tr>
+                  <th>Descripción</th>
+                  <th>Fecha</th>
+                  <th class="text-end">Valor</th>
+                  <th class="text-center">Acción</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr
+                  *ngFor="let fact of ing.facturas; let i = index"
+                  class="fila-factura"
+                >
+                  <td>{{ fact.descripcion }}</td>
+                  <td class="text-center">{{ fact.fechaFactura }}</td>
+                  <td class="text-end">{{ fact.valor | currency }}</td>
+
+                  <td class="text-center">
+                    <button
+                      class="btn btn-danger btn-sm btn-quitar"
+                      title="Quitar"
+                      (click)="quitarFactura(fact, ing, i)"
+                    >
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+
+              <tfoot>
+                <tr class="fila-total">
+                  <td colspan="2">TOTAL</td>
+                  <td class="text-end">
+                    {{ getTotalGastos(ing.facturas) | currency }}
+                  </td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+        </div>
+
+        <div class="seccion-tabla" *ngIf="ing.facturas?.length > 0">
+
+          <div class="seccion-titulo seccion-titulo-resumen">
+            <i class="fas fa-chart-pie"></i>
+            <span>Resumen</span>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle mb-0 tabla-gastos tabla-resumen">
+              <thead>
+                <tr>
+                  <th>Gastos Proyectados</th>
+                  <th>Gastos Reales</th>
+                  <th>Restante</th>
+                  <th>% Cumplimiento</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr>
+                  <td>{{ getTotalGastos(ing.gastos) | currency }}</td>
+
+                  <td>{{ getTotalGastos(ing.facturas) | currency }}</td>
+
+                  <td>
+                    {{
+                      getTotalGastos(ing.gastos) -
+                      getTotalGastos(ing.facturas)
+                      | currency
+                    }}
+                  </td>
+
+                  <td>
+                    {{
+                      (
+                        getTotalGastos(ing.facturas) /
+                        getTotalGastos(ing.gastos)
+                      ) * 100 | number:'1.2-2'
+                    }}%
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
 
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <div class="card mb-4 p-3 position-relative"
                                             *ngIf="lstIngresosGastos.length > 0">
-                                            <h6 class="card-title titulo-sobre-borde-centrado">Presupuestos</h6>
+                                            <h6 class="card-title titulo-sobre-borde-centrado">Resumen PYG</h6>
                                             <div class="table-responsive">
                                                 <div class="table-responsive">
-                                                    <table
-                                                        class="table table-sm table-bordered table-hover tabla-resumen align-middle"
-                                                        style="font-size: 10px;">
+<table class="table tabla-resumen-ejecutiva align-middle mb-0">
 
-                                                        <tbody style="font-size: 10px;">
-                                                            <tr class="fila-ingreso"
-                                                                *ngFor="let ingresos of lstIngresosGastos">
-                                                                <td>
-                                                                    <i class="bi bi-cash-stack text-success me-1"></i>
-                                                                    Ingreso Anual <strong>{{ ingresos.nombreRamo
-                                                                        }}</strong>
-                                                                </td>
-                                                                <td class="text-end fw-semibold text-success"
-                                                                    style="font-weight: bold;">
-                                                                    {{ ingresos.comisionAnual | currency }}
-                                                                </td>
-                                                            </tr>
-                                                        </tbody>
+  <tbody>
+    <tr class="resumen-row resumen-ingreso" *ngFor="let ingresos of lstIngresosGastos">
+      <td>
+        <div class="resumen-concepto">
+          <span class="resumen-icono bg-success-soft">
+            <i class="bi bi-cash-stack"></i>
+          </span>
 
-                                                        <tfoot style="font-size: 10px;">
+          <div>
+            <span class="resumen-label">Ingreso Anual</span>
+            <strong class="resumen-ramo">{{ ingresos.nombreRamo }}</strong>
+          </div>
+        </div>
+      </td>
 
-                                                            <tr class="fila-total-ingresos" style="font-size: 10px;">
-                                                                <td><strong>Total Ingresos</strong></td>
-                                                                <td class="text-end fw-bold text-success"
-                                                                    style="font-weight: bold;">
-                                                                    {{ totalIngresos | currency }}
-                                                                </td>
-                                                            </tr>
+      <td class="text-end resumen-valor text-success">
+        {{ ingresos.comisionAnual | currency }}
+      </td>
+    </tr>
+  </tbody>
 
-                                                            <tr class="fila-gastos" style="font-size: 10px;">
-                                                                <td><strong>Total Gastos</strong></td>
-                                                                <td class="text-end fw-bold text-danger"
-                                                                    style="font-weight: bold;">
-                                                                    {{ totalGastos | currency }}
-                                                                </td>
-                                                            </tr>
+  <tfoot>
 
-                                                            <tr class="fila-retorno" style="font-size: 10px;"
-                                                                *ngFor="let ingresos of lstIngresosGastos">
-                                                                <td>
-                                                                    Retorno <strong>{{ ingresos.nombreRamo }}</strong>
-                                                                </td>
-                                                                <td class="text-end fw-semibold text-primary"
-                                                                    style="font-weight: bold;">
-                                                                    {{ 0 | currency }}
-                                                                </td>
-                                                            </tr>
+    <tr class="resumen-row resumen-total-ingresos">
+      <td>
+        <div class="resumen-concepto">
+          <span class="resumen-icono bg-success-soft">
+            <i class="bi bi-plus-lg"></i>
+          </span>
 
-                                                            <tr class="fila-porcentaje" style="font-size: 10px;">
-                                                                <td>% Inversión</td>
-                                                                <td class="text-end fw-bold text-warning"
-                                                                    style="font-weight: bold;">
-                                                                    {{ calcularPorcentajeGastos() | number:'1.2-2' }} %
-                                                                </td>
-                                                            </tr>
+          <strong>Total Ingresos</strong>
+        </div>
+      </td>
 
-                                                            <tr class="fila-total-general" style="font-size: 10px;">
-                                                                <td><strong>Total Final</strong></td>
-                                                                <td class="text-end fw-bold text-dark"
-                                                                    style="font-weight: bold;">
-                                                                    {{ totalFinal | currency }}
-                                                                </td>
-                                                            </tr>
+      <td class="text-end resumen-valor text-success">
+        {{ totalIngresos | currency }}
+      </td>
+    </tr>
 
-                                                        </tfoot>
+    <tr class="resumen-row resumen-gastos">
+      <td>
+        <div class="resumen-concepto">
+          <span class="resumen-icono bg-danger-soft">
+            <i class="bi bi-dash-lg"></i>
+          </span>
 
-                                                    </table>
+          <strong>Total Gastos</strong>
+        </div>
+      </td>
+
+      <td class="text-end resumen-valor text-danger">
+        {{ totalGastos | currency }}
+      </td>
+    </tr>
+
+    <tr class="resumen-row resumen-retorno" *ngFor="let ingresos of lstIngresosGastos" hidden>
+      <td>
+        <div class="resumen-concepto">
+          <span class="resumen-icono bg-primary-soft">
+            <i class="bi bi-arrow-return-left"></i>
+          </span>
+
+          <div>
+            <span class="resumen-label">Retorno</span>
+            <strong class="resumen-ramo">{{ ingresos.nombreRamo }}</strong>
+          </div>
+        </div>
+      </td>
+
+      <td class="text-end resumen-valor text-primary">
+        {{ 0 | currency }}
+      </td>
+    </tr>
+
+    <tr class="resumen-row resumen-porcentaje">
+      <td>
+        <div class="resumen-concepto">
+          <span class="resumen-icono bg-warning-soft">
+            <i class="bi bi-percent"></i>
+          </span>
+
+          <strong>% Inversión</strong>
+        </div>
+      </td>
+
+      <td class="text-end resumen-valor text-warning">
+        {{ calcularPorcentajeGastos() | number:'1.2-2' }} %
+      </td>
+    </tr>
+
+    <tr class="resumen-row resumen-final">
+      <td>
+        <div class="resumen-concepto">
+          <span class="resumen-icono bg-dark-soft">
+            <i class="bi bi-check2-circle"></i>
+          </span>
+
+          <strong>Total Final</strong>
+        </div>
+      </td>
+
+      <td class="text-end resumen-valor-final">
+        {{ totalFinal | currency }}
+      </td>
+    </tr>
+
+  </tfoot>
+
+</table>
                                                 </div>
                                             </div>
                                             <div class="row">
                                             </div>
                                         </div>
-                                        <div class="card mb-4 p-3 position-relative"
-                                            *ngIf="lstIngresosGastos[0]?.facturas?.length > 0">
-                                            <h6 class="card-title titulo-sobre-borde-centrado">Gastos</h6>
+                                        <div class="card mb-4 p-3 position-relative" *ngIf="tieneFacturas()">
+                                            <h6 class="card-title titulo-sobre-borde-centrado">Resumen Gastos</h6>
                                             <div class="table-responsive">
-                                                <div class="table-responsive">
-                                                    <table
-                                                        class="table table-sm table-bordered table-hover tabla-resumen align-middle"
-                                                        style="font-size: 10px;">
+<div class="table-responsive">
+  <table class="table tabla-resumen-ejecutiva align-middle mb-0">
 
-                                                        <tfoot style="font-size: 10px;">
+    <tfoot>
 
-                                                            <tr class="fila-total-ingresos" style="font-size: 10px;">
-                                                                <td><strong>Total Ingresos</strong></td>
-                                                                <td class="text-end fw-bold text-success"
-                                                                    style="font-weight: bold;">
-                                                                    {{ totalIngresos | currency }}
-                                                                </td>
-                                                            </tr>
+      <tr class="resumen-row resumen-total-ingresos">
+        <td>
+          <div class="resumen-concepto">
+            <span class="resumen-icono bg-success-soft">
+              <i class="bi bi-plus-lg"></i>
+            </span>
 
-                                                            <tr class="fila-gastos" style="font-size: 10px;">
-                                                                <td><strong>Total Gastos Proyectados</strong></td>
-                                                                <td class="text-end fw-bold text-danger"
-                                                                    style="font-weight: bold;">
-                                                                    {{ totalGastos | currency }}
-                                                                </td>
-                                                            </tr>
-                                                            <tr class="fila-gastos" style="font-size: 10px;">
-                                                                <td><strong>Total Gastos Reales</strong></td>
-                                                                <td class="text-end fw-bold text-danger"
-                                                                    style="font-weight: bold;">
-                                                                    {{ totalGastosFacturas | currency }}
-                                                                </td>
-                                                            </tr>
-                                                            <tr class="fila-gastos" style="font-size: 10px;">
-                                                                <td><strong>Restante</strong></td>
-                                                                <td class="text-end fw-bold text-danger"
-                                                                    style="font-weight: bold;">
-                                                                    {{ totalGastos-totalGastosFacturas | currency }}
-                                                                </td>
-                                                            </tr>
+            <strong>Total Ingresos</strong>
+          </div>
+        </td>
 
-                                                            <tr class="fila-porcentaje" style="font-size: 10px;">
-                                                                <td>% Inversión</td>
-<td>
-                                                                            {{ ((totalGastosFacturas /
-                                                                            totalGastos) * 100) |
-                                                                            number:'1.2-2' }}%
-                                                                        </td>
-                                                            </tr>
+        <td class="text-end resumen-valor text-success">
+          {{ totalIngresos | currency }}
+        </td>
+      </tr>
 
-                                                        </tfoot>
+      <tr class="resumen-row resumen-gastos">
+        <td>
+          <div class="resumen-concepto">
+            <span class="resumen-icono bg-danger-soft">
+              <i class="bi bi-graph-down-arrow"></i>
+            </span>
 
-                                                    </table>
-                                                </div>
+            <strong>Total Gastos Proyectados</strong>
+          </div>
+        </td>
+
+        <td class="text-end resumen-valor text-danger">
+          {{ totalGastos | currency }}
+        </td>
+      </tr>
+
+      <tr class="resumen-row resumen-gastos">
+        <td>
+          <div class="resumen-concepto">
+            <span class="resumen-icono bg-danger-soft">
+              <i class="bi bi-receipt"></i>
+            </span>
+
+            <strong>Total Gastos Reales</strong>
+          </div>
+        </td>
+
+        <td class="text-end resumen-valor text-danger">
+          {{ totalGastosFacturas | currency }}
+        </td>
+      </tr>
+
+      <tr class="resumen-row resumen-retorno">
+        <td>
+          <div class="resumen-concepto">
+            <span class="resumen-icono bg-primary-soft">
+              <i class="bi bi-wallet2"></i>
+            </span>
+
+            <strong>Restante</strong>
+          </div>
+        </td>
+
+        <td class="text-end resumen-valor text-primary">
+          {{ totalGastos - totalGastosFacturas | currency }}
+        </td>
+      </tr>
+
+      <tr class="resumen-row resumen-porcentaje">
+        <td>
+          <div class="resumen-concepto">
+            <span class="resumen-icono bg-warning-soft">
+              <i class="bi bi-percent"></i>
+            </span>
+
+            <strong>% Inversión</strong>
+          </div>
+        </td>
+
+        <td class="text-end resumen-valor text-warning">
+          {{ ((totalGastosFacturas / totalGastos) * 100) | number:'1.2-2' }}%
+        </td>
+      </tr>
+
+    </tfoot>
+
+  </table>
+</div>
                                             </div>
                                             <div class="row">
                                             </div>
@@ -776,11 +966,16 @@
                                         Guardar
                                     </button>
                                 </div>
-                                <div class="d-flex gap-2 justify-content-end" *ngIf="this.ingresoForm.value.id">
+                                <div class="d-flex gap-2 justify-content-end" *ngIf="esFinanciero">
+                                    <button type="button" class="btn btn-success" (click)="guardarPyGFacturas()">
+                                        Guardar
+                                    </button>
+                                </div>
+                                <!-- <div class="d-flex gap-2 justify-content-end" *ngIf="this.ingresoForm.value.id">
                                     <button type="button" class="btn btn-success" (click)="actualizarPYG()">
                                         Actualizar
                                     </button>
-                                </div>
+                                </div> -->
                             </div>
 
                         </div>
