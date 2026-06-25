@@ -76,6 +76,7 @@ export class FianzasComponent {
           }
           this.lstVencimientos = response.resultado as INotificacionesVencimientos[] ?? [];
           this.cargarTablas();
+          this.toastrService.success('Consultar vencimientos', 'Información de vencimientos obtenida correctamente');
         },
         error: (error) => {
           this.toastrService.error('Obtener información', 'Error al obtener los años de vencimientos');
@@ -120,12 +121,14 @@ export class FianzasComponent {
 
   consultarVencimientos() {
     this.loadingService.showLoading();
-    if (!this.anioSeleccionadoVencimiento) {
+    if (!this.anioSeleccionadoVencimiento && this.anioSeleccionadoVencimiento !== 0) {
       this.toastrService.warning('Año de Vencimientos', 'Por favor, seleccione un año para consultar los vencimientos');
+      this.loadingService.hideLoading();
       return;
     }
-    if (!this.mesSeleccionadoVencimiento) {
+    if (!this.mesSeleccionadoVencimiento && this.mesSeleccionadoVencimiento !== 0) {
       this.toastrService.warning('Mes de Vencimientos', 'Por favor, seleccione un mes para consultar los vencimientos');
+      this.loadingService.hideLoading();
       return;
     }
     try {
@@ -137,6 +140,7 @@ export class FianzasComponent {
           }
           this.lstVencimientos = response.resultado as INotificacionesVencimientos[] ?? [];
           this.cargarTablas();
+          this.toastrService.success('Consultar vencimientos', 'Información de vencimientos obtenida correctamente');
         },
         error: (error) => {
           this.toastrService.error('Obtener información', 'Error al obtener los vencimientos');
@@ -356,7 +360,9 @@ export class FianzasComponent {
       totValAsegFormat: this.formatoDinero(registro.totValAseg, true),
       vigenciaDesdeFormat: registro.fcDesde ? registro.fcDesde.split('T')[0] : '',
       vigenciaHastaFormat: registro.fcHasta ? registro.fcHasta.split('T')[0] : '',
-      dscObjeto: registro.dscObjeto
+      dscObjeto: registro.dscObjeto,
+      ramo: registro.ramo,
+      nmAlias: registro.nmAlias
     }));
 
     this.loadingService.showLoading();
