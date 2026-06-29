@@ -10,6 +10,8 @@ import { PygService } from 'src/app/services/pyg.service';
 import { ChecklistService } from 'src/app/services/checklist.service';
 import { LoadingService } from 'src/app/services/loading.service';
 import Swal from 'sweetalert2';
+import * as XLSX from 'xlsx';
+
 declare var $: any;
 import { ActivatedRoute, Router } from '@angular/router';
 @Component({
@@ -1017,12 +1019,408 @@ export class PygingresoComponent2 {
   }
   lstFacturasBorradas: any = [];
   guardarPyGFacturas() {
-
     let formD = new FormData();
     console.log(this.lstIngresosGastos);
     formD.append('datos', JSON.stringify(this.lstIngresosGastos));
     formD.append('facturasBorradas', this.lstFacturasBorradas);
     this.pygService.guardarFacturasPYG(formD).subscribe((res: any) => {
+      
+    }, (error: any) => {
+      this.loadingService.hideLoading();
+      this.toastrService.error('ERROR', 'No se pudo guardar la informacion!');
+      this.router.navigate(['/home/pyg/seguimiento']);
     });
   }
+exportarDetalles(): void {
+  const wb = XLSX.utils.book_new();
+
+  const wsDetalle: XLSX.WorkSheet = {};
+  const wsResumen: XLSX.WorkSheet = {};
+
+  // =========================
+  // HOJA 1: DETALLES POR RAMO
+  // =========================
+
+  XLSX.utils.sheet_add_aoa(wsDetalle, [['Detalles Gastos por Ramo']], {
+    origin: 'A1'
+  });
+
+  let filaBase = 3;
+
+  // Ramos en dos columnas: izquierda A:C, derecha E:G
+  for (let i = 0; i < this.lstIngresosGastos.length; i += 2) {
+    const ramoIzquierdo = this.lstIngresosGastos[i];
+    const ramoDerecho = this.lstIngresosGastos[i + 1];
+
+    const filaFinalIzq = ramoIzquierdo
+      ? this.agregarRamoExcel(wsDetalle, ramoIzquierdo, filaBase, 0)
+      : filaBase;
+
+    const filaFinalDer = ramoDerecho
+      ? this.agregarRamoExcel(wsDetalle, ramoDerecho, filaBase, 4)
+      : filaBase;
+
+    filaBase = Math.max(filaFinalIzq, filaFinalDer) + 2;
+  }
+
+  wsDetalle['!cols'] = [
+    { wch: 22 }, // A
+    { wch: 18 }, // B
+    { wch: 18 }, // C
+    { wch: 4 },  // D separación
+    { wch: 22 }, // E
+    { wch: 18 }, // F
+    { wch: 18 }  // G
+  ];
+
+  // =========================
+  // HOJA 2: RESÚMENES
+  // =========================
+
+  XLSX.utils.sheet_add_aoa(wsResumen, [['Resumen PYG']], {
+    origin: 'A1'
+  });
+
+  this.agregarResumenPYGExcel(wsResumen, 3, 0);
+
+  XLSX.utils.sheet_add_aoa(wsResumen, [['Resumen Gastos']], {
+    origin: 'D1'
+  });
+
+  this.agregarResumenGastosExcel(wsResumen, 3, 3);
+
+  wsResumen['!cols'] = [
+    { wch: 35 }, // A
+    { wch: 18 }, // B
+    { wch: 4 },  // C separación
+    { wch: 35 }, // D
+    { wch: 18 }  // E
+  ];
+
+  XLSX.utils.book_append_sheet(wb, wsDetalle, 'Detalle Ramos');
+  XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen');
+
+  XLSX.writeFile(wb, 'reporte_pyg.xlsx');
+}
+agregarRamoExcel(
+  ws: XLSX.WorkSheet,
+  ing: any,
+  filaInicio: number,
+  colInicio: number
+): number {
+  let fila = filaInicio;
+
+  const gastos = ing.gastos || [];
+  const facturas = ing.facturas || [];
+
+  // Nombre del ramo
+  XLSX.utils.sheet_add_aoa(ws, [[ing.nombreRamo]], {
+    origin: {
+      r: fila - 1,
+      c: colInicio
+    }
+  });
+
+  fila++;
+
+  XLSX.utils.sheet_add_aoa(ws, [['Detalle de ingresos, gastos y facturas']], {
+    origin: {
+      r: fila - 1,
+      c: colInicio
+    }
+  });
+
+  fila += 2;
+
+  // Información superior
+  XLSX.utils.sheet_add_aoa(
+    ws,
+    [
+      ['Inicio Vigencia', ing.inicioVigencia, 'Fin Vigencia', ing.finVigencia],
+      ['Prima Mensual', Number(ing.primaMensual || 0), 'Comisión Mensual', Number(ing.comision || 0)],
+      ['Prima Anual', Number(ing.primaAnual || 0), 'Comisión Anual', Number(ing.comisionAnual || 0)]
+    ],
+    {
+      origin: {
+        r: fila - 1,
+        c: colInicio
+      }
+    }
+  );
+
+  fila += 5;
+
+  // Gastos proyectados
+  XLSX.utils.sheet_add_aoa(ws, [['Gastos Proyectados']], {
+    origin: {
+      r: fila - 1,
+      c: colInicio
+    }
+  });
+
+  fila++;
+
+  XLSX.utils.sheet_add_aoa(ws, [['Descripción', 'Valor']], {
+    origin: {
+      r: fila - 1,
+      c: colInicio
+    }
+  });
+
+  fila++;
+
+  gastos.forEach((gasto: any) => {
+    XLSX.utils.sheet_add_aoa(
+      ws,
+      [[gasto.descripcion, Number(gasto.valor || 0)]],
+      {
+        origin: {
+          r: fila - 1,
+          c: colInicio
+        }
+      }
+    );
+
+    fila++;
+  });
+
+  const totalGastosRamo = Number(this.getTotalGastos(gastos) || 0);
+  const porcentajeInversion =
+    Number(this.calcularPorcentajeGastosxRamo(gastos, ing.comisionAnual) || 0) / 100;
+  const restante =
+    Number(this.calcularRestanteGastosxRamo(gastos, ing.comisionAnual) || 0);
+
+  XLSX.utils.sheet_add_aoa(
+    ws,
+    [
+      ['TOTAL', totalGastosRamo],
+      ['% Inversión', porcentajeInversion],
+      ['Valor Restante', restante]
+    ],
+    {
+      origin: {
+        r: fila - 1,
+        c: colInicio
+      }
+    }
+  );
+
+  this.aplicarFormatoMoneda(ws, fila, colInicio + 1);
+  this.aplicarFormatoPorcentaje(ws, fila + 1, colInicio + 1);
+  this.aplicarFormatoMoneda(ws, fila + 2, colInicio + 1);
+
+  fila += 5;
+
+  // Facturas
+  if (facturas.length > 0) {
+    XLSX.utils.sheet_add_aoa(ws, [['Gastos Facturas']], {
+      origin: {
+        r: fila - 1,
+        c: colInicio
+      }
+    });
+
+    fila++;
+
+    XLSX.utils.sheet_add_aoa(ws, [['Descripción', 'Fecha', 'Valor']], {
+      origin: {
+        r: fila - 1,
+        c: colInicio
+      }
+    });
+
+    fila++;
+
+    facturas.forEach((fact: any) => {
+      XLSX.utils.sheet_add_aoa(
+        ws,
+        [[fact.descripcion, fact.fechaFactura, Number(fact.valor || 0)]],
+        {
+          origin: {
+            r: fila - 1,
+            c: colInicio
+          }
+        }
+      );
+
+      this.aplicarFormatoMoneda(ws, fila, colInicio + 2);
+      fila++;
+    });
+
+    XLSX.utils.sheet_add_aoa(
+      ws,
+      [['TOTAL', '', Number(this.getTotalGastos(facturas) || 0)]],
+      {
+        origin: {
+          r: fila - 1,
+          c: colInicio
+        }
+      }
+    );
+
+    this.aplicarFormatoMoneda(ws, fila, colInicio + 2);
+
+    fila += 3;
+
+    // Resumen por ramo
+    const totalProyectado = Number(this.getTotalGastos(gastos) || 0);
+    const totalReal = Number(this.getTotalGastos(facturas) || 0);
+    const restanteFacturas = totalProyectado - totalReal;
+    const porcentajeCumplimiento =
+      totalProyectado > 0 ? totalReal / totalProyectado : 0;
+
+    XLSX.utils.sheet_add_aoa(ws, [['Resumen']], {
+      origin: {
+        r: fila - 1,
+        c: colInicio
+      }
+    });
+
+    fila++;
+
+    XLSX.utils.sheet_add_aoa(
+      ws,
+      [['Gastos Proyectados', 'Gastos Reales', 'Restante', '% Cumplimiento']],
+      {
+        origin: {
+          r: fila - 1,
+          c: colInicio
+        }
+      }
+    );
+
+    fila++;
+
+    XLSX.utils.sheet_add_aoa(
+      ws,
+      [[
+        totalProyectado,
+        totalReal,
+        restanteFacturas,
+        porcentajeCumplimiento
+      ]],
+      {
+        origin: {
+          r: fila - 1,
+          c: colInicio
+        }
+      }
+    );
+
+    this.aplicarFormatoMoneda(ws, fila, colInicio);
+    this.aplicarFormatoMoneda(ws, fila, colInicio + 1);
+    this.aplicarFormatoMoneda(ws, fila, colInicio + 2);
+    this.aplicarFormatoPorcentaje(ws, fila, colInicio + 3);
+
+    fila += 2;
+  }
+
+  return fila;
+}
+agregarResumenGastosExcel(
+  ws: XLSX.WorkSheet,
+  filaInicio: number,
+  colInicio: number
+): void {
+  const porcentaje =
+    this.totalGastos > 0
+      ? Number(this.totalGastosFacturas || 0) / Number(this.totalGastos || 1)
+      : 0;
+
+  const data: any[][] = [
+    ['Total Ingresos', Number(this.totalIngresos || 0)],
+    ['Total Gastos Proyectados', Number(this.totalGastos || 0)],
+    ['Total Gastos Reales', Number(this.totalGastosFacturas || 0)],
+    [
+      'Restante',
+      Number(this.totalGastos || 0) - Number(this.totalGastosFacturas || 0)
+    ],
+    ['% Inversión', porcentaje]
+  ];
+
+  XLSX.utils.sheet_add_aoa(ws, data, {
+    origin: {
+      r: filaInicio - 1,
+      c: colInicio
+    }
+  });
+
+  data.forEach((row, index) => {
+    const filaExcel = filaInicio + index;
+
+    if (row[0] === '% Inversión') {
+      this.aplicarFormatoPorcentaje(ws, filaExcel, colInicio + 1);
+    } else {
+      this.aplicarFormatoMoneda(ws, filaExcel, colInicio + 1);
+    }
+  });
+}
+agregarResumenPYGExcel(
+  ws: XLSX.WorkSheet,
+  filaInicio: number,
+  colInicio: number
+): void {
+  let fila = filaInicio;
+
+  const data: any[][] = [];
+
+  this.lstIngresosGastos.forEach((ing: any) => {
+    data.push([
+      `Ingreso Anual ${ing.nombreRamo}`,
+      Number(ing.comisionAnual || 0)
+    ]);
+  });
+
+  data.push(
+    ['Total Ingresos', Number(this.totalIngresos || 0)],
+    ['Total Gastos', Number(this.totalGastos || 0)],
+    ['% Inversión', Number(this.calcularPorcentajeGastos() || 0) / 100],
+    ['Total Final', Number(this.totalFinal || 0)]
+  );
+
+  XLSX.utils.sheet_add_aoa(ws, data, {
+    origin: {
+      r: fila - 1,
+      c: colInicio
+    }
+  });
+
+  data.forEach((row, index) => {
+    const filaExcel = fila + index;
+
+    if (row[0] === '% Inversión') {
+      this.aplicarFormatoPorcentaje(ws, filaExcel, colInicio + 1);
+    } else {
+      this.aplicarFormatoMoneda(ws, filaExcel, colInicio + 1);
+    }
+  });
+}
+aplicarFormatoPorcentaje(
+  ws: XLSX.WorkSheet,
+  fila: number,
+  col: number
+): void {
+  const cellRef = XLSX.utils.encode_cell({
+    r: fila - 1,
+    c: col
+  });
+
+  if (ws[cellRef]) {
+    ws[cellRef].z = '0.00%';
+  }
+}
+aplicarFormatoMoneda(
+  ws: XLSX.WorkSheet,
+  fila: number,
+  col: number
+): void {
+  const cellRef = XLSX.utils.encode_cell({
+    r: fila - 1,
+    c: col
+  });
+
+  if (ws[cellRef]) {
+    ws[cellRef].z = '$#,##0.00';
+  }
+}
 }

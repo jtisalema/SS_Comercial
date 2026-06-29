@@ -735,7 +735,11 @@
     </div>
 
   </div>
-
+                                <div class="d-flex gap-2 justify-content-end"  >
+                                    <button type="button" class="btn btn-success" title="Guardar PYG" (click)="exportarDetalles()">
+                                        Exportar
+                                    </button>
+                                </div>
 </div>
 
                                         </div>
@@ -746,7 +750,7 @@
                                             <h6 class="card-title titulo-sobre-borde-centrado">Resumen PYG</h6>
                                             <div class="table-responsive">
                                                 <div class="table-responsive">
-<table class="table tabla-resumen-ejecutiva align-middle mb-0">
+<table class="table tabla-resumen-ejecutiva align-middle mb-0" id="tablaExportar">
 
   <tbody>
     <tr class="resumen-row resumen-ingreso" *ngFor="let ingresos of lstIngresosGastos">
@@ -961,13 +965,13 @@
                                     </div>
 
                                 </div>
-                                <div class="d-flex gap-2 justify-content-end" *ngIf="!this.ingresoForm.value.id">
-                                    <button type="button" class="btn btn-success" (click)="guardarPYG()">
+                                <div class="d-flex gap-2 justify-content-end" *ngIf="!this.ingresoForm.value.id && !esFinanciero" >
+                                    <button type="button" class="btn btn-success" title="Guardar PYG" (click)="guardarPYG()">
                                         Guardar
                                     </button>
                                 </div>
-                                <div class="d-flex gap-2 justify-content-end" *ngIf="esFinanciero">
-                                    <button type="button" class="btn btn-success" (click)="guardarPyGFacturas()">
+                                <div class="d-flex gap-2 justify-content-end" >
+                                    <button type="button" class="btn btn-success" title="Guardar Facturas" (click)="guardarPyGFacturas()">
                                         Guardar
                                     </button>
                                 </div>
