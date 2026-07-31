@@ -16,6 +16,7 @@ import { AuthService } from 'src/app/services/auth.service';
 export class ChlseguimientoComponent {
   @ViewChild('dataTableIngresos', { static: false }) tableIngresos!: ElementRef;
   lstIngresos: any = [];
+    lstTipoGestion: any = [{ id: 1, nombre: 'Emision de Poliza Nueva' }, { id: 2, nombre: 'Ingreso de Poliza Nueva' }, { id: 3, nombre: 'Renovación de Poliza' }];
   dtOptions: any;
   dataTable: any;
   userCurrent: any;
@@ -50,6 +51,7 @@ export class ChlseguimientoComponent {
     this.loadingService.showLoading();
     this.checklistService.obtenerIngresosCheckList().subscribe((res: any) => {
       this.lstIngresos = res.data;
+      console.log('this.lstIngresos ',this.lstIngresos );
       //Filtro personalizado
       $.fn.dataTable.ext.search.push(
         (settings: any, data: any, dataIndex: any) => {
@@ -80,7 +82,6 @@ export class ChlseguimientoComponent {
       $.fn.dataTable.ext.search.push((settings: any, data: any, dataIndex: any) => {
 
         const row = settings.aoData[dataIndex]._aData;
-        console.log('row', row);
         const chkRojo = ($('#chkRojo') as any).prop('checked');
         const chkAmarillo = ($('#chkAmarillo') as any).prop('checked');
 
@@ -115,7 +116,7 @@ export class ChlseguimientoComponent {
         if (!chkSinCerrados) return true;
 
         // ocultar idEstado = 10
-        return Number(row.idEstado) !== 10;
+        return Number(row.idEstado) !== 10 && Number(row.idEstado) !== 5;
       });
       this.dtOptions = {
         data: this.lstIngresos,
@@ -132,7 +133,6 @@ export class ChlseguimientoComponent {
           $(row).find('td').css('background-color', '');
 
           if (!data.fechaMaxima) return;
-          console.log(row, ' ', data);
           const hoy = new Date();
           const fechaMaxima = new Date((data.fechaMaxima + '').replace(' ', 'T'));
 
@@ -310,38 +310,35 @@ export class ChlseguimientoComponent {
 
           { title: 'N°', data: 'id' },
 
-          //   {
-          //     title: 'Prioridad / Gestión',
-          //     data: null,
-          //     render: function (data: any, type: any, row: any) {
+            {
+              title: 'Gestión',
+              data: null,
+              render: function (data: any, type: any, row: any) {
 
-          //       let icono = '';
-          //       let color = '';
+                let icono = '';
+                let color = '';
 
-          //       switch (row.prioridad) {
-          //         case 'ALTA': icono = '↑'; color = 'red'; break;
-          //         case 'MEDIA': icono = '='; color = 'orange'; break;
-          //         case 'BAJA': icono = '↓'; color = 'green'; break;
-          //         default: icono = '?';
-          //       }
+                switch (row.prioridad) {
+                  case 'ALTA': icono = '↑'; color = 'red'; break;
+                  case 'MEDIA': icono = '='; color = 'orange'; break;
+                  case 'BAJA': icono = '↓'; color = 'green'; break;
+                  default: icono = '?';
+                }
 
-          //       let tipo = row.tipoGestion == 1
-          //         ? 'Emisión Póliza nueva'
-          //         : row.tipoGestion == 2
-          //           ? 'Ingreso Póliza nueva'
-          //           : row.tipoGestion == 3
-          //             ? 'Renovación de póliza'
-          //             : 'Sin definir';
-          //       return `
-          //   <div style="font-size:11px">
-          //     <div style="color:${color}">
-          //       ${icono} <strong>${row.prioridad}</strong>
-          //     </div>
-          //     <div>${tipo}</div>
-          //   </div>
-          // `;
-          //     }
-          //   },
+                let tipo = row.tipoGestion == 1
+                  ? 'Em.Póliza Nueva'
+                  : row.tipoGestion == 2
+                    ? 'Ing.Póliza Nueva'
+                    : row.tipoGestion == 3
+                      ? 'Renov.Póliza'
+                      : 'Sin definir';
+                return `
+            <div style="font-size:11px">
+              <div style="font-weight:bold">${tipo}</div>
+            </div>
+          `;
+              }
+            },
 
           {
             title: '<i class="fas fa-cogs me-1"></i> Opción',
@@ -579,6 +576,27 @@ export class ChlseguimientoComponent {
       table.page.len(paginaActual).draw();
 
     }, 300);
-
   }
+  exportarMes(){
+    this.checklistService.descagarCheckListMes().subscribe({
+  next: (res:any) => {
+    this.exportarExcel(res.data);
+  },
+  error: (error) => {
+    console.error('Error al obtener los datos', error);
+  }
+});
+  }
+  exportarExcel(data: any[]): void {
+  if (!data?.length) {
+    console.warn('No hay datos para exportar');
+    return;
+  }
+
+  const hoja = XLSX.utils.json_to_sheet(data);
+  const libro = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(libro, hoja, 'Datos');
+  XLSX.writeFile(libro, 'informeCheckList.xlsx');
+}
 }

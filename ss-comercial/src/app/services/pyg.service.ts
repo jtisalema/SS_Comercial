@@ -55,4 +55,16 @@ export class PygService {
     const URL_API = environment.apiUrl + "guardarFacturasPYG";
     return this.httpClient.post(URL_API, form).pipe(catchError(this.handleError));
   }
+  public obtenerRamosCliente(idCliente:any) {
+    const URL_API = environment.efiApi + "clientes/informacionValoresClienteDBroker/"+idCliente;
+    return this.httpClient.get(URL_API).pipe(catchError(this.handleError));
+  }
+  public obtenerPolizasSugeridas(idCliente:any) {
+    const URL_API = environment.efiApi + "clientes/produccionPagada/"+idCliente;
+    return this.httpClient.get(URL_API).pipe(catchError(this.handleError));
+  }
+  public obtenerFacturasProdPagada(idCliente:any,poliza:any,fechaDesde:any,fechaHasta:any) {
+    const URL_API = environment.efiApi + "/clientes/produccionPagada/"+idCliente+"/"+poliza+"?fechaDesde="+fechaDesde+"&fechaHasta="+fechaHasta;
+    return this.httpClient.get(URL_API).pipe(catchError(this.handleError));
+  }
 }

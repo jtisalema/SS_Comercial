@@ -1,1016 +1,1812 @@
 <div class="content-wrapper"
-    style="background-image: url('assets/images/fondos/plataforma_fondo2.png');background-repeat: no-repeat;height: 100%;background-size: cover;">
-    <br>
-    <section class="content">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="card card-primary card-outline">
-                        <div class="card-header d-flex align-items-center">
+  style="background-image: url('assets/images/fondos/plataforma_fondo2.png');background-repeat: no-repeat;height: 100%;background-size: cover;">
+  <br>
+  <section class="content">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="card card-primary card-outline">
+            <div class="card-header d-flex align-items-center">
 
-                            <h3 class="card-title mb-0" style="font-weight: bold;">
-                                <i class="fas fa-user-alt me-2"></i>
-                                PYG Ingreso
-                            </h3>
+              <h3 class="card-title mb-0" style="font-weight: bold;">
+                <i class="fas fa-user-alt me-2"></i>
+                Registro Presupuestos y Gastos
+              </h3>
+
+            </div>
+            <div class="card-body">
+              <form [formGroup]="ingresoForm" *ngIf="!esFinanciero">
+                <div class="card mb-4 p-3 position-relative">
+                  <h6 class="card-title titulo-sobre-borde">Información del Cliente</h6>
+                  <div class="row mb-3">
+
+                    <!-- CLIENTE -->
+                    <div [ngClass]="clienteSeleccionado ? 'col-md-3' : 'col-md-4'">
+                      <label for="identificacion" class="form-label">
+                        Cliente
+                      </label>
+
+                      <ng-select [items]="clientes" bindLabel="NOMBRES" bindValue="NOMBRES"
+                        [readonly]="ingresoForm.value.id != null" [typeahead]="clientesInput$"
+                        [loading]="loadingClientes" [minTermLength]="3" placeholder="Ingrese el nombre del cliente"
+                        formControlName="cliente" (change)="onClienteChange($event)"
+                        [class.is-invalid]="ingresoForm.get('cliente')?.touched && ingresoForm.get('cliente')?.invalid">
+
+                        <ng-template ng-option-tmp let-item="item">
+                          {{item.NOMBRES}}
+                        </ng-template>
+
+                      </ng-select>
+
+                      <small class="text-danger"
+                        *ngIf="ingresoForm.get('cliente')?.touched && ingresoForm.get('cliente')?.hasError('required')">
+                        Debe seleccionar un cliente
+                      </small>
+                    </div>
+                    <div class="col-md-1 d-flex align-items-end pb-1" *ngIf="clienteSeleccionado">
+                      <button type="button" class="btn btn-primary" data-bs-toggle="modal" title="Ver Ramos Sugeridos"
+                        data-bs-target="#modalRamosEstandar">
+                        +
+                      </button>
+                    </div>
+
+                    <!-- RAMO -->
+                    <div class="col-md-4">
+                      <label for="ramo" class="form-label">
+                        Ramo
+                      </label>
+
+                      <ng-select [items]="lstRamos" formControlName="ramo" bindLabel="nmRamo"
+                        [readonly]="ingresoRamoSeleccionado.idRamo != null" bindValue="cdRamo"
+                        placeholder="Seleccione un ramo" [clearable]="true" [searchable]="true"
+                        [class.is-invalid]="ingresoForm.get('ramo')?.touched && ingresoForm.get('ramo')?.invalid">
+                      </ng-select>
+
+                      <small class="text-danger"
+                        *ngIf="ingresoForm.get('ramo')?.touched && ingresoForm.get('ramo')?.hasError('required')">
+                        Debe seleccionar el ramo
+                      </small>
+                    </div>
+
+
+                    <!-- INICIO VIGENCIA -->
+                    <div class="col-md-2">
+                      <label for="inicioVigencia" class="form-label">
+                        Inicio Vigencia
+                      </label>
+
+                      <div class="input-group">
+                        <span class="input-group-text bg-light">
+                          <i class="fas fa-calendar text-info"></i>
+                        </span>
+
+                        <input id="inicioVigencia" type="date" class="form-control"
+                          [readonly]="ingresoRamoSeleccionado.idRamo != null" formControlName="inicioVigencia"
+                          [class.is-invalid]="ingresoForm.get('inicioVigencia')?.touched && ingresoForm.get('inicioVigencia')?.invalid">
+                      </div>
+
+                      <small class="text-danger"
+                        *ngIf="ingresoForm.get('inicioVigencia')?.touched && ingresoForm.get('inicioVigencia')?.hasError('required')">
+                        Debe ingresar la fecha de inicio
+                      </small>
+                    </div>
+
+
+                    <!-- FIN VIGENCIA -->
+                    <div class="col-md-2">
+                      <label for="finVigencia" class="form-label">
+                        Fin Vigencia
+                      </label>
+
+                      <div class="input-group">
+                        <span class="input-group-text bg-light">
+                          <i class="fas fa-calendar text-info"></i>
+                        </span>
+
+                        <input id="finVigencia" type="date" class="form-control"
+                          [readonly]="ingresoRamoSeleccionado.idRamo != null" formControlName="finVigencia"
+                          [class.is-invalid]="ingresoForm.get('finVigencia')?.touched && ingresoForm.get('finVigencia')?.invalid">
+                      </div>
+
+                      <small class="text-danger"
+                        *ngIf="ingresoForm.get('finVigencia')?.touched && ingresoForm.get('finVigencia')?.hasError('required')">
+                        Debe ingresar la fecha de fin
+                      </small>
+
+                      <small class="text-danger"
+                        *ngIf="ingresoForm.errors?.['fechaInvalida'] && ingresoForm.get('finVigencia')?.touched">
+                        La fecha fin debe ser mayor que la fecha inicio
+                      </small>
+                    </div>
+
+                  </div>
+
+                  <div class="row mb-3">
+                    <!-- ASEGURADORA -->
+                    <div class="col-md-2">
+                      <label for="aseguradora" class="form-label">
+                        Aseguradora
+                      </label>
+                      <div class="input-group">
+                        <div class="input-group-prepend">
+                        </div>
+                        <ng-select [items]="lstAseguradoras" formControlName="aseguradora"
+                          [readonly]="ingresoRamoSeleccionado.idRamo != null" bindLabel="alias" bindValue="id"
+                          [clearable]="true" placeholder="Seleccione la aseguradora" [searchable]="true"
+                          style="flex: 1 1 auto;">
+                        </ng-select>
+                      </div>
+
+                      <small class="text-danger"
+                        *ngIf="ingresoForm.get('aseguradora')?.touched && ingresoForm.get('aseguradora')?.invalid">
+                        La aseguradora es obligatoria
+                      </small>
+                    </div>
+                    <!-- PÓLIZA -->
+                    <div class="col-md-2">
+                      <label class="form-label">Póliza</label>
+
+                      <div class="input-group">
+                        <span class="input-group-text bg-light">
+                          <i class="fas fa-file-contract text-primary"></i>
+                        </span>
+
+                        <input type="text" class="form-control" formControlName="poliza" placeholder="Número de póliza"
+                          [readonly]="ingresoRamoSeleccionado.idRamo != null"
+                          [class.is-invalid]="ingresoForm.get('poliza')?.touched && ingresoForm.get('poliza')?.invalid">
+                      </div>
+
+                      <small class="text-danger"
+                        *ngIf="ingresoForm.get('poliza')?.touched && ingresoForm.get('poliza')?.hasError('required')">
+                        Debe ingresar la póliza
+                      </small>
+                    </div>
+                    <!-- PRIMA MENSUAL -->
+                    <div class="col-md-2">
+                      <label class="form-label">Prima Mensual</label>
+
+                      <div class="input-group">
+                        <span class="input-group-text bg-light">
+                          <i class="fas fa-dollar-sign text-success"></i>
+                        </span>
+
+                        <input type="number" class="form-control" formControlName="primaMensual"
+                          [readonly]="ingresoRamoSeleccionado.idRamo != null" (change)="changePrimaMensual()" min="0"
+                          step="0.01" placeholder="0"
+                          [class.is-invalid]="ingresoForm.get('primaMensual')?.touched && ingresoForm.get('primaMensual')?.invalid">
+                      </div>
+
+                      <small class="text-danger"
+                        *ngIf="ingresoForm.get('primaMensual')?.touched && ingresoForm.get('primaMensual')?.hasError('required')">
+                        Debe ingresar la prima mensual
+                      </small>
+
+                      <small class="text-danger"
+                        *ngIf="ingresoForm.get('primaMensual')?.touched && ingresoForm.get('primaMensual')?.hasError('min')">
+                        La prima debe ser mayor a 0
+                      </small>
+                    </div>
+
+                    <!-- CLIENTE -->
+                    <div class="col-md-2" hidden>
+                      <label for="cliente" class="form-label">
+                        Prima Anual
+                      </label>
+
+                      <div class="input-group">
+                        <span class="input-group-text bg-light">
+                          <i class="fas fa-dollar-sign text-success"></i>
+                        </span>
+                        <input id="cliente" type="number" class="form-control" placeholder="0"
+                          formControlName="primaAnual" readonly>
+                      </div>
+                    </div>
+
+                    <!-- DIRECCIÓN -->
+                    <!-- PORCENTAJE COMISION -->
+                    <div class="col-md-2">
+                      <label for="porcentajeComision" class="form-label">
+                        % Comisión
+                      </label>
+
+                      <div class="input-group">
+                        <span class="input-group-text bg-light">
+                          <i class="fas fa-percent text-info"></i>
+                        </span>
+
+                        <input id="porcentajeComision" type="number" class="form-control"
+                          [readonly]="ingresoRamoSeleccionado.idRamo != null" formControlName="porcentajeComision"
+                          min="0" max="100" step="0.01" placeholder="0" (change)="changePorcentaje()"
+                          [class.is-invalid]="ingresoForm.get('porcentajeComision')?.touched && ingresoForm.get('porcentajeComision')?.invalid">
+                      </div>
+
+                      <small class="text-danger"
+                        *ngIf="ingresoForm.get('porcentajeComision')?.touched && ingresoForm.get('porcentajeComision')?.hasError('required')">
+                        Debe ingresar el porcentaje
+                      </small>
+
+                      <small class="text-danger" *ngIf="ingresoForm.get('porcentajeComision')?.hasError('min')">
+                        El porcentaje no puede ser menor a 0
+                      </small>
+
+                      <small class="text-danger" *ngIf="ingresoForm.get('porcentajeComision')?.hasError('max')">
+                        El porcentaje no puede ser mayor a 100
+                      </small>
+                    </div>
+
+                    <!-- CIUDAD -->
+                    <div class="col-md-2">
+                      <label for="ciudad" class="form-label">
+                        Comisión Mensual
+                      </label>
+
+                      <div class="input-group">
+                        <span class="input-group-text bg-light">
+                          <i class="fas fa-dollar-sign text-success"></i>
+                        </span>
+                        <input id="ciudad" type="number" class="form-control" readonly formControlName="comision"
+                          placeholder="0">
+                      </div>
+                    </div>
+                    <!-- CIUDAD -->
+                    <div class="col-md-2">
+                      <label for="ciudad" class="form-label">
+                        Comisión Anual
+                      </label>
+
+                      <div class="input-group">
+                        <span class="input-group-text bg-light">
+                          <i class="fas fa-dollar-sign text-success"></i>
+                        </span>
+                        <input id="ciudad" type="number" class="form-control" readonly formControlName="comisionAnual"
+                          placeholder="0">
+                      </div>
+                    </div>
+                  </div>
+                  <!-- GASTOS -->
+                  <form [formGroup]="gastoForm">
+                    <div class="card mb-4 p-3 position-relative">
+                      <h6 class="card-title titulo-sobre-borde">Detalle Gastos</h6>
+
+                      <div class="row">
+
+                        <!-- IZQUIERDA (FORMULARIO) -->
+                        <div class="col-md-5">
+
+                          <div class="mb-3">
+                            <div class="input-group">
+                              <span class="input-group-text bg-light">
+                                <i class="fas fa-file-alt text-info"></i>
+                              </span>
+
+                              <input type="text" class="form-control" placeholder="Ingrese la descripción del gasto"
+                                formControlName="descripcion"
+                                [ngClass]="{'is-invalid': gastoForm.get('descripcion')?.touched && gastoForm.get('descripcion')?.invalid}">
+                            </div>
+
+                            <div class="invalid-feedback d-block"
+                              *ngIf="gastoForm.get('descripcion')?.touched && gastoForm.get('descripcion')?.errors?.['required']">
+                              La descripción es obligatoria
+                            </div>
+                          </div>
+                          <div class="row">
+                            <div class="col-md-8">
+                              <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                  <i class="fas fa-dollar-sign text-success"></i>
+                                </span>
+
+                                <input type="number" class="form-control" placeholder="Ingrese el valor"
+                                  formControlName="valor" min="0"
+                                  [ngClass]="{'is-invalid': gastoForm.get('valor')?.touched && gastoForm.get('valor')?.invalid}">
+                              </div>
+
+                              <div class="invalid-feedback d-block"
+                                *ngIf="gastoForm.get('valor')?.touched && gastoForm.get('valor')?.errors?.['required']">
+                                El valor es obligatorio
+                              </div>
+
+                              <div class="invalid-feedback d-block" *ngIf="gastoForm.get('valor')?.errors?.['min']">
+                                El valor debe ser mayor a 0
+                              </div>
+                            </div>
+                            <div class="col-md-4">
+                              <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                  <i class="fas fa-hashtag text-primary"></i>
+                                </span>
+
+                                <input type="number" class="form-control" placeholder="Ingrese la Cantidad"
+                                  formControlName="cantidad" min="1"
+                                  [ngClass]="{'is-invalid': gastoForm.get('cantidad')?.touched && gastoForm.get('cantidad')?.invalid}">
+                              </div>
+
+                              <div class="invalid-feedback d-block"
+                                *ngIf="gastoForm.get('cantidad')?.touched && gastoForm.get('cantidad')?.errors?.['required']">
+                                La cantidad es obligatoria
+                              </div>
+
+                              <div class="invalid-feedback d-block" *ngIf="gastoForm.get('cantidad')?.errors?.['min']">
+                                La cantidad debe ser mayor a 0
+                              </div>
+                            </div>
+
+                          </div>
+
+                          <div class=" d-flex gap-2 justify-content-end mt-3" *ngIf="gastoForm.valid">
+
+                            <button type="button" class="btn btn-primary" (click)="agregarGasto()" *ngIf="!esEdicion">
+                              + Ingresar
+                            </button>
+
+                            <div *ngIf="esEdicion">
+
+                              <button type="button" class="btn btn-success" (click)="actualizarGasto()"
+                                *ngIf="esEdicion">
+                                Actualizar
+                              </button>&nbsp;
+
+                              <button type="button" class="btn btn-danger" (click)="cancelarActualizar()"
+                                *ngIf="esEdicion">
+                                Cancelar
+                              </button>
+
+                            </div>
+
+                          </div>
+                        </div>
+                        <div class="col-md-1"></div>
+
+                        <!-- DERECHA (TABLA) -->
+                        <div class="col-md-6">
+
+                          <div class="table-responsive">
+
+                            <table class="table table-bordered tabla-lstContactos"
+                              style="font-size:10px;text-align:center;">
+
+                              <thead>
+                                <tr>
+                                  <th>#</th>
+                                  <th>Descripción</th>
+                                  <th>Valor</th>
+                                  <th>Cantidad</th>
+                                  <th>Acción</th>
+                                </tr>
+                              </thead>
+
+                              <tbody>
+
+                                <tr *ngIf="lstGastos.length === 0">
+                                  <td colspan="4" class="text-muted">
+                                    No hay gastos agregados
+                                  </td>
+                                </tr>
+
+                                <tr *ngFor="let con of lstGastos; let i = index">
+                                  <td>{{ i + 1 }}</td>
+                                  <td>{{ con.descripcion }}</td>
+                                  <td>{{ con.valor | currency:'USD':'symbol':'1.2-2'
+                                    }}
+                                  </td>
+                                  <td>{{ con.cantidad }}</td>
+                                  <td>
+
+                                    <button class="btn btn-outline-primary btn-sm" (click)="editarGasto(i)"
+                                      title="editar gasto" *ngIf="!con.id">
+                                      <i class="fas fa-edit"></i>
+                                    </button>
+
+                                    <button class="btn btn-outline-danger btn-sm" (click)="eliminarGasto(i)"
+                                      title="eliminar gasto" *ngIf="!con.id">
+                                      <i class="fas fa-trash-alt"></i>
+                                    </button>
+
+                                  </td>
+                                </tr>
+
+                              </tbody>
+
+                              <tfoot *ngIf="lstGastos.length > 0">
+                                <tr>
+                                  <td colspan="2"><strong>Total</strong></td>
+                                  <td>
+                                    <strong>
+                                      {{ totalDetalleGastos |
+                                      currency:'USD':'symbol':'1.2-2'
+                                      }}
+                                    </strong>
+                                  </td>
+                                  <td>
+                                    <strong>
+                                      {{ totalCantidadGastos}}
+                                    </strong>
+                                  </td>
+                                  <td></td>
+                                </tr>
+                              </tfoot>
+
+                            </table>
+
+                          </div>
 
                         </div>
-                        <div class="card-body">
-                            <form [formGroup]="ingresoForm" *ngIf="!esFinanciero">
-                                <div class="card mb-4 p-3 position-relative">
-                                    <h6 class="card-title titulo-sobre-borde">Información del Cliente</h6>
-                                    <div class="row mb-3">
-
-                                        <!-- CLIENTE -->
-                                        <div class="col-md-4">
-                                            <label for="identificacion" class="form-label">
-                                                Cliente
-                                            </label>
-
-                                            <ng-select [items]="clientes" bindLabel="NOMBRES" bindValue="NOMBRES"
-                                                [typeahead]="clientesInput$" [loading]="loadingClientes"
-                                                [minTermLength]="3" placeholder="Ingrese el nombre del cliente"
-                                                formControlName="cliente" (change)="onClienteChange($event)"
-                                                [class.is-invalid]="ingresoForm.get('cliente')?.touched && ingresoForm.get('cliente')?.invalid">
-
-                                                <ng-template ng-option-tmp let-item="item">
-                                                    {{item.NOMBRES}}
-                                                </ng-template>
-
-                                            </ng-select>
-
-                                            <small class="text-danger"
-                                                *ngIf="ingresoForm.get('cliente')?.touched && ingresoForm.get('cliente')?.hasError('required')">
-                                                Debe seleccionar un cliente
-                                            </small>
-                                        </div>
-
-
-                                        <!-- RAMO -->
-                                        <div class="col-md-4">
-                                            <label for="ramo" class="form-label">
-                                                Ramo
-                                            </label>
-
-                                            <ng-select [items]="lstRamos" formControlName="ramo" bindLabel="nmRamo"
-                                                bindValue="cdRamo" placeholder="Seleccione un ramo" [clearable]="true"
-                                                [searchable]="true"
-                                                [class.is-invalid]="ingresoForm.get('ramo')?.touched && ingresoForm.get('ramo')?.invalid">
-                                            </ng-select>
-
-                                            <small class="text-danger"
-                                                *ngIf="ingresoForm.get('ramo')?.touched && ingresoForm.get('ramo')?.hasError('required')">
-                                                Debe seleccionar el ramo
-                                            </small>
-                                        </div>
-
-
-                                        <!-- INICIO VIGENCIA -->
-                                        <div class="col-md-2">
-                                            <label for="inicioVigencia" class="form-label">
-                                                Inicio Vigencia
-                                            </label>
-
-                                            <div class="input-group">
-                                                <span class="input-group-text bg-light">
-                                                    <i class="fas fa-calendar text-info"></i>
-                                                </span>
-
-                                                <input id="inicioVigencia" type="date" class="form-control"
-                                                    formControlName="inicioVigencia"
-                                                    [class.is-invalid]="ingresoForm.get('inicioVigencia')?.touched && ingresoForm.get('inicioVigencia')?.invalid">
-                                            </div>
-
-                                            <small class="text-danger"
-                                                *ngIf="ingresoForm.get('inicioVigencia')?.touched && ingresoForm.get('inicioVigencia')?.hasError('required')">
-                                                Debe ingresar la fecha de inicio
-                                            </small>
-                                        </div>
-
-
-                                        <!-- FIN VIGENCIA -->
-                                        <div class="col-md-2">
-                                            <label for="finVigencia" class="form-label">
-                                                Fin Vigencia
-                                            </label>
-
-                                            <div class="input-group">
-                                                <span class="input-group-text bg-light">
-                                                    <i class="fas fa-calendar text-info"></i>
-                                                </span>
-
-                                                <input id="finVigencia" type="date" class="form-control"
-                                                    formControlName="finVigencia"
-                                                    [class.is-invalid]="ingresoForm.get('finVigencia')?.touched && ingresoForm.get('finVigencia')?.invalid">
-                                            </div>
-
-                                            <small class="text-danger"
-                                                *ngIf="ingresoForm.get('finVigencia')?.touched && ingresoForm.get('finVigencia')?.hasError('required')">
-                                                Debe ingresar la fecha de fin
-                                            </small>
-
-                                            <small class="text-danger"
-                                                *ngIf="ingresoForm.errors?.['fechaInvalida'] && ingresoForm.get('finVigencia')?.touched">
-                                                La fecha fin debe ser mayor que la fecha inicio
-                                            </small>
-                                        </div>
-
-                                    </div>
-
-                                    <div class="row mb-3">
-                                        <!-- PRIMA MENSUAL -->
-                                        <div class="col-md-3">
-                                            <label class="form-label">Prima Mensual</label>
-
-                                            <div class="input-group">
-                                                <span class="input-group-text bg-light">
-                                                    <i class="fas fa-dollar-sign text-success"></i>
-                                                </span>
-
-                                                <input type="number" class="form-control" formControlName="primaMensual"
-                                                    (change)="changePrimaMensual()" min="0" step="0.01" placeholder="0"
-                                                    [class.is-invalid]="ingresoForm.get('primaMensual')?.touched && ingresoForm.get('primaMensual')?.invalid">
-                                            </div>
-
-                                            <small class="text-danger"
-                                                *ngIf="ingresoForm.get('primaMensual')?.touched && ingresoForm.get('primaMensual')?.hasError('required')">
-                                                Debe ingresar la prima mensual
-                                            </small>
-
-                                            <small class="text-danger"
-                                                *ngIf="ingresoForm.get('primaMensual')?.touched && ingresoForm.get('primaMensual')?.hasError('min')">
-                                                La prima debe ser mayor a 0
-                                            </small>
-                                        </div>
-
-                                        <!-- CLIENTE -->
-                                        <div class="col-md-3">
-                                            <label for="cliente" class="form-label">
-                                                Prima Anual
-                                            </label>
-
-                                            <div class="input-group">
-                                                <span class="input-group-text bg-light">
-                                                    <i class="fas fa-dollar-sign text-success"></i>
-                                                </span>
-                                                <input id="cliente" type="number" class="form-control" placeholder="0"
-                                                    formControlName="primaAnual" readonly>
-                                            </div>
-                                        </div>
-
-                                        <!-- DIRECCIÓN -->
-                                        <!-- PORCENTAJE COMISION -->
-                                        <div class="col-md-2">
-                                            <label for="porcentajeComision" class="form-label">
-                                                % Comisión
-                                            </label>
-
-                                            <div class="input-group">
-                                                <span class="input-group-text bg-light">
-                                                    <i class="fas fa-percent text-info"></i>
-                                                </span>
-
-                                                <input id="porcentajeComision" type="number" class="form-control"
-                                                    formControlName="porcentajeComision" min="0" max="100" step="0.01"
-                                                    placeholder="0" (change)="changePorcentaje()"
-                                                    [class.is-invalid]="ingresoForm.get('porcentajeComision')?.touched && ingresoForm.get('porcentajeComision')?.invalid">
-                                            </div>
-
-                                            <small class="text-danger"
-                                                *ngIf="ingresoForm.get('porcentajeComision')?.touched && ingresoForm.get('porcentajeComision')?.hasError('required')">
-                                                Debe ingresar el porcentaje
-                                            </small>
-
-                                            <small class="text-danger"
-                                                *ngIf="ingresoForm.get('porcentajeComision')?.hasError('min')">
-                                                El porcentaje no puede ser menor a 0
-                                            </small>
-
-                                            <small class="text-danger"
-                                                *ngIf="ingresoForm.get('porcentajeComision')?.hasError('max')">
-                                                El porcentaje no puede ser mayor a 100
-                                            </small>
-                                        </div>
-
-                                        <!-- CIUDAD -->
-                                        <div class="col-md-2">
-                                            <label for="ciudad" class="form-label">
-                                                Comisión Mensual
-                                            </label>
-
-                                            <div class="input-group">
-                                                <span class="input-group-text bg-light">
-                                                    <i class="fas fa-dollar-sign text-success"></i>
-                                                </span>
-                                                <input id="ciudad" type="number" class="form-control" readonly
-                                                    formControlName="comision" placeholder="0">
-                                            </div>
-                                        </div>
-                                        <!-- CIUDAD -->
-                                        <div class="col-md-2">
-                                            <label for="ciudad" class="form-label">
-                                                Comisión Anual
-                                            </label>
-
-                                            <div class="input-group">
-                                                <span class="input-group-text bg-light">
-                                                    <i class="fas fa-dollar-sign text-success"></i>
-                                                </span>
-                                                <input id="ciudad" type="number" class="form-control" readonly
-                                                    formControlName="comisionAnual" placeholder="0">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <!-- GASTOS -->
-                                    <form [formGroup]="gastoForm">
-                                        <div class="card mb-4 p-3 position-relative">
-                                            <h6 class="card-title titulo-sobre-borde">Detalle Gastos</h6>
-
-                                            <div class="row">
-
-                                                <!-- IZQUIERDA (FORMULARIO) -->
-                                                <div class="col-md-5">
-
-                                                    <div class="mb-3">
-                                                        <div class="input-group">
-                                                            <span class="input-group-text bg-light">
-                                                                <i class="fas fa-file-alt text-info"></i>
-                                                            </span>
-
-                                                            <input type="text" class="form-control"
-                                                                placeholder="Ingrese la descripción del gasto"
-                                                                formControlName="descripcion"
-                                                                [ngClass]="{'is-invalid': gastoForm.get('descripcion')?.touched && gastoForm.get('descripcion')?.invalid}">
-                                                        </div>
-
-                                                        <div class="invalid-feedback d-block"
-                                                            *ngIf="gastoForm.get('descripcion')?.touched && gastoForm.get('descripcion')?.errors?.['required']">
-                                                            La descripción es obligatoria
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="mb-3">
-                                                        <div class="input-group">
-                                                            <span class="input-group-text bg-light">
-                                                                <i class="fas fa-dollar-sign text-success"></i>
-                                                            </span>
-
-                                                            <input type="number" class="form-control"
-                                                                placeholder="Ingrese el valor" formControlName="valor"
-                                                                min="0"
-                                                                [ngClass]="{'is-invalid': gastoForm.get('valor')?.touched && gastoForm.get('valor')?.invalid}">
-                                                        </div>
-
-                                                        <div class="invalid-feedback d-block"
-                                                            *ngIf="gastoForm.get('valor')?.touched && gastoForm.get('valor')?.errors?.['required']">
-                                                            El valor es obligatorio
-                                                        </div>
-
-                                                        <div class="invalid-feedback d-block"
-                                                            *ngIf="gastoForm.get('valor')?.errors?.['min']">
-                                                            El valor debe ser mayor a 0
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="d-flex gap-2 justify-content-end"
-                                                        *ngIf="gastoForm.valid">
-
-                                                        <button type="button" class="btn btn-primary"
-                                                            (click)="agregarGasto()" *ngIf="!esEdicion">
-                                                            + Ingresar
-                                                        </button>
-
-                                                        <div *ngIf="esEdicion">
-
-                                                            <button type="button" class="btn btn-success"
-                                                                (click)="actualizarGasto()" *ngIf="esEdicion">
-                                                                Actualizar
-                                                            </button>&nbsp;
-
-                                                            <button type="button" class="btn btn-danger"
-                                                                (click)="cancelarActualizar()" *ngIf="esEdicion">
-                                                                Cancelar
-                                                            </button>
-
-                                                        </div>
-
-                                                    </div>
-
-                                                </div>
-                                                <div class="col-md-1"></div>
-
-                                                <!-- DERECHA (TABLA) -->
-                                                <div class="col-md-6">
-
-                                                    <div class="table-responsive">
-
-                                                        <table class="table table-bordered tabla-lstContactos"
-                                                            style="font-size:10px;text-align:center;">
-
-                                                            <thead>
-                                                                <tr>
-                                                                    <th>#</th>
-                                                                    <th>Descripción</th>
-                                                                    <th>Valor</th>
-                                                                    <th>Acción</th>
-                                                                </tr>
-                                                            </thead>
-
-                                                            <tbody>
-
-                                                                <tr *ngIf="lstGastos.length === 0">
-                                                                    <td colspan="4" class="text-muted">
-                                                                        No hay gastos agregados
-                                                                    </td>
-                                                                </tr>
-
-                                                                <tr *ngFor="let con of lstGastos; let i = index">
-                                                                    <td>{{ i + 1 }}</td>
-                                                                    <td>{{ con.descripcion }}</td>
-                                                                    <td>{{ con.valor | currency:'USD':'symbol':'1.2-2'
-                                                                        }}
-                                                                    </td>
-                                                                    <td>
-
-                                                                        <button class="btn btn-outline-primary btn-sm"
-                                                                            (click)="editarGasto(i)"
-                                                                            title="editar gasto"
-                                                                            *ngIf="!con.idDetalleFact">
-                                                                            <i class="fas fa-edit"></i>
-                                                                        </button>
-
-                                                                        <button class="btn btn-outline-danger btn-sm"
-                                                                            (click)="eliminarGasto(i)"
-                                                                            title="eliminar gasto"
-                                                                            *ngIf="!con.idDetalleFact">
-                                                                            <i class="fas fa-trash-alt"></i>
-                                                                        </button>
-
-                                                                    </td>
-                                                                </tr>
-
-                                                            </tbody>
-
-                                                            <tfoot *ngIf="lstGastos.length > 0">
-                                                                <tr>
-                                                                    <td colspan="2"><strong>Total</strong></td>
-                                                                    <td>
-                                                                        <strong>
-                                                                            {{ totalDetalleGastos |
-                                                                            currency:'USD':'symbol':'1.2-2'
-                                                                            }}
-                                                                        </strong>
-                                                                    </td>
-                                                                    <td></td>
-                                                                </tr>
-                                                            </tfoot>
-
-                                                        </table>
-
-                                                    </div>
-
-                                                </div>
-
-                                            </div>
-                                        </div>
-                                    </form>
-                                    <div class="d-flex gap-2 justify-content-end">
-                                        <button type="button" class="btn btn-primary" (click)="guardarIngresoGastos()"
-                                            *ngIf="!editarIngresoGasto">
-                                            Agregar
-                                        </button>
-                                        <button type="button" class="btn btn-primary" (click)="actualizarIngresoGasto()"
-                                            *ngIf="editarIngresoGasto">
-                                            Actualizar
-                                        </button>
-                                        <button type="button" class="btn btn-danger" (click)="cancelarActualizarIG()"
-                                            *ngIf="editarIngresoGasto">
-                                            Cancelar
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
-                            <!-- Esta Seccion solo para el usuario Financiero -->
-                            <div class="card mb-4 p-3 position-relative">
-                                <h6 class="card-title titulo-sobre-borde">Información del Cliente</h6>
-<div class="row mb-3 filtros-ejecutivos">
-
-  <div class="col-md-4">
-    <div class="filtro-item">
-      <label for="identificacion" class="filtro-label">
-        Cliente
-      </label>
-
-      <div class="filtro-control">
-        <span class="filtro-icono bg-primary-soft">
-          <i class="bi bi-person"></i>
-        </span>
-
-        <input
-          type="text"
-          class="form-control filtro-input"
-          [value]="objCliente?.nombre"
-          disabled
-        >
-      </div>
-    </div>
-  </div>
-
-  <div class="col-md-4">
-    <div class="filtro-item">
-      <label for="finVigencia" class="filtro-label">
-        Ramos
-      </label>
-
-      <div class="filtro-control">
-        <span class="filtro-icono bg-success-soft">
-          <i class="bi bi-diagram-3"></i>
-        </span>
-
-        <select
-          class="form-control filtro-input"
-          [(ngModel)]="selectRamo"
-          (change)="cargarDatosRegistro()"
-        >
-          <option value="999" selected>Todos</option>
-          <option *ngFor="let r of lstRamosCargados" [value]="r.id">
-            {{ r.nombre }}
-          </option>
-        </select>
-      </div>
-    </div>
-  </div>
-
-  <div class="col-md-4">
-    <div class="filtro-item">
-      <label for="finVigencia" class="filtro-label">
-        Vigencia desde
-      </label>
-
-      <div class="filtro-control">
-        <span class="filtro-icono bg-warning-soft">
-          <i class="bi bi-calendar3"></i>
-        </span>
-
-        <select
-          class="form-control filtro-input"
-          [(ngModel)]="selectVigencia"
-          (change)="cargarDatosRegistro()"
-        >
-          <option *ngFor="let r of lstAniosCargados" [value]="r.id">
-            {{ r.value }}
-          </option>
-        </select>
-      </div>
-    </div>
-  </div>
-
-</div>
+
+                      </div>
+                    </div>
+                  </form>
+                  <div class="d-flex gap-2 justify-content-end">
+                    <button type="button" class="btn btn-primary" (click)="guardarIngresoGastos()"
+                      *ngIf="!editarIngresoGasto">
+                      Agregar
+                    </button>
+                    <button type="button" class="btn btn-primary" (click)="actualizarIngresoGasto()"
+                      *ngIf="editarIngresoGasto">
+                      Actualizar
+                    </button>
+                    <button type="button" class="btn btn-danger" (click)="cancelarActualizarIG()"
+                      *ngIf="editarIngresoGasto">
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              </form>
+              <!-- Esta Seccion solo para el usuario Financiero -->
+              <div class="card mb-4 p-3 position-relative" *ngIf="idRegistro">
+                <h6 class="card-title titulo-sobre-borde">Información del Cliente</h6>
+                <div class="row mb-3 filtros-ejecutivos">
+
+                  <div class="col-md-4">
+                    <div class="filtro-item">
+                      <label for="identificacion" class="filtro-label">
+                        Cliente
+                      </label>
+
+                      <div class="filtro-control">
+                        <span class="filtro-icono bg-primary-soft">
+                          <i class="bi bi-person"></i>
+                        </span>
+
+                        <input type="text" class="form-control filtro-input" [value]="objCliente?.nombre" disabled>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-md-4">
+                    <div class="filtro-item">
+                      <label for="finVigencia" class="filtro-label">
+                        Ramos
+                      </label>
+
+                      <div class="filtro-control">
+                        <span class="filtro-icono bg-success-soft">
+                          <i class="bi bi-diagram-3"></i>
+                        </span>
+
+                        <select class="form-control filtro-input" [(ngModel)]="selectRamo"
+                          (ngModelChange)="cargarDatosRegistro()">
+                          <option value="999" selected>Todos</option>
+                          <option *ngFor="let r of lstRamosCargados" [value]="r.id">
+                            {{ r.nombre }}
+                          </option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-md-4">
+                    <div class="filtro-item">
+                      <label for="finVigencia" class="filtro-label">
+                        Vigencia desde
+                      </label>
+
+                      <div class="filtro-control">
+                        <span class="filtro-icono bg-warning-soft">
+                          <i class="bi bi-calendar3"></i>
+                        </span>
+
+                        <select class="form-control filtro-input" [(ngModel)]="selectVigencia"
+                          (ngModelChange)="cargarDatosRegistro()">
+                          <option *ngFor="let r of lstAniosCargados" [value]="r.id">
+                            {{ r.value }}
+                          </option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+              <div>
+                <div class="row">
+                  <div *ngIf="lstIngresosGastos.length<1 && idRegistro" class="col-md-12">
+                    <div class="card mb-4 p-3 position-relative">
+                      No hay Registros con los filtros Seleccionados
+                    </div>
+                  </div>
+                  <div class="col-md-9">
+                    <div class="card mb-4 p-3 position-relative" *ngIf="lstIngresosGastos.length > 0">
+                      <h6 class="card-title titulo-sobre-borde-centrado">Detalles de PYG
+                      </h6>
+
+                      <div class="row g-3 ingresos-gastos-wrapper">
+
+                        <div class="col-md-12 mb-3" *ngFor="let ing of lstIngresosGastos; let i = index">
+
+                          <div class="card card-ramo shadow-sm border-0 h-100">
+
+                            <div class="card-header-ramo">
+                              <div class="w-100">
+                                <h6 class="titulo-ramo mb-0">
+                                  {{ ing.nombreRamo }}
+                                </h6>
+
+                                <small class="subtitulo-ramo d-flex justify-content-between align-items-center w-100">
+                                  <span>
+                                    Número de Póliza:
+                                    <span style="font-weight: bold;">{{ ing.poliza }}</span>
+                                  </span>
+
+                                  <span class="text-center">
+                                    Porcentaje:
+                                    <span style="font-weight: bold;">{{ ing.porcentajeComision }}%</span>
+                                  </span>
+
+                                  <span class="text-end">
+                                    Aseguradora:
+                                    <span style="font-weight: bold;">{{ ing.nombreAseguradora }}</span>
+                                  </span>
+                                </small>
+                              </div>
+
+                              <div class="acciones-ramo">
+                                <button type="button" class="btn btn-outline-danger btn-sm"
+                                  *ngIf="!esFinanciero && !ing.idRamo" (click)="eliminarIngreso(i)" title="Eliminar">
+                                  <i class="fas fa-times"></i>
+                                </button>
+
+                                <button type="button" *ngIf="!esFinanciero" class="btn btn-outline-primary btn-sm"
+                                  (click)="editarIngreso(i)" title="Editar detalle">
+                                  <i class="fas fa-pencil-alt"></i>
+                                </button>
+                              </div>
                             </div>
-                            <div>
-                                <div class="row">
-                                    <div class="col-md-9">
-                                        <div class="card mb-4 p-3 position-relative"
-                                            *ngIf="lstIngresosGastos.length > 0">
-                                            <h6 class="card-title titulo-sobre-borde-centrado">Detalles Gastos por Ramo
-                                            </h6>
 
-<div class="row g-3 ingresos-gastos-wrapper">
+                            <div class="card-body-ramo">
+                              <div class="row">
+                                <div class="col-md-8">
+                                  <div class="info-grid-ramo mb-1">
 
-  <div
-    class="mb-3"
-    *ngFor="let ing of lstIngresosGastos; let i = index"
-    [ngClass]="{
-      'col-md-12': lstIngresosGastos.length === 1 || 
-                   (lstIngresosGastos.length % 2 !== 0 && i === lstIngresosGastos.length - 1),
-      'col-md-6': !(lstIngresosGastos.length === 1 || 
-                    (lstIngresosGastos.length % 2 !== 0 && i === lstIngresosGastos.length - 1))
-    }"
+                                    <div class="info-item">
+                                      <span>Inicio Vigencia</span>
+                                      <strong>{{ ing.inicioVigencia }}</strong>
+                                    </div>
+
+                                    <div class="info-item">
+                                      <span>Fin Vigencia</span>
+                                      <strong>{{ ing.finVigencia }}</strong>
+                                    </div>
+
+                                    <div class="info-item">
+                                      <span>Prima Mensual</span>
+                                      <strong class="text-success">{{ ing.primaMensual | currency }}</strong>
+                                    </div>
+                                    <div class="info-item">
+                                      <span>Prima Anual</span>
+                                      <strong class="text-success">{{ ing.primaAnual | currency }}</strong>
+                                    </div>
+
+                                    <div class="info-item">
+                                      <span>Comisión Mensual</span>
+                                      <strong class="text-info">{{ ing.comision | currency }}</strong>
+                                    </div>
+
+                                    <div class="info-item">
+                                      <span>Comisión Anual</span>
+                                      <strong class="text-info">{{ ing.comisionAnual | currency }}</strong>
+                                    </div>
+
+                                  </div>
+                                </div>
+                                <div class="col-md-4">
+
+                                  <div class="revision-box">
+
+                                    <div class="revision-title">
+                                      Revisión en <span style="font-weight: bold;">{{ing.mesRevision}}</span>
+                                    </div>
+
+                                    <table class="revision-table">
+
+                                      <thead>
+                                        <tr>
+                                          <th></th>
+                                          <th style="font-weight: bold;">Anual</th>
+                                          <th style="font-weight: bold;">Mensual</th>
+                                        </tr>
+                                      </thead>
+
+                                      <tbody>
+
+                                        <tr>
+                                          <td class="titulo" style="font-weight: bold;">Prima</td>
+                                          <td>{{ (ing.totalPrima + ing.proyeccionPrima) |
+                                            currency:'USD':'symbol':'1.2-2' }}</td>
+                                          <td>{{ (ing.totalPrima + ing.proyeccionPrima)/12 |
+                                            currency:'USD':'symbol':'1.2-2' }}</td>
+                                        </tr>
+
+                                        <tr>
+                                          <td class="titulo" style="font-weight: bold;">Comisión</td>
+                                          <td>{{ (ing.totalComision + ing.proyeccionComision) |
+                                            currency:'USD':'symbol':'1.2-2' }}</td>
+                                          <td>{{ (ing.totalComision + ing.proyeccionComision)/12 |
+                                            currency:'USD':'symbol':'1.2-2' }}</td>
+                                        </tr>
+
+                                        <tr>
+                                          <td class="titulo" style="font-weight: bold;">%</td>
+                                          <td>{{ (ing.totalComision + ing.proyeccionComision)/(ing.totalPrima +
+                                            ing.proyeccionPrima) | percent:'1.2-2' }}</td>
+                                          <td>{{ ((ing.totalComision + ing.proyeccionComision)/12)/((ing.totalPrima +
+                                            ing.proyeccionPrima)/12) | percent:'1.2-2' }}</td>
+                                        </tr>
+
+                                      </tbody>
+
+                                    </table>
+
+                                  </div>
+
+                                </div>
+                              </div>
+
+
+                              <div class="seccion-tabla">
+
+                                <div class="seccion-titulo">
+                                  <i class="fas fa-file-invoice-dollar"></i>
+
+                                  <span>
+                                    {{
+                                    tieneFacturasAsignadas(ing)
+                                    ? 'Gastos y Facturas'
+                                    : 'Gastos'
+                                    }}
+                                  </span>
+                                </div>
+
+<div class="contenedor-tabla-gastos">
+
+  <table
+    class="table mb-0 tabla-gastos-facturas"
+    [class.tabla-con-facturas]="tieneFacturasAsignadas(ing)"
+    [class.tabla-solo-gastos]="!tieneFacturasAsignadas(ing)"
   >
 
-    <div class="card card-ramo shadow-sm border-0 h-100">
+    <thead>
 
-      <div class="card-header-ramo">
-        <div>
-          <h6 class="titulo-ramo mb-0">
-            {{ ing.nombreRamo }}
-          </h6>
-          <small class="subtitulo-ramo">
-            Detalle de ingresos, gastos y facturas
-          </small>
-        </div>
+      <tr class="fila-titulos-principales">
 
-        <div class="acciones-ramo">
-          <button
-            type="button"
-            class="btn btn-outline-danger btn-sm"
-            *ngIf="!esFinanciero"
-            (click)="eliminarIngreso(i)"
-            title="Eliminar"
+        <th
+          [attr.colspan]="esFinanciero ? 5 : 4"
+          class="encabezado-bloque encabezado-gasto"
+        >
+          <i class="fas fa-wallet me-1"></i>
+          Gastos
+        </th>
+
+        <th
+          *ngIf="tieneFacturasAsignadas(ing)"
+          [attr.colspan]="esFinanciero ? 6 : 5"
+          class="encabezado-bloque encabezado-factura"
+        >
+          <i class="fas fa-receipt me-1"></i>
+          Facturas
+        </th>
+
+      </tr>
+
+      <tr class="fila-encabezados-columnas">
+
+        <th class="col-descripcion-gasto">
+          Descripción
+        </th>
+
+        <th class="text-center col-cantidad">
+          Cantidad
+        </th>
+
+        <th class="text-center col-tipo">
+          Tipo ingreso
+        </th>
+
+        <th
+          class="text-end col-valor"
+          [class.separador-bloques]="!esFinanciero"
+        >
+          Valor
+        </th>
+
+        <th
+          *ngIf="esFinanciero"
+          class="text-center col-accion separador-bloques"
+        >
+          Asignar
+        </th>
+
+        <ng-container *ngIf="tieneFacturasAsignadas(ing)">
+
+          <th class="col-descripcion-factura">
+            Descripción factura
+          </th>
+
+          <th class="text-center col-fecha">
+            Fecha
+          </th>
+
+          <th class="text-end col-valor">
+            Valor factura
+          </th>
+
+          <th
+            *ngIf="esFinanciero"
+            class="text-center col-accion"
           >
-            <i class="fas fa-times"></i>
-          </button>
-<button
-  type="button"
-  class="btn btn-asignar-factura"
-  (click)="asignarFacturas(i)"
-  title="Asignar factura"
->
-  <i class="bi bi-receipt-cutoff me-1"></i>
-  Asignar
-</button>
+            Acción
+          </th>
 
-          <button
-            type="button"
-            *ngIf="!esFinanciero"
-            class="btn btn-outline-primary btn-sm"
-            (click)="editarIngreso(i)"
-            title="Editar detalle"
+          <th class="text-end col-total-facturas">
+            Total facturas
+          </th>
+
+          <th class="text-center col-saldo">
+            Restante
+          </th>
+
+        </ng-container>
+
+      </tr>
+
+    </thead>
+
+    <tbody>
+
+      <ng-container
+        *ngFor="
+          let grupo of getGastosConFacturas(ing);
+          let indiceGasto = index
+        "
+      >
+
+        <!-- Gasto con una o más facturas -->
+        <ng-container *ngIf="grupo.facturas.length > 0">
+
+          <tr
+            *ngFor="
+              let factura of grupo.facturas;
+              let indiceFactura = index
+            "
+            class="fila-detalle-factura"
+            [ngClass]="'grupo-color-' + grupo.grupoColor"
           >
-            <i class="fas fa-pencil-alt"></i>
-          </button>
-        </div>
-      </div>
 
-      <div class="card-body-ramo">
+            <!-- Las celdas del gasto se crean una sola vez -->
+            <ng-container *ngIf="indiceFactura === 0">
 
-        <div class="info-grid-ramo mb-3">
+              <td
+                [attr.rowspan]="grupo.cantidadFilas"
+                class="celda-gasto celda-descripcion-gasto"
+              >
+                <div class="contenido-gasto">
+                  <div class="gasto-texto">
+                    {{ grupo.gasto?.descripcion }}
+                  </div>
+                </div>
+              </td>
 
-          <div class="info-item">
-            <span>Inicio Vigencia</span>
-            <strong>{{ ing.inicioVigencia }}</strong>
-          </div>
+              <td
+                [attr.rowspan]="grupo.cantidadFilas"
+                class="text-center celda-gasto celda-cantidad"
+              >
+                {{ grupo.gasto?.cantidad ?? 0 }}
+              </td>
 
-          <div class="info-item">
-            <span>Fin Vigencia</span>
-            <strong>{{ ing.finVigencia }}</strong>
-          </div>
-
-          <div class="info-item">
-            <span>Prima Mensual</span>
-            <strong class="text-success">{{ ing.primaMensual | currency }}</strong>
-          </div>
-
-          <div class="info-item">
-            <span>Comisión Mensual</span>
-            <strong class="text-info">{{ ing.comision | currency }}</strong>
-          </div>
-
-          <div class="info-item">
-            <span>Prima Anual</span>
-            <strong class="text-success">{{ ing.primaAnual | currency }}</strong>
-          </div>
-
-          <div class="info-item">
-            <span>Comisión Anual</span>
-            <strong class="text-info">{{ ing.comisionAnual | currency }}</strong>
-          </div>
-
-        </div>
-
-        <div class="seccion-tabla">
-
-          <div class="seccion-titulo">
-            <i class="fas fa-file-invoice-dollar"></i>
-            <span>Gastos Proyectados</span>
-          </div>
-
-          <div class="table-responsive">
-            <table class="table table-sm table-hover align-middle mb-0 tabla-gastos">
-              <thead>
-                <tr>
-                  <th>Descripción</th>
-                  <th class="text-end">Valor</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                <tr
-                  *ngFor="let gasto of ing.gastos"
-                  [ngClass]="{ 'fila-asignada': gasto.idDetalleFact != null }"
+              <td
+                [attr.rowspan]="grupo.cantidadFilas"
+                class="text-center celda-gasto celda-tipo"
+              >
+                <span
+                  class="tipo-ingreso"
+                  style="font-weight: bold; cursor: pointer;"
+                  [title]="grupo.gasto?.fecha"
                 >
-                  <td>{{ gasto.descripcion }}</td>
-                  <td class="text-end">{{ gasto.valor | currency }}</td>
-                </tr>
-              </tbody>
+                  {{ grupo.gasto?.tipo }}
+                </span>
+              </td>
 
-              <tfoot>
-                <tr class="fila-total">
-                  <td>TOTAL</td>
-                  <td class="text-end">
-                    {{ getTotalGastos(ing.gastos) | currency }}
-                  </td>
-                </tr>
+              <td
+                [attr.rowspan]="grupo.cantidadFilas"
+                class="text-end celda-gasto celda-valor"
+                style="text-align: center;"
+                [class.separador-bloques]="!esFinanciero"
+              >
+                {{ grupo.gasto?.valor | currency }}
+              </td>
 
-                <tr class="fila-porcentaje">
-                  <td>% Inversión</td>
-                  <td class="text-end fw-bold">
-                    {{
-                      calcularPorcentajeGastosxRamo(
-                        ing.gastos,
-                        ing.comisionAnual
-                      ) | number:'1.2-2'
-                    }} %
-                  </td>
-                </tr>
-
-                <tr class="fila-total-general">
-                  <td>Valor Restante</td>
-                  <td class="text-end fw-bold">
-                    {{
-                      calcularRestanteGastosxRamo(
-                        ing.gastos,
-                        ing.comisionAnual
-                      ) | currency
-                    }}
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-
-        </div>
-
-        <div class="seccion-tabla" *ngIf="ing.facturas?.length > 0">
-
-          <div class="seccion-titulo seccion-titulo-danger">
-            <i class="fas fa-receipt"></i>
-            <span>Gastos Facturas</span>
-          </div>
-
-          <div class="table-responsive">
-            <table class="table table-sm table-hover align-middle mb-0 tabla-gastos">
-              <thead>
-                <tr>
-                  <th>Descripción</th>
-                  <th>Fecha</th>
-                  <th class="text-end">Valor</th>
-                  <th class="text-center">Acción</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                <tr
-                  *ngFor="let fact of ing.facturas; let i = index"
-                  class="fila-factura"
+              <td
+                *ngIf="esFinanciero"
+                [attr.rowspan]="grupo.cantidadFilas"
+                class="text-center celda-gasto celda-accion separador-bloques"
+              >
+                <button
+                  type="button"
+                  class="btn btn-asignar-factura"
+                  title="Asignar factura"
+                  (click)="asignarFacturas(i, grupo.gasto.id)"
                 >
-                  <td>{{ fact.descripcion }}</td>
-                  <td class="text-center">{{ fact.fechaFactura }}</td>
-                  <td class="text-end">{{ fact.valor | currency }}</td>
+                  <i class="bi bi-receipt-cutoff"></i>
 
-                  <td class="text-center">
-                    <button
-                      class="btn btn-danger btn-sm btn-quitar"
-                      title="Quitar"
-                      (click)="quitarFactura(fact, ing, i)"
-                    >
-                      <i class="fas fa-times"></i>
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
+                  <span class="texto-boton">
+                    Asignar
+                  </span>
+                </button>
+              </td>
 
-              <tfoot>
-                <tr class="fila-total">
-                  <td colspan="2">TOTAL</td>
-                  <td class="text-end">
-                    {{ getTotalGastos(ing.facturas) | currency }}
-                  </td>
-                  <td></td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
+            </ng-container>
 
-        </div>
+            <!-- Factura hija -->
+            <ng-container *ngIf="tieneFacturasAsignadas(ing)">
 
-        <div class="seccion-tabla" *ngIf="ing.facturas?.length > 0">
+              <td class="celda-factura celda-descripcion-factura">
 
-          <div class="seccion-titulo seccion-titulo-resumen">
-            <i class="fas fa-chart-pie"></i>
-            <span>Resumen</span>
-          </div>
+                <div class="contenido-factura">
 
-          <div class="table-responsive">
-            <table class="table table-sm table-hover align-middle mb-0 tabla-gastos tabla-resumen">
-              <thead>
-                <tr>
-                  <th>Gastos Proyectados</th>
-                  <th>Gastos Reales</th>
-                  <th>Restante</th>
-                  <th>% Cumplimiento</th>
-                </tr>
-              </thead>
+                  <span class="linea-hija"></span>
 
-              <tbody>
-                <tr>
-                  <td>{{ getTotalGastos(ing.gastos) | currency }}</td>
+                  <i class="fas fa-file-invoice icono-factura"></i>
 
-                  <td>{{ getTotalGastos(ing.facturas) | currency }}</td>
+                  <span>
+                    {{ factura.descripcion }}
+                  </span>
 
-                  <td>
-                    {{
-                      getTotalGastos(ing.gastos) -
-                      getTotalGastos(ing.facturas)
-                      | currency
-                    }}
-                  </td>
+                </div>
 
-                  <td>
-                    {{
-                      (
-                        getTotalGastos(ing.facturas) /
-                        getTotalGastos(ing.gastos)
-                      ) * 100 | number:'1.2-2'
-                    }}%
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+              </td>
 
-        </div>
+              <td class="text-center celda-factura celda-fecha">
+                {{ factura.fechaFactura }}
+              </td>
 
-      </div>
+              <td
+                class="text-end celda-factura celda-valor-factura"
+                style="text-align: center;"
+              >
+                {{ factura.valor | currency }}
+              </td>
 
-    </div>
+              <td
+                *ngIf="esFinanciero"
+                class="text-center celda-factura celda-accion-factura"
+              >
+                <button
+                  type="button"
+                  class="btn btn-danger btn-quitar"
+                  title="Quitar factura"
+                  (click)="
+                    quitarFactura(
+                      factura,
+                      ing,
+                      ing.facturas.indexOf(factura)
+                    )
+                  "
+                >
+                  <i class="fas fa-times"></i>
+                </button>
+              </td>
 
-  </div>
-                                <div class="d-flex gap-2 justify-content-end"  >
-                                    <button type="button" class="btn btn-success" title="Guardar PYG" (click)="exportarDetalles()">
-                                        Exportar
-                                    </button>
-                                </div>
-</div>
+              <!-- Total de las facturas asociadas al gasto -->
+              <td
+                *ngIf="indiceFactura === 0"
+                [attr.rowspan]="grupo.cantidadFilas"
+                class="text-end celda-factura celda-total-facturas"
+                style="text-align: center; font-weight: bold;"
+              >
+                {{ getTotalFacturasGrupo(grupo) | currency }}
+              </td>
 
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="card mb-4 p-3 position-relative"
-                                            *ngIf="lstIngresosGastos.length > 0">
-                                            <h6 class="card-title titulo-sobre-borde-centrado">Resumen PYG</h6>
-                                            <div class="table-responsive">
-                                                <div class="table-responsive">
-<table class="table tabla-resumen-ejecutiva align-middle mb-0" id="tablaExportar">
+              <!-- Saldo del gasto -->
+              <td
+                *ngIf="indiceFactura === 0"
+                [attr.rowspan]="grupo.cantidadFilas"
+                class="text-center celda-saldo"
+              >
+                <div
+                  class="indicador-saldo"
+                  [ngClass]="{
+                    'saldo-positivo': getSaldoGasto(grupo) > 0,
+                    'saldo-negativo': getSaldoGasto(grupo) < 0,
+                    'saldo-cero': getSaldoGasto(grupo) === 0
+                  }"
+                >
+                  <i
+                    class="fas"
+                    [ngClass]="{
+                      'fa-arrow-up': getSaldoGasto(grupo) > 0,
+                      'fa-arrow-down': getSaldoGasto(grupo) < 0,
+                      'fa-equals': getSaldoGasto(grupo) === 0
+                    }"
+                  ></i>
 
-  <tbody>
-    <tr class="resumen-row resumen-ingreso" *ngFor="let ingresos of lstIngresosGastos">
-      <td>
-        <div class="resumen-concepto">
-          <span class="resumen-icono bg-success-soft">
-            <i class="bi bi-cash-stack"></i>
-          </span>
+                  <span>
+                    {{ getSaldoGasto(grupo) | currency }}
+                  </span>
+                </div>
+              </td>
 
-          <div>
-            <span class="resumen-label">Ingreso Anual</span>
-            <strong class="resumen-ramo">{{ ingresos.nombreRamo }}</strong>
-          </div>
-        </div>
-      </td>
+            </ng-container>
 
-      <td class="text-end resumen-valor text-success">
-        {{ ingresos.comisionAnual | currency }}
-      </td>
-    </tr>
-  </tbody>
+          </tr>
 
-  <tfoot>
+        </ng-container>
 
-    <tr class="resumen-row resumen-total-ingresos">
-      <td>
-        <div class="resumen-concepto">
-          <span class="resumen-icono bg-success-soft">
-            <i class="bi bi-plus-lg"></i>
-          </span>
+        <!-- Gasto sin facturas -->
+        <tr
+          *ngIf="grupo.facturas.length === 0"
+          class="fila-gasto-sin-factura"
+          [ngClass]="'grupo-color-' + grupo.grupoColor"
+        >
 
-          <strong>Total Ingresos</strong>
-        </div>
-      </td>
+          <td class="celda-gasto celda-descripcion-gasto">
+            <div class="contenido-gasto">
+              <div class="gasto-texto">
+                {{ grupo.gasto?.descripcion }}
+              </div>
+            </div>
+          </td>
 
-      <td class="text-end resumen-valor text-success">
-        {{ totalIngresos | currency }}
-      </td>
-    </tr>
+          <td class="text-center celda-gasto celda-cantidad">
+            {{ grupo.gasto?.cantidad ?? 0 }}
+          </td>
 
-    <tr class="resumen-row resumen-gastos">
-      <td>
-        <div class="resumen-concepto">
-          <span class="resumen-icono bg-danger-soft">
-            <i class="bi bi-dash-lg"></i>
-          </span>
+          <td class="text-center celda-gasto celda-tipo">
+            <span
+              class="tipo-ingreso"
+              style="font-weight: bold; cursor: pointer;"
+              [title]="grupo.gasto?.fecha"
+            >
+              {{ grupo.gasto?.tipo }}
+            </span>
+          </td>
 
-          <strong>Total Gastos</strong>
-        </div>
-      </td>
+          <td
+            class="text-end celda-gasto celda-valor"
+            style="text-align: center;"
+            [class.separador-bloques]="!esFinanciero"
+          >
+            {{ grupo.gasto?.valor | currency }}
+          </td>
 
-      <td class="text-end resumen-valor text-danger">
-        {{ totalGastos | currency }}
-      </td>
-    </tr>
+          <td
+            *ngIf="esFinanciero"
+            class="text-center celda-gasto celda-accion separador-bloques"
+          >
+            <button
+              type="button"
+              class="btn btn-asignar-factura"
+              title="Asignar factura"
+              (click)="asignarFacturas(i, grupo.gasto.id)"
+            >
+              <i class="bi bi-receipt-cutoff"></i>
 
-    <tr class="resumen-row resumen-retorno" *ngFor="let ingresos of lstIngresosGastos" hidden>
-      <td>
-        <div class="resumen-concepto">
-          <span class="resumen-icono bg-primary-soft">
-            <i class="bi bi-arrow-return-left"></i>
-          </span>
+              <span class="texto-boton">
+                Asignar
+              </span>
+            </button>
+          </td>
 
-          <div>
-            <span class="resumen-label">Retorno</span>
-            <strong class="resumen-ramo">{{ ingresos.nombreRamo }}</strong>
-          </div>
-        </div>
-      </td>
+          <ng-container *ngIf="tieneFacturasAsignadas(ing)">
 
-      <td class="text-end resumen-valor text-primary">
-        {{ 0 | currency }}
-      </td>
-    </tr>
+            <td
+              [attr.colspan]="esFinanciero ? 4 : 3"
+              class="celda-sin-factura"
+            >
+              <i class="fas fa-info-circle me-1"></i>
+              Sin facturas
+            </td>
 
-    <tr class="resumen-row resumen-porcentaje">
-      <td>
-        <div class="resumen-concepto">
-          <span class="resumen-icono bg-warning-soft">
-            <i class="bi bi-percent"></i>
-          </span>
+            <td
+              class="text-end celda-total-facturas"
+              style="text-align: center; font-weight: bold;"
+            >
+              {{ 0 | currency }}
+            </td>
 
-          <strong>% Inversión</strong>
-        </div>
-      </td>
+            <td class="text-center celda-saldo">
+              <div
+                class="indicador-saldo"
+                [ngClass]="{
+                  'saldo-positivo': getSaldoGasto(grupo) > 0,
+                  'saldo-negativo': getSaldoGasto(grupo) < 0,
+                  'saldo-cero': getSaldoGasto(grupo) === 0
+                }"
+              >
+                <i
+                  class="fas"
+                  [ngClass]="{
+                    'fa-arrow-up': getSaldoGasto(grupo) > 0,
+                    'fa-arrow-down': getSaldoGasto(grupo) < 0,
+                    'fa-equals': getSaldoGasto(grupo) === 0
+                  }"
+                ></i>
 
-      <td class="text-end resumen-valor text-warning">
-        {{ calcularPorcentajeGastos() | number:'1.2-2' }} %
-      </td>
-    </tr>
+                <span>
+                  {{ getSaldoGasto(grupo) | currency }}
+                </span>
+              </div>
+            </td>
 
-    <tr class="resumen-row resumen-final">
-      <td>
-        <div class="resumen-concepto">
-          <span class="resumen-icono bg-dark-soft">
-            <i class="bi bi-check2-circle"></i>
-          </span>
+          </ng-container>
 
-          <strong>Total Final</strong>
-        </div>
-      </td>
+        </tr>
 
-      <td class="text-end resumen-valor-final">
-        {{ totalFinal | currency }}
-      </td>
-    </tr>
+      </ng-container>
 
-  </tfoot>
-
-</table>
-                                                </div>
-                                            </div>
-                                            <div class="row">
-                                            </div>
-                                        </div>
-                                        <div class="card mb-4 p-3 position-relative" *ngIf="tieneFacturas()">
-                                            <h6 class="card-title titulo-sobre-borde-centrado">Resumen Gastos</h6>
-                                            <div class="table-responsive">
-<div class="table-responsive">
-  <table class="table tabla-resumen-ejecutiva align-middle mb-0">
+    </tbody>
 
     <tfoot>
 
-      <tr class="resumen-row resumen-total-ingresos">
-        <td>
-          <div class="resumen-concepto">
-            <span class="resumen-icono bg-success-soft">
-              <i class="bi bi-plus-lg"></i>
-            </span>
+      <tr class="fila-total">
 
-            <strong>Total Ingresos</strong>
-          </div>
+        <td style="font-weight: bold;">
+          TOTAL GASTOS
         </td>
 
-        <td class="text-end resumen-valor text-success">
-          {{ totalIngresos | currency }}
+        <td></td>
+
+        <td></td>
+
+        <td
+          class="text-end"
+          style="text-align: center; font-weight: bold; color: red;"
+        >
+          {{ getTotalGastos(ing.gastos) | currency }}
         </td>
+
+        <td
+          *ngIf="esFinanciero"
+          class="separador-bloques"
+        ></td>
+
+        <ng-container *ngIf="tieneFacturasAsignadas(ing)">
+
+          <td
+            [attr.colspan]="esFinanciero ? 4 : 3"
+            style="font-weight: bold;"
+          >
+            TOTAL FACTURAS
+          </td>
+
+          <td
+            class="text-end"
+            style="text-align: center; font-weight: bold; color: blue;"
+          >
+            {{ getTotalFacturasAsignadas(ing) | currency }}
+          </td>
+
+          <td class="text-center">
+            <div
+              class="indicador-saldo"
+              [ngClass]="{
+                'saldo-positivo': getSaldoTotal(ing) > 0,
+                'saldo-negativo': getSaldoTotal(ing) < 0,
+                'saldo-cero': getSaldoTotal(ing) === 0
+              }"
+            >
+              <i
+                class="fas"
+                [ngClass]="{
+                  'fa-arrow-up': getSaldoTotal(ing) > 0,
+                  'fa-arrow-down': getSaldoTotal(ing) < 0,
+                  'fa-equals': getSaldoTotal(ing) === 0
+                }"
+              ></i>
+
+              <span>
+                {{ getSaldoTotal(ing) | currency }}
+              </span>
+            </div>
+          </td>
+
+        </ng-container>
+
       </tr>
 
-      <tr class="resumen-row resumen-gastos">
-        <td>
-          <div class="resumen-concepto">
-            <span class="resumen-icono bg-danger-soft">
-              <i class="bi bi-graph-down-arrow"></i>
-            </span>
+      <tr class="fila-porcentaje">
 
-            <strong>Total Gastos Proyectados</strong>
-          </div>
+        <td style="font-weight: bold;">
+          % Inversión
         </td>
 
-        <td class="text-end resumen-valor text-danger">
-          {{ totalGastos | currency }}
+        <td></td>
+
+        <td></td>
+
+        <td
+          class="text-end"
+          style="text-align: center; font-weight: bold;"
+        >
+          {{
+            calcularPorcentajeGastosxRamo(
+              ing.gastos,
+              ing.comisionAnual
+            ) | number:'1.2-2'
+          }} %
         </td>
+
+        <td
+          *ngIf="esFinanciero"
+          class="separador-bloques"
+        ></td>
+
+        <td
+          *ngIf="tieneFacturasAsignadas(ing)"
+          [attr.colspan]="esFinanciero ? 6 : 5"
+        ></td>
+
       </tr>
 
-      <tr class="resumen-row resumen-gastos">
-        <td>
-          <div class="resumen-concepto">
-            <span class="resumen-icono bg-danger-soft">
-              <i class="bi bi-receipt"></i>
-            </span>
+      <tr class="fila-total-general">
 
-            <strong>Total Gastos Reales</strong>
-          </div>
+        <td style="font-weight: bold;">
+          Disponible
         </td>
 
-        <td class="text-end resumen-valor text-danger">
-          {{ totalGastosFacturas | currency }}
-        </td>
-      </tr>
+        <td></td>
 
-      <tr class="resumen-row resumen-retorno">
-        <td>
-          <div class="resumen-concepto">
-            <span class="resumen-icono bg-primary-soft">
-              <i class="bi bi-wallet2"></i>
-            </span>
+        <td></td>
 
-            <strong>Restante</strong>
-          </div>
-        </td>
-
-        <td class="text-end resumen-valor text-primary">
-          {{ totalGastos - totalGastosFacturas | currency }}
-        </td>
-      </tr>
-
-      <tr class="resumen-row resumen-porcentaje">
-        <td>
-          <div class="resumen-concepto">
-            <span class="resumen-icono bg-warning-soft">
-              <i class="bi bi-percent"></i>
-            </span>
-
-            <strong>% Inversión</strong>
-          </div>
+        <td
+          class="text-end"
+          style="text-align: center; font-weight: bold;"
+        >
+          {{
+            calcularRestanteGastosxRamo(
+              ing.gastos,
+              ing.comisionAnual
+            ) | currency
+          }}
         </td>
 
-        <td class="text-end resumen-valor text-warning">
-          {{ ((totalGastosFacturas / totalGastos) * 100) | number:'1.2-2' }}%
-        </td>
+        <td
+          *ngIf="esFinanciero"
+          class="separador-bloques"
+        ></td>
+
+        <td
+          *ngIf="tieneFacturasAsignadas(ing)"
+          [attr.colspan]="esFinanciero ? 6 : 5"
+        ></td>
+
       </tr>
 
     </tfoot>
 
   </table>
+
 </div>
-                                            </div>
-                                            <div class="row">
-                                            </div>
-                                        </div>
-                                    </div>
+
+                              </div>
+                              <!---Seccion Facturas Produccion-->
+                              <div class="seccion-tabla" *ngIf="ing.proyeccion?.length">
+
+                                <!-- Título -->
+                                <div class="seccion-titulo" (click)="ing.mostrarFacturas = !ing.mostrarFacturas"
+                                  style="cursor:pointer; display:flex; align-items:center;">
+
+                                  <i class="fas fa-file-invoice-dollar"></i>
+
+                                  <span class="ms-2">Facturas Producción</span>
+
+                                  <i class="fas ms-auto"
+                                    [ngClass]="ing.mostrarFacturas ? 'fa-chevron-up' : 'fa-chevron-down'">
+                                  </i>
 
                                 </div>
-                                <div class="d-flex gap-2 justify-content-end" *ngIf="!this.ingresoForm.value.id && !esFinanciero" >
-                                    <button type="button" class="btn btn-success" title="Guardar PYG" (click)="guardarPYG()">
-                                        Guardar
-                                    </button>
+
+                                <!-- Tabla -->
+                                <div class="contenedor-tabla-gastos" *ngIf="ing.mostrarFacturas">
+
+                                  <table class="table mb-0 tabla-gastos-facturas">
+
+                                    <thead>
+                                      <tr>
+                                        <th class="text-center" style="width:55px">#</th>
+                                        <th class="text-center">Facturas</th>
+                                        <th class="text-center">Desde</th>
+                                        <th class="text-center">Hasta</th>
+                                        <th class="text-center">Prima Neta</th>
+                                        <th class="text-center">Comisión Broker</th>
+                                        <th class="text-center">Porcentaje</th>
+                                      </tr>
+                                    </thead>
+
+                                    <tbody>
+
+                                      <tr *ngFor="let proy of ing.proyeccion; let i = index">
+
+                                        <td class="text-center">
+                                          {{ i + 1 }}
+                                        </td>
+
+                                        <td class="text-center">
+
+                                          <span *ngIf="proy.facturas?.length === 1" class="fw-semibold text-primary">
+                                            <i class="fas fa-file-invoice me-1"></i>
+                                            {{ proy.facturas[0] }}
+                                          </span>
+
+                                          <span *ngIf="proy.facturas?.length > 1"
+                                            class="badge rounded-pill badge-factura"
+                                            [attr.title]="proy.facturas.join('&#10;')">
+
+                                            <i class="fas fa-file-invoice me-1"></i>
+
+                                            {{ proy.facturas.length }} Facturas
+
+                                          </span>
+
+                                          <span *ngIf="!proy.facturas?.length" class="text-muted">
+                                            -
+                                          </span>
+
+                                        </td>
+
+                                        <td class="text-center">
+                                          {{ proy.fcdesde | date:'yyyy-MM-dd' }}
+                                        </td>
+
+                                        <td class="text-center">
+                                          {{ proy.fchasta | date:'yyyy-MM-dd' }}
+                                        </td>
+
+                                        <td class="text-center fw-semibold">
+                                          {{ proy.priNet | currency:'USD':'symbol':'1.2-2' }}
+                                        </td>
+
+                                        <td class="text-center fw-semibold">
+                                          {{ proy.valcombroker | currency:'USD':'symbol':'1.2-2' }}
+                                        </td>
+
+                                        <td class="text-center fw-semibold">
+                                          {{ (proy.valcombroker / proy.priNet) | percent:'1.2-2' }}
+                                        </td>
+
+                                      </tr>
+
+                                    </tbody>
+
+                                    <tfoot>
+
+                                      <tr class="fila-total">
+
+                                        <td colspan="3"></td>
+
+                                        <td class="text-center">
+                                          <strong>Facturado</strong><br>
+                                          {{ ing.mesesFacturados }} meses
+                                        </td>
+
+                                        <td class="text-center total-prima">
+                                          {{ ing.totalPrima | currency:'USD':'symbol':'1.2-2' }}
+                                        </td>
+
+                                        <td class="text-center total-comision">
+                                          {{ ing.totalComision | currency:'USD':'symbol':'1.2-2' }}
+                                        </td>
+
+                                        <td class="text-center fw-semibold">
+                                          {{ (ing.totalComision / ing.totalPrima) | percent:'1.2-2' }}
+                                        </td>
+
+                                      </tr>
+
+                                      <tr class="fila-proyeccion">
+
+                                        <td colspan="3"></td>
+
+                                        <td class="text-center">
+                                          <strong>Proyección</strong><br>
+                                          {{ ing.mesesRestantes }} meses
+                                        </td>
+
+                                        <td class="text-center total-prima">
+                                          {{ ing.proyeccionPrima | currency:'USD':'symbol':'1.2-2' }}
+                                        </td>
+
+                                        <td class="text-center total-comision">
+                                          {{ ing.proyeccionComision | currency:'USD':'symbol':'1.2-2' }}
+                                        </td>
+
+                                        <td class="text-center fw-semibold">
+                                          {{ (ing.proyeccionComision / ing.proyeccionPrima) | percent:'1.2-2' }}
+                                        </td>
+
+                                      </tr>
+
+                                      <tr class="fila-total-general">
+
+                                        <td colspan="3"></td>
+
+                                        <td class="text-center">
+                                          <strong>Total</strong>
+                                        </td>
+
+                                        <td class="text-center total-prima">
+                                          <strong>
+                                            {{ (ing.totalPrima + ing.proyeccionPrima) | currency:'USD':'symbol':'1.2-2'
+                                            }}
+                                          </strong>
+                                        </td>
+
+                                        <td class="text-center total-comision">
+                                          <strong>
+                                            {{ (ing.totalComision + ing.proyeccionComision) |
+                                            currency:'USD':'symbol':'1.2-2' }}
+                                          </strong>
+                                        </td>
+
+                                        <td class="text-center fw-semibold" style="font-weight: bold;">
+                                          {{ ((ing.totalComision + ing.proyeccionComision) / (ing.totalPrima +
+                                          ing.proyeccionPrima)) | percent:'1.2-2' }}
+                                        </td>
+
+                                      </tr>
+
+                                    </tfoot>
+
+                                  </table>
+
                                 </div>
-                                <div class="d-flex gap-2 justify-content-end" >
-                                    <button type="button" class="btn btn-success" title="Guardar Facturas" (click)="guardarPyGFacturas()">
-                                        Guardar
-                                    </button>
-                                </div>
-                                <!-- <div class="d-flex gap-2 justify-content-end" *ngIf="this.ingresoForm.value.id">
+
+                              </div>
+                              <!---->
+                              <small class="subtitulo-ramo d-flex justify-content-between align-items-center w-100">
+                                <span></span>
+                                <span class="text-end">Comercial: <span
+                                    style="font-weight: bold;">{{ing.nombresUsuario}}</span></span>
+                              </small>
+                            </div>
+
+                          </div>
+
+                        </div>
+                        <div class="d-flex gap-2 justify-content-end">
+                          <button type="button" class="btn btn-success" title="Exportar Datos"
+                            (click)="exportarDetalles()">
+                            Exportar
+                          </button>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="card mb-4 p-3 position-relative" *ngIf="lstIngresosGastos.length > 0">
+                      <h6 class="card-title titulo-sobre-borde-centrado">Resumen PYG</h6>
+                      <div class="table-responsive">
+                        <div class="table-responsive">
+                          <table class="table tabla-resumen-ejecutiva align-middle mb-0" id="tablaExportar">
+
+                            <tbody>
+                              <tr class="resumen-row resumen-ingreso" *ngFor="let ingresos of lstIngresosGastos">
+                                <td>
+                                  <div class="resumen-concepto">
+                                    <span class="resumen-icono bg-success-soft">
+                                      <i class="bi bi-cash-stack"></i>
+                                    </span>
+
+                                    <div>
+                                      <span class="resumen-label">Ingreso Anual</span>
+                                      <strong class="resumen-ramo">{{ ingresos.nombreRamo }}-{{ ingresos.inicioVigencia
+                                        | date:'yyyy' }}</strong>
+                                    </div>
+                                  </div>
+                                </td>
+
+                                <td class="text-end resumen-valor text-success">
+                                  {{ ingresos.comisionAnual | currency }}
+                                </td>
+                              </tr>
+                            </tbody>
+
+                            <tfoot>
+
+                              <tr class="resumen-row resumen-total-ingresos">
+                                <td>
+                                  <div class="resumen-concepto">
+                                    <span class="resumen-icono bg-success-soft">
+                                      <i class="bi bi-plus-lg"></i>
+                                    </span>
+
+                                    <strong>Total Ingresos</strong>
+                                  </div>
+                                </td>
+
+                                <td class="text-end resumen-valor text-success">
+                                  {{ totalIngresos | currency }}
+                                </td>
+                              </tr>
+
+                              <tr class="resumen-row resumen-gastos">
+                                <td>
+                                  <div class="resumen-concepto">
+                                    <span class="resumen-icono bg-danger-soft">
+                                      <i class="bi bi-dash-lg"></i>
+                                    </span>
+
+                                    <strong>Total Gastos</strong>
+                                  </div>
+                                </td>
+
+                                <td class="text-end resumen-valor text-danger">
+                                  {{ totalGastos | currency }}
+                                </td>
+                              </tr>
+
+                              <tr class="resumen-row resumen-retorno" *ngFor="let ingresos of lstIngresosGastos" hidden>
+                                <td>
+                                  <div class="resumen-concepto">
+                                    <span class="resumen-icono bg-primary-soft">
+                                      <i class="bi bi-arrow-return-left"></i>
+                                    </span>
+
+                                    <div>
+                                      <span class="resumen-label">Retorno</span>
+                                      <strong class="resumen-ramo">{{ ingresos.nombreRamo }}</strong>
+                                    </div>
+                                  </div>
+                                </td>
+
+                                <td class="text-end resumen-valor text-primary">
+                                  {{ 0 | currency }}
+                                </td>
+                              </tr>
+
+                              <tr class="resumen-row resumen-porcentaje">
+                                <td>
+                                  <div class="resumen-concepto">
+                                    <span class="resumen-icono bg-warning-soft">
+                                      <i class="bi bi-percent"></i>
+                                    </span>
+
+                                    <strong>% Inversión</strong>
+                                  </div>
+                                </td>
+
+                                <td class="text-end resumen-valor text-warning">
+                                  {{ calcularPorcentajeGastos() | number:'1.2-2' }} %
+                                </td>
+                              </tr>
+
+                              <tr class="resumen-row resumen-final">
+                                <td>
+                                  <div class="resumen-concepto">
+                                    <span class="resumen-icono bg-dark-soft">
+                                      <i class="bi bi-check2-circle"></i>
+                                    </span>
+
+                                    <strong>Total Final</strong>
+                                  </div>
+                                </td>
+
+                                <td class="text-end resumen-valor-final">
+                                  {{ totalFinal | currency }}
+                                </td>
+                              </tr>
+
+                            </tfoot>
+
+                          </table>
+                        </div>
+                      </div>
+                      <div class="row">
+                      </div>
+                    </div>
+                    <div class="card mb-4 p-3 position-relative" *ngIf="tieneFacturas()">
+                      <h6 class="card-title titulo-sobre-borde-centrado">Resumen Gastos</h6>
+                      <div class="table-responsive">
+                        <div class="table-responsive">
+                          <table class="table tabla-resumen-ejecutiva align-middle mb-0">
+
+                            <tfoot>
+
+                              <tr class="resumen-row resumen-total-ingresos">
+                                <td>
+                                  <div class="resumen-concepto">
+                                    <span class="resumen-icono bg-success-soft">
+                                      <i class="bi bi-plus-lg"></i>
+                                    </span>
+
+                                    <strong>Total Ingresos</strong>
+                                  </div>
+                                </td>
+
+                                <td class="text-end resumen-valor text-success">
+                                  {{ totalIngresos | currency }}
+                                </td>
+                              </tr>
+
+                              <tr class="resumen-row resumen-gastos">
+                                <td>
+                                  <div class="resumen-concepto">
+                                    <span class="resumen-icono bg-danger-soft">
+                                      <i class="bi bi-graph-down-arrow"></i>
+                                    </span>
+
+                                    <strong>Total Gastos</strong>
+                                  </div>
+                                </td>
+
+                                <td class="text-end resumen-valor text-danger">
+                                  {{ totalGastos | currency }}
+                                </td>
+                              </tr>
+
+                              <tr class="resumen-row resumen-gastos">
+                                <td>
+                                  <div class="resumen-concepto">
+                                    <span class="resumen-icono bg-danger-soft">
+                                      <i class="bi bi-receipt"></i>
+                                    </span>
+
+                                    <strong>Total Gastos Reales</strong>
+                                  </div>
+                                </td>
+
+                                <td class="text-end resumen-valor text-danger">
+                                  {{ totalGastosFacturas | currency }}
+                                </td>
+                              </tr>
+
+                              <tr class="resumen-row resumen-retorno">
+                                <td>
+                                  <div class="resumen-concepto">
+                                    <span class="resumen-icono bg-primary-soft">
+                                      <i class="bi bi-wallet2"></i>
+                                    </span>
+
+                                    <strong>Restante</strong>
+                                  </div>
+                                </td>
+
+                                <td class="text-end resumen-valor text-primary">
+                                  {{ totalGastos - totalGastosFacturas | currency }}
+                                </td>
+                              </tr>
+
+                              <tr class="resumen-row resumen-porcentaje">
+                                <td>
+                                  <div class="resumen-concepto">
+                                    <span class="resumen-icono bg-warning-soft">
+                                      <i class="bi bi-percent"></i>
+                                    </span>
+
+                                    <strong>% Inversión</strong>
+                                  </div>
+                                </td>
+
+                                <td class="text-end resumen-valor text-warning">
+                                  {{ ((totalGastosFacturas / totalGastos) * 100) | number:'1.2-2' }}%
+                                </td>
+                              </tr>
+
+                            </tfoot>
+
+                          </table>
+                        </div>
+                      </div>
+                      <div class="row">
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+                <div class="d-flex gap-2 justify-content-end" *ngIf="!this.ingresoForm.value.id || !esFinanciero">
+                  <button type="button" class="btn btn-success" title="Guardar PYG" (click)="guardarPYG()">
+                    Guardar
+                  </button>
+                </div>
+                <div class="d-flex gap-2 justify-content-end">
+                  <button type="button" class="btn btn-success" *ngIf="this.ingresoForm.value.id && esFinanciero"
+                    title="Guardar Facturas" (click)="guardarPyGFacturas()">
+                    Guardar
+                  </button>
+                </div>
+                <!-- <div class="d-flex gap-2 justify-content-end" *ngIf="this.ingresoForm.value.id">
                                     <button type="button" class="btn btn-success" (click)="actualizarPYG()">
                                         Actualizar
                                     </button>
                                 </div> -->
-                            </div>
+              </div>
 
-                        </div>
-
-                    </div>
-                </div>
             </div>
 
+          </div>
         </div>
-    </section>
-    <div class="modal fade" id="modalFacturas">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
+      </div>
 
-                <!-- HEADER -->
-                <div class="modal-header d-flex justify-content-center position-relative">
-                    <h4 class="modal-title text-center w-100">
-                        Facturas para: {{this.ramoSeleccionado?.nombreRamo}}
-                    </h4>
-                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                        <span>&times;</span>
-                    </button>
-                </div>
-                <div class="card-body">
-                    <table #dataTableFacturas class="table table-bordered table-striped"
-                        style="width: 100%;font-size: 11px;text-align: center;" id="tablaseg">
-                    </table>
-                    <div style="text-align: right;">
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
+  </section>
+  <div class="modal fade" id="modalFacturas">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+
+        <!-- HEADER -->
+        <div class="modal-header d-flex justify-content-center position-relative">
+          <h4 class="modal-title text-center w-100">
+            Facturas para: {{this.ramoSeleccionado?.nombreRamo}}
+          </h4>
+          <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+            <span>&times;</span>
+          </button>
+        </div>
+        <div class="card-body">
+          <table #dataTableFacturas class="table table-bordered table-striped"
+            style="width: 100%;font-size: 11px;text-align: center;" id="tablaseg">
+          </table>
+          <div style="text-align: right;">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade" id="modalRamosEstandar">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content border-0 shadow">
+
+        <!-- HEADER -->
+        <div class="modal-header bg-primary text-white">
+
+          <div class="w-100 text-center">
+
+            <h5 class="modal-title mb-1">
+              <i class="fas fa-layer-group me-2"></i>
+              Ramos sugeridos para {{ clienteSeleccionado?.NOMBRES }}
+            </h5>
+
+            <small>
+              <span style="font-weight: bold;">Nota:</span> Pude actualizar la información posterior al haber creado el
+              detalle de ramos base.
+            </small>
+
+          </div>
+
+          <button type="button" class="close text-white" data-bs-dismiss="modal" aria-label="Close">
+
+            <span aria-hidden="true">&times;</span>
+
+          </button>
+
+        </div>
+
+        <div class="modal-body bg-light">
+
+          <div class="row gx-4 gy-4">
+
+            <div class="col-md-6 col-lg-4" *ngFor="let ramo of lstRamosSugeridos">
+
+              <div class="card ramo-card" [class.ramo-selected]="ramo.seleccionado"
+                (click)="ramo.seleccionado = !ramo.seleccionado">
+
+                <!-- Header Card -->
+                <div class="card-header d-flex justify-content-between align-items-start">
+
+                  <div class="w-100">
+
+                    <div class="ramo-title">
+                      {{ ramo.nombreRamo }}
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-1">
+
+                      <small class="text-muted fw-bold">
+                        {{ ramo.nombreAseguradora }}
+                      </small>
+
+                      <small class="fw-bold text-dark">
+                        Póliza: {{ ramo.poliza }}
+                      </small>
+
+                    </div>
+
+                  </div>
+
+                  <div class="check-selected ms-3" [class.visible]="ramo.seleccionado">
+                    <i class="fas fa-check"></i>
+                  </div>
+
+                </div>
+
+                <!-- Body Card -->
+                <div class="card-body">
+
+                  <div class="dato">
+                    <span>Desde</span>
+                    <strong>{{ ramo.fcDesde | date:'dd/MM/yyyy' }}</strong>
+                  </div>
+
+                  <div class="dato">
+                    <span>Hasta</span>
+                    <strong>{{ ramo.fcHasta | date:'dd/MM/yyyy' }}</strong>
+                  </div>
+
+                  <div class="dato">
+                    <span>Prima mensual</span>
+                    <strong class="text-success">
+                      $ {{ ramo.primaMensual | number:'1.2-2' }}
+                    </strong>
+                  </div>
+
+                  <div class="dato">
+                    <span>Prima anual</span>
+                    <strong class="text-success">
+                      $ {{ ramo.primaAnual | number:'1.2-2' }}
+                    </strong>
+                  </div>
+
+                  <div class="dato">
+                    <span>Comisión mensual</span>
+                    <strong class="text-primary">
+                      $ {{ ramo.comisionMensual | number:'1.2-2' }}
+                    </strong>
+                  </div>
+
+                  <div class="dato">
+                    <span>Comisión anual</span>
+                    <strong class="text-primary">
+                      $ {{ ramo.comisionAnual | number:'1.2-2' }}
+                    </strong>
+                  </div>
+
+                  <div class="dato">
+                    <span>% Comisión</span>
+
+                    <span class="badge bg-primary">
+                      {{ ramo.porcCom }} %
+                    </span>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+
+          <button class="btn btn-outline-secondary" data-bs-dismiss="modal">
+
+            <i class="fas fa-times me-1"></i>
+            Cancelar
+
+          </button>
+
+          <button class="btn btn-primary" (click)="crearRamosSeleccionados()" [disabled]="!haySeleccionados()">
+
+            <i class="fas fa-print me-2"></i>
+            Crear Ramos
+
+          </button>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
 </div>

@@ -160,4 +160,9 @@ export class ChecklistService {
     const URL_API = environment.apiUrl + "obtenerContactosIngresados";
     return this.httpClient.post(URL_API,datos).pipe(catchError(this.handleError));
   }
+
+  public  descagarCheckListMes() {
+    const URL_API = environment.apiUrl + "descargarCheckListMes";
+    return this.httpClient.get(URL_API).pipe(catchError(this.handleError));
+  }
 }

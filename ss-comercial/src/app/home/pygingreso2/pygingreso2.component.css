@@ -761,3 +761,849 @@ ngx-dropzone-preview img {
 .tabla-resumen-ejecutiva tfoot tr:hover td {
   background: #f8fafc;
 }
+.ramo-card {
+    cursor: pointer;
+    border-radius: 14px;
+    border: 2px solid #e9ecef;
+    transition: all .25s ease;
+    font-size: .82rem;
+    margin: 5px;
+    min-height: 320px;
+}
+
+.ramo-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,.15);
+}
+
+.ramo-selected {
+    border-color: #0d6efd !important;
+    background: #eef5ff;
+}
+
+.ramo-card .card-header{
+    background:#fff;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    padding:.75rem;
+    border-bottom:1px solid #ececec;
+}
+
+.ramo-title{
+    font-weight:700;
+    color:#0d6efd;
+    font-size:.92rem;
+}
+
+.ramo-card .card-body{
+    padding:.75rem;
+}
+
+.dato{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:4px 0;
+    border-bottom:1px dashed #ececec;
+}
+
+.dato:last-child{
+    border-bottom:none;
+}
+
+.dato span:first-child{
+    color:#6c757d;
+    font-size:.78rem;
+}
+
+.dato strong{
+    font-size:.8rem;
+}
+
+.check-selected{
+    width:24px;
+    height:24px;
+    border-radius:50%;
+    background:#dee2e6;
+    color:white;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:.25s;
+}
+
+.check-selected.visible{
+    background:#198754;
+}
+
+.modal-header .close{
+    background:none;
+    border:0;
+    color:#fff;
+    font-size:30px;
+    line-height:1;
+    cursor:pointer;
+    opacity:.85;
+}
+
+.modal-header .close:hover{
+    opacity:1;
+}
+
+.modal-footer{
+    background:#fafafa;
+}
+.card {
+  background: #ffffff;
+  border: 1px solid #e6edf5;
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+}
+
+.titulo-sobre-borde {
+  color: #1f3b57;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.form-label {
+  color: #34495e;
+  font-weight: 600;
+}
+
+.form-control,
+.ng-select-container {
+  border-color: #d8e1ec;
+  border-radius: 10px;
+  background-color: #ffffff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-control:focus,
+.ng-select.ng-select-focused .ng-select-container {
+  border-color: #5dade2;
+  box-shadow: 0 0 0 0.15rem rgba(93, 173, 226, 0.18);
+}
+
+.input-group-text {
+  border-color: #d8e1ec;
+  border-radius: 10px;
+  background: #f6f9fc !important;
+}
+
+.input-group .form-control {
+  border-left: 0;
+}
+
+.input-group .input-group-text + .form-control {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.input-group .input-group-text {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.btn {
+  border-radius: 10px;
+  font-weight: 600;
+  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.08);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 12px rgba(15, 23, 42, 0.12);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #2f80ed, #1c64d1);
+  border-color: #1c64d1;
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #27ae60, #219653);
+  border-color: #219653;
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #eb5757, #d64545);
+  border-color: #d64545;
+}
+
+.btn-outline-primary,
+.btn-outline-danger {
+  box-shadow: none;
+}
+
+.table {
+  background: #ffffff;
+  border-color: #e5ecf3;
+}
+
+.table thead th {
+  background: #f3f7fb;
+  color: #2c3e50;
+  font-weight: 700;
+  border-color: #dfe8f1;
+}
+
+.table tbody td {
+  vertical-align: middle;
+  border-color: #eef3f8;
+}
+
+.table tbody tr:hover {
+  background-color: #f8fbff;
+}
+
+.table tfoot td {
+  background: #f6f9fc;
+  color: #1f3b57;
+  border-color: #dfe8f1;
+}
+
+.text-danger,
+.invalid-feedback {
+  font-weight: 500;
+}
+
+.text-muted {
+  color: #8a97a6 !important;
+}
+
+input[readonly],
+.ng-select.ng-select-disabled .ng-select-container {
+  background-color: #f8fafc;
+  color: #64748b;
+}
+
+.is-invalid,
+.form-control.is-invalid,
+.ng-select.is-invalid .ng-select-container {
+  border-color: #dc3545;
+}
+.seccion-tabla {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.table-responsive {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.tabla-gastos-facturas {
+  width: 100%;
+  max-width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+/* Elimina los anchos mínimos */
+.tabla-con-facturas,
+.tabla-solo-gastos {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Permite que los textos largos bajen de línea */
+.tabla-gastos-facturas th,
+.tabla-gastos-facturas td {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  vertical-align: middle;
+  padding: 0.45rem;
+}
+
+/* Encabezados */
+.encabezado-gasto {
+  background-color: #e9f2ff;
+}
+
+.encabezado-factura {
+  background-color: #fdecec;
+}
+
+/* Separación visual entre gastos y facturas */
+.tabla-con-facturas .separador-gastos {
+  border-right: 2px solid #adb5bd;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+/* Colores por gasto */
+.tabla-gastos-facturas tbody tr.grupo-color-0 > td {
+  background-color: #eef6ff;
+}
+
+.tabla-gastos-facturas tbody tr.grupo-color-1 > td {
+  background-color: #f1faee;
+}
+
+.tabla-gastos-facturas tbody tr.grupo-color-2 > td {
+  background-color: #fff7e6;
+}
+
+.tabla-gastos-facturas tbody tr.grupo-color-3 > td {
+  background-color: #f8efff;
+}
+
+.tabla-gastos-facturas tbody tr.grupo-color-4 > td {
+  background-color: #fff0f3;
+}
+
+.tabla-gastos-facturas tbody tr.inicio-grupo > td {
+  border-top: 2px solid #adb5bd;
+}
+
+.tabla-gastos-facturas tbody tr:hover > td {
+  filter: brightness(0.97);
+}
+
+.fila-total {
+  font-weight: bold;
+  background-color: #f8f9fa;
+}
+
+.fila-porcentaje {
+  background-color: #f8f9fa;
+}
+
+.fila-total-general {
+  font-weight: bold;
+  background-color: #e9ecef;
+}
+
+/* Botones compactos */
+.tabla-gastos-facturas .btn {
+  max-width: 100%;
+  white-space: normal;
+}
+
+/* Pantallas medianas */
+@media (max-width: 992px) {
+  .tabla-gastos-facturas {
+    font-size: 0.82rem;
+  }
+
+  .tabla-gastos-facturas th,
+  .tabla-gastos-facturas td {
+    padding: 0.35rem 0.25rem;
+  }
+
+  .btn-asignar-factura {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.4rem;
+  }
+}
+
+/* Celulares */
+@media (max-width: 576px) {
+  .tabla-gastos-facturas {
+    font-size: 0.7rem;
+  }
+
+  .tabla-gastos-facturas th,
+  .tabla-gastos-facturas td {
+    padding: 0.25rem 0.15rem;
+  }
+
+  .tabla-gastos-facturas .btn {
+    font-size: 0;
+    padding: 0.25rem 0.35rem;
+  }
+
+  .tabla-gastos-facturas .btn i {
+    font-size: 0.8rem;
+    margin-right: 0 !important;
+  }
+}
+.seccion-tabla {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Título general de la sección */
+.seccion-titulo {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.4rem 0.55rem;
+}
+
+.seccion-titulo i {
+  font-size: 0.8rem;
+}
+
+.contenedor-tabla-gastos {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.tabla-gastos-facturas {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+  border-collapse: collapse;
+  margin: 0;
+
+  /* Tamaño general reducido */
+  font-size: 0.68rem;
+  line-height: 1.15;
+}
+
+.tabla-con-facturas,
+.tabla-solo-gastos {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* Encabezados y celdas */
+.tabla-gastos-facturas th,
+.tabla-gastos-facturas td {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  vertical-align: middle;
+  padding: 0.25rem 0.18rem;
+}
+
+/* Letra de encabezados */
+.tabla-gastos-facturas thead th {
+  font-size: 0.65rem;
+  line-height: 1.1;
+  font-weight: 700;
+}
+
+/* Letra del contenido */
+.tabla-gastos-facturas tbody td {
+  font-size: 0.66rem;
+}
+
+/* Letra del pie */
+.tabla-gastos-facturas tfoot td {
+  font-size: 0.65rem;
+}
+
+/* Distribución cuando existen facturas */
+.tabla-con-facturas .col-descripcion-gasto {
+  width: 17%;
+}
+
+.tabla-con-facturas .col-tipo {
+  width: 10%;
+}
+
+.tabla-con-facturas .col-valor {
+  width: 11%;
+}
+
+.tabla-con-facturas .col-accion {
+  width: 8%;
+}
+
+.tabla-con-facturas .col-descripcion-factura {
+  width: 17%;
+}
+
+.tabla-con-facturas .col-fecha {
+  width: 10%;
+}
+
+/* Distribución cuando solamente existen gastos */
+.tabla-solo-gastos .col-descripcion-gasto {
+  width: 45%;
+}
+
+.tabla-solo-gastos .col-tipo {
+  width: 20%;
+}
+
+.tabla-solo-gastos .col-valor {
+  width: 20%;
+}
+
+.tabla-solo-gastos .col-accion {
+  width: 15%;
+}
+
+/* Encabezados principales */
+.encabezado-gasto {
+  background-color: #e9f2ff;
+  font-size: 0.7rem !important;
+  font-weight: 700;
+}
+
+.encabezado-factura {
+  background-color: #fdecec;
+  font-size: 0.7rem !important;
+  font-weight: 700;
+}
+
+/* Separador entre gastos y facturas */
+.tabla-con-facturas .separador-gastos {
+  border-right: 2px solid #adb5bd;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+/* Colores por gasto y facturas relacionadas */
+.tabla-gastos-facturas tbody tr.grupo-color-0 > td {
+  background-color: #eef6ff;
+}
+
+.tabla-gastos-facturas tbody tr.grupo-color-1 > td {
+  background-color: #f1faee;
+}
+
+.tabla-gastos-facturas tbody tr.grupo-color-2 > td {
+  background-color: #fff7e6;
+}
+
+.tabla-gastos-facturas tbody tr.grupo-color-3 > td {
+  background-color: #f8efff;
+}
+
+.tabla-gastos-facturas tbody tr.grupo-color-4 > td {
+  background-color: #fff0f3;
+}
+
+/* Línea al inicio de cada gasto */
+.tabla-gastos-facturas tbody tr.inicio-grupo > td {
+  border-top: 1.5px solid #adb5bd;
+}
+
+/* Efecto hover */
+.tabla-gastos-facturas tbody tr:hover > td {
+  filter: brightness(0.97);
+}
+
+/* Botones pequeños */
+.tabla-gastos-facturas .btn {
+  max-width: 100%;
+  white-space: normal;
+  line-height: 1;
+}
+
+.btn-asignar-factura {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  max-width: 100%;
+  padding: 0.18rem 0.25rem;
+  font-size: 0.58rem;
+  line-height: 1;
+}
+
+.btn-asignar-factura i {
+  font-size: 0.62rem;
+}
+
+.btn-quitar {
+  padding: 0.15rem 0.25rem;
+  font-size: 0.6rem;
+  line-height: 1;
+}
+
+.btn-quitar i {
+  font-size: 0.6rem;
+}
+
+/* Texto sin factura */
+.texto-sin-factura {
+  font-size: 0.6rem;
+}
+
+/* Pie de tabla */
+.fila-total {
+  font-weight: bold;
+  background-color: #f8f9fa;
+}
+
+.fila-porcentaje {
+  background-color: #f8f9fa;
+}
+
+.fila-total-general {
+  font-weight: bold;
+  background-color: #e9ecef;
+}
+
+/* Pantallas medianas */
+@media (max-width: 992px) {
+  .seccion-titulo {
+    font-size: 0.7rem;
+  }
+
+  .tabla-gastos-facturas {
+    font-size: 0.6rem;
+  }
+
+  .tabla-gastos-facturas thead th,
+  .tabla-gastos-facturas tbody td,
+  .tabla-gastos-facturas tfoot td {
+    font-size: 0.58rem;
+  }
+
+  .tabla-gastos-facturas th,
+  .tabla-gastos-facturas td {
+    padding: 0.2rem 0.1rem;
+  }
+
+  .btn-asignar-factura {
+    font-size: 0.52rem;
+    padding: 0.15rem 0.2rem;
+  }
+}
+
+/* Tablets */
+@media (max-width: 768px) {
+  .seccion-titulo {
+    font-size: 0.65rem;
+    padding: 0.3rem 0.4rem;
+  }
+
+  .tabla-gastos-facturas {
+    font-size: 0.53rem;
+  }
+
+  .tabla-gastos-facturas thead th,
+  .tabla-gastos-facturas tbody td,
+  .tabla-gastos-facturas tfoot td {
+    font-size: 0.52rem;
+  }
+
+  .tabla-gastos-facturas th,
+  .tabla-gastos-facturas td {
+    padding: 0.16rem 0.06rem;
+  }
+
+  .texto-boton {
+    display: none;
+  }
+
+  .btn-asignar-factura,
+  .btn-quitar {
+    padding: 0.14rem 0.18rem;
+  }
+
+  .btn-asignar-factura i,
+  .btn-quitar i {
+    font-size: 0.55rem;
+  }
+
+  .texto-sin-factura {
+    font-size: 0.48rem;
+  }
+}
+
+/* Celulares pequeños */
+@media (max-width: 576px) {
+  .seccion-titulo {
+    font-size: 0.58rem;
+  }
+
+  .seccion-titulo i {
+    font-size: 0.62rem;
+  }
+
+  .tabla-gastos-facturas {
+    font-size: 0.46rem;
+    line-height: 1.05;
+  }
+
+  .tabla-gastos-facturas thead th,
+  .tabla-gastos-facturas tbody td,
+  .tabla-gastos-facturas tfoot td {
+    font-size: 0.45rem;
+  }
+
+  .encabezado-gasto,
+  .encabezado-factura {
+    font-size: 0.5rem !important;
+  }
+
+  .tabla-gastos-facturas th,
+  .tabla-gastos-facturas td {
+    padding: 0.12rem 0.04rem;
+  }
+
+  .btn-asignar-factura,
+  .btn-quitar {
+    padding: 0.1rem 0.13rem;
+  }
+
+  .btn-asignar-factura i,
+  .btn-quitar i {
+    font-size: 0.48rem;
+  }
+
+  .texto-sin-factura {
+    font-size: 0.42rem;
+  }
+}
+.col-saldo,
+.celda-saldo {
+  min-width: 145px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.indicador-saldo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-weight: 700;
+}
+
+.indicador-saldo i {
+  font-size: 1rem;
+}
+
+.saldo-positivo {
+  color: #198754;
+}
+
+.saldo-negativo {
+  color: #dc3545;
+}
+
+.saldo-cero {
+  color: #fd7e14;
+}
+.badge-factura{
+        cursor:pointer;
+      background: linear-gradient(135deg,#0d6efd,#4f8dfd);
+      color:#fff;
+
+      font-weight:600;
+      box-shadow:0 2px 8px rgba(13,110,253,.25);
+}
+.badge-factura{
+    background:#0d6efd;
+    color:#fff;
+
+    font-weight:600;
+    padding:.45rem .8rem;
+    cursor:pointer;
+}
+
+.badge-factura:hover{
+    opacity:.9;
+}
+
+.tabla-gastos-facturas tfoot .fila-total{
+    background:#f8f9fa;
+    border-top:2px solid #d7dde5;
+}
+
+.tabla-gastos-facturas tfoot .fila-proyeccion{
+    background:#eef6ff;
+    border-top:1px solid #d7dde5;
+}
+
+.tabla-gastos-facturas tfoot td{
+    vertical-align:middle;
+    font-weight:600;
+}
+
+.total-prima{
+    color:#0d6efd;
+    font-size:15px;
+}
+
+.total-comision{
+    color:#198754;
+    font-size:15px;
+}
+.revision-box{
+    background:#fff;
+    border:1px solid #d8e2e8;
+    border-radius:8px;
+    overflow:hidden;
+    height:100%;
+}
+
+.revision-title{
+    background:#f4f8fb;
+    text-align:center;
+    font-size:13px;
+    font-weight:600;
+    padding:6px 0;
+    border-bottom:1px solid #d8e2e8;
+}
+
+.revision-table{
+    width:100%;
+    border-collapse:collapse;
+    table-layout:fixed;
+}
+
+.revision-table th,
+.revision-table td{
+    border:1px solid #e5edf2;
+    padding:6px 4px;
+    font-size:12px;
+    text-align:center;
+    vertical-align:middle;
+}
+
+.revision-table th{
+    background:#f8fafc;
+    font-weight:600;
+}
+
+.revision-table td{
+    font-weight:600;
+}
+
+.revision-table .titulo{
+    text-align:center;
+    font-weight:600;
+    white-space:nowrap;
+}
+/* ===========================
+   TABLA GASTOS Y FACTURAS
+=========================== */
+
+.tabla-gastos-facturas {
+    border-collapse: collapse;
+}
+
+.tabla-gastos-facturas thead th {
+    border: 1px solid #cfd8dc;
+}
+
+.tabla-gastos-facturas tbody td {
+    border: 1px solid #dee2e6;
+    vertical-align: middle;
+}
+
+/* separador entre grupos */
+.tabla-gastos-facturas tbody tr {
+    border-bottom: 1px solid #ced4da;
+}
+
+/* mantiene el footer separado */
+.tabla-gastos-facturas tfoot td {
+    border-top: 2px solid #adb5bd;
+}

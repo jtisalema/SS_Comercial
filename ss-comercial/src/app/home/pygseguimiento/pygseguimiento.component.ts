@@ -46,34 +46,36 @@ export class PygseguimientoComponent {
         },
 
         columns: [
-
-          {
-            title: '<i class="fas fa-hashtag me-1"></i> N°',
-            data: 'id'
-          },
+{
+  title: '<i class="fas fa-hashtag me-1"></i> N°',
+  data: null,
+  render: function (data:any, type:any, row:any, meta:any) {
+    return meta.settings._iDisplayStart + meta.row + 1;
+  }
+},
                     {
             title: '<i class="fas fa-hashtag me-1"></i> Cliente',
             data: 'cliente'
           },
-                    {
-            title: '<i class="fas fa-hashtag me-1"></i> F.Registro',
-            data: 'fechaRegistro'
-          },
-                              {
-            title: '<i class="fas fa-hashtag me-1"></i> Ramos',
-            data: 'ramosTexto'
-          },
-{
-            title: '<i class="fas fa-hashtag me-1"></i> Usuario',
-            data: 'nombreUsuario'
-          },
+//                     {
+//             title: '<i class="fas fa-hashtag me-1"></i> F.Registro',
+//             data: 'fechaRegistro'
+//           },
+//                               {
+//             title: '<i class="fas fa-hashtag me-1"></i> Ramos',
+//             data: 'ramosTexto'
+//           },
+// {
+//             title: '<i class="fas fa-hashtag me-1"></i> Usuario',
+//             data: 'nombreUsuario'
+//           },
           {
-            title: '<i class="fas fa-cogs me-1"></i> Opción',
+            title: '<i class="fas fa-cogs me-1"></i> Revisar',
             searchable: false,
             render: (data: any, type: any, full: any) => {
 
               let botones = '';
-              botones += `<button title="Visualizar" class="btn btn-info btn-sm" onclick="visualizarRegistro(${full.id})"><i class="fas fa-eye"></i></button>`;
+              botones += `<button title="Visualizar" class="btn btn-info btn-sm" onclick="visualizarRegistro(${full.id})"><i class="fas fa-search"></i></button>`;
 
               return `<div class="d-flex justify-content-center flex-nowrap" style="gap:5px">${botones}</div>`;
             }
