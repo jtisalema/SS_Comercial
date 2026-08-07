@@ -1817,7 +1817,7 @@ exportarDetalles(): void {
   // al otro. Cuando cambia el ramo, el siguiente grupo comienza debajo
   // del bloque más alto del grupo anterior.
   const gruposPorRamo = this.agruparIngresosPorRamo(registros);
-  const columnasPorCuadro = 9; // 8 columnas de datos + 1 separador.
+  const columnasPorCuadro = 10; // 9 columnas de datos + 1 separador.
   const maxObjetosPorRamo = Math.max(
     1,
     ...gruposPorRamo.map((grupo: any[]) => grupo.length)
@@ -1877,15 +1877,16 @@ exportarDetalles(): void {
 
   for (let i = 0; i < maxObjetosPorRamo; i++) {
     wsDetalle['!cols'].push(
-      { wch: 29 },
-      { wch: 17 },
-      { wch: 18 },
-      { wch: 34 },
-      { wch: 16 },
-      { wch: 18 },
+      { wch: 29 }, // Descripción gasto
+      { wch: 12 }, // Cantidad
+      { wch: 17 }, // Tipo ingreso
+      { wch: 18 }, // Valor gasto
+      { wch: 34 }, // Descripción factura
+      { wch: 16 }, // Fecha
+      { wch: 18 }, // Valor factura
       { wch: 18 }, // Total facturas
       { wch: 17 }, // Restante
-      { wch: 4 }
+      { wch: 4 }   // Separador
     );
   }
 
@@ -2058,8 +2059,8 @@ private agregarRamoPantallaExcel(
 ): number {
   let fila = filaInicio;
 
-  // Columnas desde A hasta H.
-  const colFin = 7;
+  // Columnas desde A hasta I.
+  const colFin = 8;
 
   const estiloDato = {
     ...this.estiloNormal(),
@@ -2150,6 +2151,7 @@ private agregarRamoPantallaExcel(
       '',
       `Aseguradora: ${ing?.nombreAseguradora ?? ''}`,
       '',
+      '',
       ''
     ]],
     {
@@ -2181,7 +2183,7 @@ private agregarRamoPantallaExcel(
     fila,
     5,
     fila,
-    7
+    8
   );
 
   this.aplicarEstiloRangoMerge(
@@ -2207,7 +2209,7 @@ private agregarRamoPantallaExcel(
     fila,
     5,
     fila,
-    7,
+    8,
     this.estiloSubtitulo()
   );
 
@@ -2496,11 +2498,11 @@ private agregarRamoPantallaExcel(
 
   fila++;
 
-  // Nueva columna Total facturas antes de Restante.
   XLSX.utils.sheet_add_aoa(
     ws,
     [[
       'Descripción gasto',
+      'Cantidad',
       'Tipo ingreso',
       'Valor gasto',
       'Descripción factura',
@@ -2535,6 +2537,7 @@ private agregarRamoPantallaExcel(
       ws,
       [[
         'Sin gastos registrados',
+        '',
         '',
         '',
         '',
@@ -2599,6 +2602,11 @@ private agregarRamoPantallaExcel(
               primeraFila
                 ? grupo?.gasto?.descripcion ?? ''
                 : '',
+              primeraFila
+                ? this.convertirANumero(
+                    grupo?.gasto?.cantidad
+                  )
+                : '',
               tipoIngreso,
               primeraFila
                 ? this.convertirANumero(
@@ -2641,37 +2649,33 @@ private agregarRamoPantallaExcel(
           );
 
           if (primeraFila) {
-            // Valor gasto.
             this.aplicarFormatoMoneda(
               ws,
               fila,
-              2,
+              3,
               estiloDato
             );
 
-            // Total facturas.
-            this.aplicarFormatoMoneda(
-              ws,
-              fila,
-              6,
-              estiloDato
-            );
-
-            // Restante.
             this.aplicarFormatoMoneda(
               ws,
               fila,
               7,
+              estiloDato
+            );
+
+            this.aplicarFormatoMoneda(
+              ws,
+              fila,
+              8,
               this.estiloTotalFinal()
             );
           }
 
-          // Valor de cada factura.
           if (factura) {
             this.aplicarFormatoMoneda(
               ws,
               fila,
-              5,
+              6,
               estiloDato
             );
           }
@@ -2683,13 +2687,13 @@ private agregarRamoPantallaExcel(
       const filaGrupoFin = fila - 1;
 
       if (filaGrupoFin > filaGrupoInicio) {
-        // Combina los datos que se muestran una sola vez por gasto.
         [
           0, // Descripción gasto
-          1, // Tipo ingreso
-          2, // Valor gasto
-          6, // Total facturas
-          7  // Restante
+          1, // Cantidad
+          2, // Tipo ingreso
+          3, // Valor gasto
+          7, // Total facturas
+          8  // Restante
         ].forEach((columna: number) => {
           this.agregarMerge(
             ws,
@@ -2729,6 +2733,7 @@ private agregarRamoPantallaExcel(
       [
         'TOTAL GASTOS',
         '',
+        '',
         totalGastos,
         'TOTAL FACTURAS',
         '',
@@ -2739,6 +2744,7 @@ private agregarRamoPantallaExcel(
       [
         '% Inversión',
         '',
+        '',
         porcentajeInversion,
         '',
         '',
@@ -2748,6 +2754,7 @@ private agregarRamoPantallaExcel(
       ],
       [
         'Disponible',
+        '',
         '',
         disponible,
         '',
@@ -2770,15 +2777,15 @@ private agregarRamoPantallaExcel(
     fila,
     0,
     fila,
-    1
+    2
   );
 
   this.agregarMerge(
     ws,
     fila,
-    3,
+    4,
     fila,
-    5
+    6
   );
 
   this.agregarMerge(
@@ -2786,7 +2793,7 @@ private agregarRamoPantallaExcel(
     fila + 1,
     0,
     fila + 1,
-    1
+    2
   );
 
   this.agregarMerge(
@@ -2794,7 +2801,7 @@ private agregarRamoPantallaExcel(
     fila + 2,
     0,
     fila + 2,
-    1
+    2
   );
 
   this.aplicarEstiloRangoMerge(
@@ -2802,25 +2809,25 @@ private agregarRamoPantallaExcel(
     fila,
     0,
     fila,
-    2,
+    3,
     this.estiloMonedaRoja()
   );
 
   this.aplicarEstiloRangoMerge(
     ws,
     fila,
-    3,
+    4,
     fila,
-    6,
+    7,
     this.estiloMonedaAzul()
   );
 
   this.aplicarEstiloRangoMerge(
     ws,
     fila,
-    7,
+    8,
     fila,
-    7,
+    8,
     this.estiloTotalFinal()
   );
 
@@ -2829,7 +2836,7 @@ private agregarRamoPantallaExcel(
     fila + 1,
     0,
     fila + 1,
-    2,
+    3,
     this.estiloPorcentaje()
   );
 
@@ -2838,44 +2845,42 @@ private agregarRamoPantallaExcel(
     fila + 2,
     0,
     fila + 2,
-    2,
+    3,
     this.estiloTotalFinal()
   );
 
   this.aplicarFormatoMoneda(
     ws,
     fila,
-    2,
+    3,
     this.estiloMonedaRoja()
   );
 
-  // Total general de facturas.
-  this.aplicarFormatoMoneda(
-    ws,
-    fila,
-    6,
-    this.estiloMonedaAzul()
-  );
-
-  // Restante general.
   this.aplicarFormatoMoneda(
     ws,
     fila,
     7,
+    this.estiloMonedaAzul()
+  );
+
+  this.aplicarFormatoMoneda(
+    ws,
+    fila,
+    8,
     this.estiloTotalFinal()
   );
 
   this.aplicarFormatoPorcentaje(
     ws,
     fila + 1,
-    2,
+    3,
     this.estiloPorcentaje()
   );
 
   this.aplicarFormatoMoneda(
     ws,
     fila + 2,
-    2,
+    3,
     this.estiloTotalFinal()
   );
 
@@ -2927,6 +2932,7 @@ private agregarRamoPantallaExcel(
         'Prima Neta',
         'Comisión Broker',
         'Porcentaje',
+        '',
         ''
       ]],
       {
@@ -2977,6 +2983,7 @@ private agregarRamoPantallaExcel(
             primaNeta,
             comisionBroker,
             porcentaje,
+            '',
             ''
           ]],
           {
@@ -3074,6 +3081,7 @@ private agregarRamoPantallaExcel(
           totalPrima > 0
             ? totalComision / totalPrima
             : 0,
+          '',
           ''
         ],
         [
@@ -3088,6 +3096,7 @@ private agregarRamoPantallaExcel(
           proyeccionPrima > 0
             ? proyeccionComision / proyeccionPrima
             : 0,
+          '',
           ''
         ],
         [
@@ -3101,6 +3110,7 @@ private agregarRamoPantallaExcel(
             ? totalComisionGeneral /
               totalPrimaGeneral
             : 0,
+          '',
           ''
         ]
       ],
@@ -3178,7 +3188,7 @@ private agregarRamoPantallaExcel(
     fila,
     5,
     fila,
-    7
+    8
   );
 
   this.aplicarEstiloRangoMerge(
@@ -3186,7 +3196,7 @@ private agregarRamoPantallaExcel(
     fila,
     5,
     fila,
-    7,
+    8,
     this.estiloSubtitulo()
   );
 
