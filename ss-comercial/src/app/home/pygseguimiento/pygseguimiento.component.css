@@ -1,0 +1,441 @@
+/* =====================================================
+   PANTALLA GENERAL
+   ===================================================== */
+
+.presupuesto-page {
+    min-height: 100vh;
+    padding-bottom: 30px;
+
+    background:
+        radial-gradient(circle at top right, rgba(34, 94, 168, 0.12), transparent 35%),
+        radial-gradient(circle at bottom left, rgba(79, 70, 229, 0.08), transparent 30%),
+        #eef3f8;
+}
+
+
+/* =====================================================
+   TARJETA PRINCIPAL
+   ===================================================== */
+
+.presupuesto-card {
+    border: none;
+    border-radius: 16px;
+    overflow: hidden;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 10px 30px rgba(20, 45, 80, 0.10);
+
+    border-top: 4px solid #1f5d9b;
+
+    transition: all 0.25s ease;
+}
+
+.presupuesto-card:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 14px 35px rgba(20, 45, 80, 0.14);
+}
+
+
+/* =====================================================
+   CABECERA
+   ===================================================== */
+
+.presupuesto-card-header {
+    padding: 20px 24px;
+
+    border-bottom: none;
+
+    background:
+        linear-gradient(
+            135deg,
+            #123a67 0%,
+            #1f5d9b 60%,
+            #2874b9 100%
+        );
+
+    color: #ffffff;
+}
+
+
+/* ICONO */
+
+.section-icon {
+    width: 48px;
+    height: 48px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    margin-right: 14px;
+
+    border-radius: 12px;
+
+    background: rgba(255, 255, 255, 0.15);
+
+    border: 1px solid rgba(255, 255, 255, 0.18);
+
+    color: #ffffff;
+
+    font-size: 19px;
+
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+
+/* TITULO */
+
+.presupuesto-title {
+    float: none !important;
+
+    margin: 0 0 3px 0;
+
+    color: #ffffff;
+
+    font-size: 17px;
+
+    font-weight: 600;
+
+    letter-spacing: 0.2px;
+}
+
+
+/* SUBTITULO */
+
+.presupuesto-card-header .text-muted {
+    color: rgba(255, 255, 255, 0.72) !important;
+
+    font-size: 11.5px;
+}
+
+
+/* ICONO DECORATIVO */
+
+.header-decoration {
+    font-size: 34px;
+
+    color: rgba(255, 255, 255, 0.20);
+
+    margin-right: 5px;
+}
+
+
+/* =====================================================
+   CUERPO
+   ===================================================== */
+
+.presupuesto-card .card-body {
+    padding: 22px;
+
+    background:
+        linear-gradient(
+            180deg,
+            #ffffff 0%,
+            #fbfcfe 100%
+        );
+}
+
+
+/* =====================================================
+   TITULO DETALLE CLIENTES
+   ===================================================== */
+
+.table-title-container {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    margin-bottom: 14px;
+
+    padding: 10px 14px;
+
+    background: #eef5fc;
+
+    border-radius: 8px;
+
+    border-left: 4px solid #1f5d9b;
+}
+
+.table-title {
+    color: #24476b;
+
+    font-size: 13px;
+
+    font-weight: 600;
+}
+
+.table-title i {
+    color: #1f5d9b;
+}
+
+
+/* =====================================================
+   CONTENEDOR TABLA
+   ===================================================== */
+
+.presupuesto-table-container {
+    border-radius: 10px;
+
+    border: 1px solid #dde5ee;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 3px 10px rgba(32, 54, 78, 0.05);
+
+    overflow: hidden;
+}
+
+
+/* =====================================================
+   TABLA
+   ===================================================== */
+
+.presupuesto-table {
+    width: 100%;
+
+    margin-bottom: 0 !important;
+
+    font-size: 11px;
+
+    text-align: center;
+
+    color: #3e4d5c;
+
+    background: #ffffff;
+}
+
+
+/* CABECERA TABLA */
+
+.presupuesto-table thead th {
+    padding: 12px 9px !important;
+
+    vertical-align: middle !important;
+
+    background:
+        linear-gradient(
+            180deg,
+            #edf4fb 0%,
+            #e4eef8 100%
+        ) !important;
+
+    color: #1e456b;
+
+    font-size: 10.5px;
+
+    font-weight: 700;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.3px;
+
+    border-top: none !important;
+
+    border-bottom: 2px solid #cddbea !important;
+
+    border-left: 1px solid #dce6f0 !important;
+
+    white-space: nowrap;
+}
+
+
+/* FILAS */
+
+.presupuesto-table tbody td {
+    padding: 10px 8px !important;
+
+    vertical-align: middle !important;
+
+    border-color: #e8edf3 !important;
+}
+
+
+/* FILAS ALTERNADAS */
+
+.presupuesto-table tbody tr:nth-child(even) {
+    background: #f8fafc;
+}
+
+
+/* HOVER */
+
+.presupuesto-table tbody tr {
+    transition: all 0.15s ease;
+}
+
+.presupuesto-table tbody tr:hover {
+    background: #eaf3fc !important;
+
+    box-shadow:
+        inset 4px 0 0 #1f5d9b;
+}
+
+
+/* =====================================================
+   DATATABLE - BUSCADOR
+   ===================================================== */
+
+::ng-deep .dataTables_wrapper {
+    font-size: 12px;
+
+    color: #495869;
+}
+
+::ng-deep .dataTables_filter {
+    margin-bottom: 10px;
+}
+
+::ng-deep .dataTables_filter label {
+    color: #526577;
+
+    font-weight: 500;
+}
+
+::ng-deep .dataTables_filter input {
+    min-width: 200px;
+
+    margin-left: 8px !important;
+
+    padding: 7px 11px !important;
+
+    border: 1px solid #ced9e4 !important;
+
+    border-radius: 8px !important;
+
+    background: #ffffff;
+
+    color: #34495e;
+
+    outline: none;
+
+    transition: all 0.2s ease;
+}
+
+::ng-deep .dataTables_filter input:focus {
+    border-color: #1f5d9b !important;
+
+    box-shadow:
+        0 0 0 3px rgba(31, 93, 155, 0.12);
+}
+
+
+/* =====================================================
+   SELECT CANTIDAD DE REGISTROS
+   ===================================================== */
+
+::ng-deep .dataTables_length select {
+    margin: 0 5px;
+
+    padding: 5px 8px;
+
+    border: 1px solid #ced9e4;
+
+    border-radius: 7px;
+
+    background: #ffffff;
+
+    color: #34495e;
+}
+
+
+/* =====================================================
+   PAGINACIÓN
+   ===================================================== */
+
+::ng-deep .dataTables_paginate {
+    margin-top: 12px !important;
+}
+
+::ng-deep .page-link {
+    margin: 0 2px;
+
+    border-radius: 6px !important;
+
+    border: 1px solid #d8e2ec !important;
+
+    color: #1f5d9b !important;
+
+    background: #ffffff !important;
+}
+
+::ng-deep .page-link:hover {
+    background: #edf5fc !important;
+
+    color: #123a67 !important;
+}
+
+::ng-deep .page-item.active .page-link {
+    border-color: #1f5d9b !important;
+
+    background:
+        linear-gradient(
+            135deg,
+            #174978,
+            #2470b5
+        ) !important;
+
+    color: #ffffff !important;
+
+    box-shadow:
+        0 3px 8px rgba(31, 93, 155, 0.22);
+}
+
+
+/* =====================================================
+   INFORMACIÓN DATATABLE
+   ===================================================== */
+
+::ng-deep .dataTables_info {
+    padding-top: 15px !important;
+
+    color: #718096;
+
+    font-size: 11px;
+}
+
+
+/* =====================================================
+   RESPONSIVE
+   ===================================================== */
+
+@media (max-width: 768px) {
+
+    .presupuesto-card-header {
+        padding: 16px;
+    }
+
+    .section-icon {
+        width: 42px;
+        height: 42px;
+
+        font-size: 17px;
+    }
+
+    .presupuesto-title {
+        font-size: 15px;
+    }
+
+    .header-decoration {
+        display: none;
+    }
+
+    .presupuesto-card .card-body {
+        padding: 14px;
+    }
+
+    .table-title-container {
+        padding: 9px 11px;
+    }
+
+    ::ng-deep .dataTables_filter input {
+        min-width: 140px;
+    }
+}

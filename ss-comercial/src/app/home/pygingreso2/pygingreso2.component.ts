@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { Component, ElementRef, ViewChild,  OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AppComponent } from 'src/app/app.component';
 import { AuthService } from 'src/app/services/auth.service';
@@ -25,11 +25,30 @@ import { ActivatedRoute, Router } from '@angular/router';
   templateUrl: './pygingreso2.component.html',
   styleUrls: ['./pygingreso2.component.css']
 })
-export class PygingresoComponent2 {
+export class PygingresoComponent2 implements OnDestroy {
+  ngOnDestroy(): void {
+
+  if (this.esFinanciero) {
+    document.body.classList.remove('sidebar-collapse');
+  }
+
+}
   @ViewChild('dataTableFacturas', { static: false }) tableFacturas!: ElementRef;
   ingresoForm!: FormGroup;
   gastoForm!: FormGroup;
   userCurrent: any;
+
+  // Respaldos temporales para la aprobación de gastos.
+  // Se muestran en ngx-dropzone y se asocian al ramo únicamente al confirmar.
+  archivosAprobacionTemp: File[] = [];
+  registroPendienteAprobacion: any = null;
+  porcentajeGastoPendiente: number = 0;
+  porcMaxGastoPendiente: number = 0;
+  maximoValorGastosPendiente: number = 0;
+  readonly maxArchivoAprobacion: number = 20 * 1024 * 1024; // 20 MB por archivo
+  // Referencia visual para la barra acumulada. No bloquea la carga total.
+  readonly maxTotalVisualAprobacion: number = 100 * 1024 * 1024; // 100 MB
+  private resolverAprobacion?: (permitirContinuar: boolean) => void;
   lstGastos: any;
   lstPYG: any;
   idRegistro: any;
@@ -356,8 +375,11 @@ export class PygingresoComponent2 {
   }
   async obtenerUsuario() {
     this.userCurrent = await this.authService.getUserInfor();
+    console.log('this.userCurrent',this.userCurrent);
     if (this.userCurrent.get_roles.id == 32) {
       this.esFinanciero = true;
+        // Colapsar sidebar automáticamente
+  document.body.classList.add('sidebar-collapse');
     }
     if (this.idRegistro) {
       this.pygService.obtenerFiltrosPYG(this.idRegistro).subscribe((res: any) => {
@@ -565,16 +587,17 @@ export class PygingresoComponent2 {
     return Math.round((totalGastos / presupuesto) * 100 * 100) / 100;
   }
   lstIngresosGastos: any = [];
-  guardarIngresoGastos() {
+  async guardarIngresoGastos() {
     try {
-      this.loadingService.showLoading();
       if (this.lstGastos.length < 1) {
         this.toastrService.error('Error', 'Debe agregar el detalle de gastos');
         return;
       }
+
       if (this.ingresoForm.valid) {
         const ramo = this.lstRamos.find((r: any) => r.cdRamo == this.ingresoForm.value.ramo);
         const aseguradora = this.lstAseguradoras.find((r: any) => r.id == this.ingresoForm.value.aseguradora);
+
         let ingreso = {
           idIngreso: '',
           cliente: this.ingresoForm.getRawValue().cliente,
@@ -593,11 +616,22 @@ export class PygingresoComponent2 {
           comisionAnual: this.ingresoForm.value.comisionAnual,
           poliza: this.ingresoForm.value.poliza,
           gastos: this.lstGastos,
+          archivosAprobacion: [] as File[],
           nombresUsuario: (
             (this.userCurrent?.get_persona.nombre ?? '') + ' ' +
             (this.userCurrent?.get_persona.apellido ?? '')
           ).trim()
+        };
+
+        // Si supera o alcanza el porcentaje máximo, se solicita respaldo de aprobación.
+        // Si confirma con un archivo válido, se registra la aprobación y
+        // se continúa con el flujo normal de guardado.
+        const puedeIngresarNormal = await this.validarPorcentajeMaximoGasto(ingreso);
+        if (!puedeIngresarNormal) {
+          return;
         }
+
+        this.loadingService.showLoading();
         this.lstIngresosGastos.push(ingreso);
         this.limpiarFormIngreso();
       } else {
@@ -660,9 +694,448 @@ export class PygingresoComponent2 {
     return (this.totalGastos / this.totalIngresos) * 100;
   }
   calcularPorcentajeGastosxRamo(gastos: any[], comision: any): number {
-    let totalGastos = gastos?.reduce((total, gasto) => total + Number(gasto.valor), 0);
-    return (totalGastos / comision) * 100;
+    const totalGastos = (gastos || []).reduce(
+      (total: number, gasto: any) => total + Number(gasto?.valor || 0),
+      0
+    );
+
+    const comisionNumero = Number(comision || 0);
+
+    if (comisionNumero <= 0) {
+      return 0;
+    }
+
+    return (totalGastos / comisionNumero) * 100;
   }
+
+  // ==========================================================
+  // VISUALIZACIÓN DE RESPALDOS DE ACEPTACIÓN - FINANCIERO
+  // ==========================================================
+  archivosAceptacionRamo: any[] = [];
+  ramoAceptacionSeleccionado: any = null;
+  cargandoArchivosAceptacion: boolean = false;
+
+  mostrarBotonAceptacion(ingreso: any): boolean {
+    if (!this.esFinanciero || !ingreso?.idRamo) {
+      return false;
+    }
+
+    const porcMaxGasto = Number(this.userCurrent?.porcMaxgasto || 0);
+
+    if (porcMaxGasto <= 0) {
+      return false;
+    }
+
+    const porcentajeActual = this.calcularPorcentajeGastosxRamo(
+      ingreso?.gastos || [],
+      ingreso?.comisionAnual
+    );
+
+    return porcentajeActual >= porcMaxGasto;
+  }
+
+  abrirModalAceptacion(ingreso: any): void {
+    this.ramoAceptacionSeleccionado = ingreso;
+    this.archivosAceptacionRamo = [];
+    this.cargandoArchivosAceptacion = true;
+
+
+    this.pygService.obtenerArchivosAprobacion(ingreso.idRamo)
+      .subscribe({
+        next: (res: any) => {
+          this.archivosAceptacionRamo = res?.archivos ?? [];
+          this.cargandoArchivosAceptacion = false;
+        },
+        error: () => {
+          this.cargandoArchivosAceptacion = false;
+          this.archivosAceptacionRamo = [];
+          this.toastrService.error(
+            'Error',
+            'No se pudieron obtener los archivos de aceptación.'
+          );
+        }
+      });
+  }
+
+  visualizarArchivoAceptacion(archivo: any): void {
+    if (!this.ramoAceptacionSeleccionado?.idRamo || !archivo?.nombre) {
+      return;
+    }
+
+    this.pygService.visualizarArchivoAprobacion(
+      this.ramoAceptacionSeleccionado.idRamo,
+      archivo.nombre
+    ).subscribe({
+      next: (blob: Blob) => {
+        const url = window.URL.createObjectURL(blob);
+        window.open(url, '_blank');
+
+        // Se libera más tarde para dar tiempo al navegador a abrir el recurso.
+        setTimeout(() => window.URL.revokeObjectURL(url), 60000);
+      },
+      error: () => {
+        this.toastrService.error(
+          'Error',
+          'No se pudo visualizar el archivo.'
+        );
+      }
+    });
+  }
+
+  descargarArchivoAceptacion(archivo: any): void {
+    if (!this.ramoAceptacionSeleccionado?.idRamo || !archivo?.nombre) {
+      return;
+    }
+
+    this.pygService.descargarArchivoAprobacion(
+      this.ramoAceptacionSeleccionado.idRamo,
+      archivo.nombre
+    ).subscribe({
+      next: (blob: Blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const enlace = document.createElement('a');
+        enlace.href = url;
+        enlace.download = archivo.nombre;
+        document.body.appendChild(enlace);
+        enlace.click();
+        document.body.removeChild(enlace);
+        window.URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.toastrService.error(
+          'Error',
+          'No se pudo descargar el archivo.'
+        );
+      }
+    });
+  }
+
+  async validarPorcentajeMaximoGasto(registro: any): Promise<boolean> {
+    const comisionAnual = Number(registro?.comisionAnual || 0);
+    const porcMaxGasto = Number(this.userCurrent?.porcMaxgasto || 0);
+
+    const totalGastos = (registro?.gastos || []).reduce(
+      (total: number, gasto: any) => total + Number(gasto.valor || 0),
+      0
+    );
+
+    // Si no existe una comisión anual válida, no se puede calcular el porcentaje.
+    if (comisionAnual <= 0) {
+      return true;
+    }
+
+    // Si el usuario no tiene configurado un porcentaje máximo, no se aplica restricción.
+    if (porcMaxGasto <= 0) {
+      return true;
+    }
+
+    const porcentajeGasto = (totalGastos / comisionAnual) * 100;
+    const maximoValorGastos = (comisionAnual * porcMaxGasto) / 100;
+
+    if (porcentajeGasto >= porcMaxGasto) {
+      return await this.abrirModalAprobacionGastos(
+        registro,
+        porcentajeGasto,
+        porcMaxGasto,
+        maximoValorGastos
+      );
+    }
+
+    return true;
+  }
+
+  /**
+   * Abre el modal Angular que contiene ngx-dropzone.
+   * La promesa se resuelve en true únicamente cuando el usuario confirma
+   * con por lo menos un archivo válido.
+   */
+  abrirModalAprobacionGastos(
+    registro: any,
+    porcentajeGasto: number,
+    porcMaxGasto: number,
+    maximoValorGastos: number
+  ): Promise<boolean> {
+
+    // Si por algún motivo quedó una validación anterior abierta, se cancela.
+    if (this.resolverAprobacion) {
+      this.resolverAprobacion(false);
+      this.resolverAprobacion = undefined;
+    }
+
+    this.registroPendienteAprobacion = registro;
+    this.porcentajeGastoPendiente = porcentajeGasto;
+    this.porcMaxGastoPendiente = porcMaxGasto;
+    this.maximoValorGastosPendiente = maximoValorGastos;
+
+    // Precarga solo los File todavía no enviados al backend.
+    // Así, si el ramo se está editando, el usuario puede quitar un respaldo
+    // que seleccionó anteriormente antes de guardar definitivamente el PYG.
+    this.archivosAprobacionTemp = Array.isArray(registro?.archivosAprobacion)
+      ? registro.archivosAprobacion.filter((archivo: any) => archivo instanceof File)
+      : [];
+
+    return new Promise<boolean>((resolve) => {
+      this.resolverAprobacion = resolve;
+
+      setTimeout(() => {
+        $('#modalAprobacionGastos').modal({
+          backdrop: 'static',
+          keyboard: false
+        });
+        $('#modalAprobacionGastos').modal('show');
+      }, 0);
+    });
+  }
+
+  /**
+   * Recibe los archivos seleccionados en ngx-dropzone.
+   */
+  onSelectAprobacion(event: any): void {
+    const archivosAgregados: File[] = event?.addedFiles ?? [];
+    const archivosRechazados: any[] = event?.rejectedFiles ?? [];
+
+    console.log('Archivos agregados:', archivosAgregados);
+    console.log('Archivos rechazados:', archivosRechazados);
+
+    // Solo mostramos un mensaje específico si realmente podemos identificar
+    // que el rechazo fue por tamaño o por tipo. Evitamos mostrar
+    // "Archivo no permitido" para rechazos sin razón clara.
+    if (archivosRechazados.length > 0) {
+      const rechazadosPorTamano = archivosRechazados.filter(
+        (archivo: any) =>
+          archivo?.reason === 'size' ||
+          Number(archivo?.size ?? 0) > this.maxArchivoAprobacion
+      );
+
+      const rechazadosPorTipo = archivosRechazados.filter(
+        (archivo: any) => archivo?.reason === 'type'
+      );
+
+      if (rechazadosPorTamano.length > 0) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Archivo demasiado grande',
+          text: 'Cada respaldo puede pesar máximo 20 MB.',
+          confirmButtonText: 'Aceptar'
+        });
+      } else if (rechazadosPorTipo.length > 0) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Tipo de archivo no permitido',
+          text: 'El tipo de uno o más archivos no está permitido.',
+          confirmButtonText: 'Aceptar'
+        });
+      } else {
+        console.warn(
+          'ngx-dropzone rechazó uno o más archivos sin una razón identificable:',
+          archivosRechazados
+        );
+      }
+    }
+
+    archivosAgregados.forEach((archivo: File) => {
+      // Doble validación por seguridad.
+      if (archivo.size > this.maxArchivoAprobacion) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Archivo demasiado grande',
+          text: `El archivo "${archivo.name}" supera el máximo permitido de 20 MB.`,
+          confirmButtonText: 'Aceptar'
+        });
+        return;
+      }
+
+      const yaExiste = this.archivosAprobacionTemp.some(
+        (actual: File) =>
+          actual.name === archivo.name &&
+          actual.size === archivo.size &&
+          actual.lastModified === archivo.lastModified
+      );
+
+      if (!yaExiste) {
+        this.archivosAprobacionTemp.push(archivo);
+      }
+    });
+
+    console.log(
+      'Archivos actuales de aprobación:',
+      this.archivosAprobacionTemp
+    );
+    console.log(
+      'Peso acumulado:',
+      this.formatearTamanoArchivo(this.totalPesoArchivosAprobacion)
+    );
+  }
+
+  /**
+   * Permite quitar un archivo seleccionado incorrectamente.
+   */
+  onRemoveAprobacion(archivo: File): void {
+    this.archivosAprobacionTemp = this.archivosAprobacionTemp.filter(
+      (item: File) => item !== archivo
+    );
+
+    console.log(
+      'Archivos restantes:',
+      this.archivosAprobacionTemp
+    );
+    console.log(
+      'Peso acumulado:',
+      this.formatearTamanoArchivo(this.totalPesoArchivosAprobacion)
+    );
+  }
+
+  /**
+   * Confirma la aprobación y continúa con el flujo normal del ramo.
+   */
+  confirmarAprobacionGastos(): void {
+    if (this.archivosAprobacionTemp.length < 1) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Respaldo requerido',
+        text: 'Debe cargar por lo menos un respaldo de aprobación para continuar.',
+        confirmButtonText: 'Aceptar'
+      });
+      return;
+    }
+
+    const archivoInvalido = this.archivosAprobacionTemp.find(
+      (archivo: File) => archivo.size > this.maxArchivoAprobacion
+    );
+
+    if (archivoInvalido) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Archivo demasiado grande',
+        text: `El archivo "${archivoInvalido.name}" supera el máximo permitido de 20 MB.`,
+        confirmButtonText: 'Aceptar'
+      });
+      return;
+    }
+
+    if (this.registroPendienteAprobacion) {
+      this.ingresoConAprobacion(
+        this.registroPendienteAprobacion,
+        this.archivosAprobacionTemp
+      );
+    }
+
+    $('#modalAprobacionGastos').modal('hide');
+
+    const resolver = this.resolverAprobacion;
+    this.limpiarModalAprobacion();
+
+    // true hace que guardarIngresoGastos()/actualizarIngresoGasto()
+    // continúen exactamente con su flujo normal.
+    resolver?.(true);
+  }
+
+  /**
+   * Cancela la aprobación. El usuario vuelve al formulario para reducir gastos.
+   */
+  cancelarAprobacionGastos(): void {
+    $('#modalAprobacionGastos').modal('hide');
+
+    const resolver = this.resolverAprobacion;
+    this.limpiarModalAprobacion();
+
+    resolver?.(false);
+  }
+
+  private limpiarModalAprobacion(): void {
+    this.archivosAprobacionTemp = [];
+    this.registroPendienteAprobacion = null;
+    this.porcentajeGastoPendiente = 0;
+    this.porcMaxGastoPendiente = 0;
+    this.maximoValorGastosPendiente = 0;
+    this.resolverAprobacion = undefined;
+  }
+
+  /**
+   * Asocia al ramo la lista actual del dropzone.
+   * Los archivos File anteriores se reemplazan por la selección actual,
+   * permitiendo que un archivo eliminado deje de enviarse al backend.
+   * Cualquier metadata de archivos que ya exista en backend se conserva.
+   */
+  ingresoConAprobacion(registro: any, archivos: File[]): void {
+    const archivosPersistidos = Array.isArray(registro?.archivosAprobacion)
+      ? registro.archivosAprobacion.filter((archivo: any) => !(archivo instanceof File))
+      : [];
+
+    registro.archivosAprobacion = [
+      ...archivosPersistidos,
+      ...archivos
+    ];
+
+    console.log('===== INGRESO CON APROBACIÓN =====');
+    console.log('Datos del ramo:', registro);
+    console.log('Archivos de aprobación:', registro.archivosAprobacion);
+
+    console.table(
+      archivos.map((archivo: File) => ({
+        nombre: archivo.name,
+        tipo: archivo.type || 'Tipo no informado',
+        tamanioMB: Number((archivo.size / (1024 * 1024)).toFixed(2)),
+        ultimaModificacion: archivo.lastModified
+      }))
+    );
+  }
+
+  /**
+   * Peso acumulado de todos los respaldos seleccionados.
+   */
+  get totalPesoArchivosAprobacion(): number {
+    return this.archivosAprobacionTemp.reduce(
+      (total: number, archivo: File) => total + Number(archivo?.size || 0),
+      0
+    );
+  }
+
+  /**
+   * Porcentaje usado únicamente para representar visualmente el peso
+   * acumulado en la barra. La referencia visual es 100 MB y NO representa
+   * un límite de carga total; el límite real continúa siendo 20 MB por archivo.
+   */
+  get porcentajePesoArchivosAprobacion(): number {
+    if (this.maxTotalVisualAprobacion <= 0) {
+      return 0;
+    }
+
+    const porcentaje =
+      (this.totalPesoArchivosAprobacion / this.maxTotalVisualAprobacion) * 100;
+
+    return Math.min(Math.max(porcentaje, 0), 100);
+  }
+
+  formatearTamanoArchivo(bytes: number): string {
+    if (!bytes || bytes <= 0) {
+      return '0 KB';
+    }
+
+    const kb = bytes / 1024;
+
+    if (kb < 1024) {
+      return `${kb.toFixed(2)} KB`;
+    }
+
+    const mb = kb / 1024;
+    return `${mb.toFixed(2)} MB`;
+  }
+
+  /**
+   * Acorta visualmente nombres largos dentro del modal de aceptación.
+   * El nombre real se conserva completo para visualizar y descargar.
+   */
+  truncarNombreArchivo(nombre: string, limite: number = 25): string {
+    if (!nombre) {
+      return '';
+    }
+
+    return nombre.length > limite
+      ? nombre.substring(0, limite) + '...'
+      : nombre;
+  }
+
   calcularRestanteGastosxRamo(gastos: any[], comision: any): number {
     let totalGastos = gastos?.reduce((total, gasto) => total + Number(gasto.valor), 0);
     return comision - totalGastos;
@@ -853,13 +1326,13 @@ export class PygingresoComponent2 {
 
                       let resultado;
 
-                      if (subidas === 0 || bajadas === 0) {
-                        // Tendencia clara (sube o baja)
-                        resultado = {
-                          ...ultimo,
-                          estadoCrecimiento: subidas > 0 ? 'SUBE' : 'BAJA'
-                        };
-                      } else {
+                      // if (subidas === 0 || bajadas === 0) {
+                      //   // Tendencia clara (sube o baja)
+                      //   resultado = {
+                      //     ...ultimo,
+                      //     estadoCrecimiento: subidas > 0 ? 'SUBE' : 'BAJA'
+                      //   };
+                      // } else {
                         // Comportamiento mixto
                         const promedioPrima =
                           primas.reduce((a, b) => a + b, 0) / primas.length;
@@ -877,7 +1350,7 @@ export class PygingresoComponent2 {
                           comisionAnual: Number((promedioComision * 12).toFixed(2)),
                           estadoCrecimiento: 'PROMEDIO'
                         };
-                      }
+                     // }
                       if (resultado?.registros?.length > 0) {
                         this.lstRamosSugeridos.push(resultado);
                       }
@@ -931,7 +1404,14 @@ export class PygingresoComponent2 {
   editarIngreso(index: any) {
     this.indexIGActualizar = index;
     this.editarIngresoGasto = true;
-    this.ingresoRamoSeleccionado = JSON.parse(JSON.stringify(this.lstIngresosGastos[index]));
+    const ingresoOriginal = this.lstIngresosGastos[index];
+    this.ingresoRamoSeleccionado = {
+      ...ingresoOriginal,
+      gastos: JSON.parse(JSON.stringify(ingresoOriginal.gastos ?? [])),
+      facturas: JSON.parse(JSON.stringify(ingresoOriginal.facturas ?? [])),
+      // Los File no deben pasar por JSON.stringify porque se convierten en {}.
+      archivosAprobacion: [...(ingresoOriginal.archivosAprobacion ?? [])]
+    };
     this.idRamoSeleccionado = this.ingresoRamoSeleccionado.idRamo ?? '';
     if (this.idRamoSeleccionado) {
       Swal.fire({
@@ -964,7 +1444,7 @@ export class PygingresoComponent2 {
     // );
   }
 
-  actualizarIngresoGasto() {
+  async actualizarIngresoGasto() {
     const ramo = this.lstRamos.find((r: any) => r.cdRamo === this.ingresoForm.value.ramo);
     const aseguradora = this.lstAseguradoras.find((r: any) => r.id == this.ingresoForm.value.aseguradora);
 
@@ -987,11 +1467,18 @@ export class PygingresoComponent2 {
       gastos: this.lstGastos,
       facturas: this.ingresoRamoSeleccionado.facturas,
       poliza: this.ingresoForm.value.poliza,
+      archivosAprobacion: [...(this.ingresoRamoSeleccionado.archivosAprobacion ?? [])],
       nombresUsuario: (
         (this.userCurrent?.get_persona.nombre ?? '') + ' ' +
         (this.userCurrent?.get_persona.apellido ?? '')
       ).trim()
+    };
+
+    const puedeActualizarNormal = await this.validarPorcentajeMaximoGasto(ingreso);
+    if (!puedeActualizarNormal) {
+      return;
     }
+
     this.lstIngresosGastos[this.indexIGActualizar] = ingreso;
     this.limpiarFormIngreso();
     this.toastrService.success(
@@ -1050,7 +1537,50 @@ export class PygingresoComponent2 {
     formD.append('nombreCliente', this.clienteSeleccionado.NOMBRES);
     formD.append('idCliente', this.clienteSeleccionado.ID);
     formD.append('idUsuario', this.userCurrent.id);
-    formD.append('lstIngresosGastos', JSON.stringify(this.lstIngresosGastos));
+
+    // Los objetos File no deben viajar dentro de JSON.stringify.
+    // Se agregan al FormData como archivos reales y se relacionan
+    // con cada ramo mediante el índice de lstIngresosGastos.
+    const ingresosParaEnviar = this.lstIngresosGastos.map(
+      (ingreso: any, indexRamo: number) => {
+        const archivos = Array.isArray(ingreso.archivosAprobacion)
+          ? ingreso.archivosAprobacion
+          : [];
+
+        const metadataArchivos = archivos.map((archivo: any, indexArchivo: number) => {
+          if (archivo instanceof File) {
+            formD.append(
+              `archivosAprobacion[${indexRamo}][]`,
+              archivo,
+              archivo.name
+            );
+
+            return {
+              indexArchivo,
+              nombre: archivo.name,
+              tipo: archivo.type || null,
+              tamanio: archivo.size,
+              esNuevo: true
+            };
+          }
+
+          // Si el backend ya devolvió respaldos previamente guardados,
+          // conserva su información/ruta en el JSON.
+          return {
+            ...archivo,
+            indexArchivo,
+            esNuevo: false
+          };
+        });
+
+        return {
+          ...ingreso,
+          archivosAprobacion: metadataArchivos
+        };
+      }
+    );
+
+    formD.append('lstIngresosGastos', JSON.stringify(ingresosParaEnviar));
     // return;
     this.pygService.guardarPYG(formD).subscribe((res: any) => {
       Swal.fire({
@@ -1135,6 +1665,7 @@ export class PygingresoComponent2 {
             : '',
           gastos: element.gastos,
           facturas: element.facturas,
+          archivosAprobacion: element.archivosAprobacion ?? [],
           nombresUsuario: element.nombresUsuario ?? '',
           poliza: element.poliza ?? '',
           //adicionales
@@ -3430,6 +3961,7 @@ private agregarRamoPantallaExcel(
         comisionAnual: element.comisionAnual ?? 0,
         poliza: element.poliza ?? 0,
         gastos: [],
+        archivosAprobacion: [] as File[],
         nombresUsuario: (
           (this.userCurrent?.get_persona.nombre ?? '') + ' ' +
           (this.userCurrent?.get_persona.apellido ?? '')

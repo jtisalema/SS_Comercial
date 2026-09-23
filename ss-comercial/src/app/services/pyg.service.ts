@@ -21,6 +21,71 @@ export class PygService {
     console.error('HTTP Error:', error);
     return throwError(() => error);
   }
+  public obtenerArchivosAprobacion(idRamo: any) {
+
+  const URL_API =
+    environment.apiUrl +
+    "obtenerArchivosAprobacion/" +
+    idRamo;
+
+  return this.httpClient
+    .get(URL_API)
+    .pipe(
+      catchError(this.handleError)
+    );
+}
+
+
+public visualizarArchivoAprobacion(
+  idRamo: any,
+  nombreArchivo: string
+) {
+
+  const URL_API =
+    environment.apiUrl +
+    "visualizarArchivoAprobacion/" +
+    idRamo;
+
+  return this.httpClient
+    .get(
+      URL_API,
+      {
+        params: {
+          archivo: nombreArchivo
+        },
+        responseType: 'blob'
+      }
+    )
+    .pipe(
+      catchError(this.handleError)
+    );
+}
+
+
+public descargarArchivoAprobacion(
+  idRamo: any,
+  nombreArchivo: string
+) {
+
+  const URL_API =
+    environment.apiUrl +
+    "descargarArchivoAprobacion/" +
+    idRamo;
+
+  return this.httpClient
+    .get(
+      URL_API,
+      {
+        params: {
+          archivo: nombreArchivo
+        },
+        responseType: 'blob'
+      }
+    )
+    .pipe(
+      catchError(this.handleError)
+    );
+}
   public guardarPYG(form: any) {
     const URL_API = environment.apiUrl + "guardarPYG";
     return this.httpClient.post(URL_API, form).pipe(catchError(this.handleError));

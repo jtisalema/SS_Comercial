@@ -1,27 +1,79 @@
-<div class="content-wrapper"
-    style="background-image: url('assets/images/fondos/plataforma_fondo2.png');background-repeat: no-repeat;height: 100%;background-size: cover;">
-    <br>
-    <section class="content">
+<div class="content-wrapper presupuesto-page">
+
+    <section class="content pt-4">
         <div class="container-fluid">
+
+            <!-- CONTENIDO -->
             <div class="row">
                 <div class="col-12">
-                    <div class="card card-primary card-outline">
-                        <div class="card-header">
-                            <h3 class="card-title" style="padding-top: 5px;">
-                                <i class="fas fa-user-alt mr-2"></i>
-                                Presupuesto y Gastos de Clientes
-                            </h3>
-                            <button #btnActualizaCustodio type="button" hidden data-toggle="modal">
+
+                    <div class="card presupuesto-card">
+
+                        <!-- CABECERA -->
+                        <div class="card-header presupuesto-card-header">
+                            <div class="d-flex justify-content-between align-items-center">
+
+                                <div class="d-flex align-items-center">
+                                    <div class="section-icon">
+                                        <i class="fas fa-users"></i>
+                                    </div>
+
+                                    <div>
+                                        <h3 class="card-title presupuesto-title">
+                                            Presupuesto y Gastos de Clientes
+                                        </h3>
+
+                                        <small class="text-muted">
+                                            Consulta y administración de información
+                                        </small>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <i class="fas fa-chart-line header-decoration"></i>
+                                </div>
+
+                            </div>
+
+                            <button
+                                #btnActualizaCustodio
+                                type="button"
+                                hidden
+                                data-toggle="modal">
                             </button>
+
                         </div>
+
+                        <!-- CUERPO -->
                         <div class="card-body">
-                            <table #dataTableRegistros class="table table-bordered table-striped"
-                                style="width: 100%;font-size: 11px;text-align: center;">
-                            </table>
+
+                            <div class="table-title-container">
+                                <div>
+                                    <span class="table-title">
+                                        <i class="fas fa-list mr-2"></i>
+                                        Detalle de clientes
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive presupuesto-table-container">
+
+                                <table
+                                    #dataTableRegistros
+                                    class="table table-hover table-bordered presupuesto-table"
+                                    style="width: 100%;">
+                                </table>
+
+                            </div>
+
                         </div>
+
                     </div>
+
                 </div>
             </div>
+
         </div>
     </section>
+
 </div>
