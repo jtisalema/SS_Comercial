@@ -10,7 +10,11 @@ export class PygService {
 
   constructor(private httpClient: HttpClient) { }
   public consultarClienteNombre(nombre: string) {
-    const URL_API = "https://siniestros.segurossuarez.com:3030/api/Clientes/" + nombre;
+    const URL_API = "https://cotizador.segurossuarez.com/backend-siniestros/public/api/Clientes/" + nombre;
+    return this.httpClient.get(URL_API).pipe(catchError(this.handleError));
+  }
+  public obtenerHistorialPYG(idRegistro: number) {
+    const URL_API = environment.apiUrl + "obtenerHistorialPYG/" + idRegistro;
     return this.httpClient.get(URL_API).pipe(catchError(this.handleError));
   }
   public consultarClienteNombreCompleto(nombre: string) {
@@ -23,113 +27,121 @@ export class PygService {
   }
   public obtenerArchivosAprobacion(idRamo: any) {
 
-  const URL_API =
-    environment.apiUrl +
-    "obtenerArchivosAprobacion/" +
-    idRamo;
+    const URL_API =
+      environment.apiUrl +
+      "obtenerArchivosAprobacion/" +
+      idRamo;
 
-  return this.httpClient
-    .get(URL_API)
-    .pipe(
-      catchError(this.handleError)
-    );
-}
-
-
-public visualizarArchivoAprobacion(
-  idRamo: any,
-  nombreArchivo: string
-) {
-
-  const URL_API =
-    environment.apiUrl +
-    "visualizarArchivoAprobacion/" +
-    idRamo;
-
-  return this.httpClient
-    .get(
-      URL_API,
-      {
-        params: {
-          archivo: nombreArchivo
-        },
-        responseType: 'blob'
-      }
-    )
-    .pipe(
-      catchError(this.handleError)
-    );
-}
+    return this.httpClient
+      .get(URL_API)
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
 
 
-public descargarArchivoAprobacion(
-  idRamo: any,
-  nombreArchivo: string
-) {
+  public visualizarArchivoAprobacion(
+    idRamo: any,
+    nombreArchivo: string
+  ) {
 
-  const URL_API =
-    environment.apiUrl +
-    "descargarArchivoAprobacion/" +
-    idRamo;
+    const URL_API =
+      environment.apiUrl +
+      "visualizarArchivoAprobacion/" +
+      idRamo;
 
-  return this.httpClient
-    .get(
-      URL_API,
-      {
-        params: {
-          archivo: nombreArchivo
-        },
-        responseType: 'blob'
-      }
-    )
-    .pipe(
-      catchError(this.handleError)
-    );
-}
+    return this.httpClient
+      .get(
+        URL_API,
+        {
+          params: {
+            archivo: nombreArchivo
+          },
+          responseType: 'blob'
+        }
+      )
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
+
+  public descargarArchivoAprobacion(
+    idRamo: any,
+    nombreArchivo: string
+  ) {
+
+    const URL_API =
+      environment.apiUrl +
+      "descargarArchivoAprobacion/" +
+      idRamo;
+
+    return this.httpClient
+      .get(
+        URL_API,
+        {
+          params: {
+            archivo: nombreArchivo
+          },
+          responseType: 'blob'
+        }
+      )
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
   public guardarPYG(form: any) {
-    const URL_API = environment.apiUrl + "guardarPYG";
+    const URL_API = environment.apiUrl + "guardarPYG2";
     return this.httpClient.post(URL_API, form).pipe(catchError(this.handleError));
   }
-    public obtenerRegistrosPYG() {
+  public guardarRevisionPYG(form: any) {
+    const URL_API = environment.apiUrl + "guardarRevisionPYG";
+    return this.httpClient.post(URL_API, form).pipe(catchError(this.handleError));
+  }
+  public obtenerRegistrosPYG() {
     const URL_API = environment.apiUrl + "obtenerRegistrosPYG";
     return this.httpClient.get(URL_API).pipe(catchError(this.handleError));
   }
-      public obtenerRegistrosPYGbyID(idRegistro:string) {
-    const URL_API = environment.apiUrl + "obtenerRegistrosPYGbyID/"+idRegistro;
+  public obtenerRegistrosPYGDetalle() {
+    const URL_API = environment.apiUrl + "obtenerRegistrosPYGDetalle";
     return this.httpClient.get(URL_API).pipe(catchError(this.handleError));
   }
-        public obtenerRegistrosPYGFinanciero(formData:FormData) {
-    const URL_API = environment.apiUrl + "obtenerRegistrosPYGFinanciero";
+  public obtenerRegistrosPYGbyID(idRegistro: string) {
+    const URL_API = environment.apiUrl + "obtenerRegistrosPYGbyID/" + idRegistro;
+    return this.httpClient.get(URL_API).pipe(catchError(this.handleError));
+  }
+  public obtenerRegistrosPYGFinanciero(formData: FormData) {
+    const URL_API = environment.apiUrl + "obtenerRegistrosPYGFinanciero2";
     return this.httpClient.post(URL_API, formData).pipe(catchError(this.handleError));
   }
-        public obtenerFiltrosPYG(idCliente:string) {
-    const URL_API = environment.apiUrl + "obtenerFiltrosPYG/"+idCliente;
+  public obtenerFiltrosPYG(idCliente: string) {
+    const URL_API = environment.apiUrl + "obtenerFiltrosPYG/" + idCliente;
     return this.httpClient.get(URL_API).pipe(catchError(this.handleError));
   }
-  public obtenerFacturasPYG(form:any){
+  public obtenerFacturasPYG(form: any) {
     const URL_API = environment.apiUrl + "obtenerFacturasPYG";
     return this.httpClient.post(URL_API, form).pipe(catchError(this.handleError));
   }
-  
-    public obtenerFacturasPYGFactura(form:any){
+
+  public obtenerFacturasPYGFactura(form: any) {
     const URL_API = environment.apiUrl + "obtenerFacturasPYGFactura";
     return this.httpClient.post(URL_API, form).pipe(catchError(this.handleError));
   }
 
-    public guardarFacturasPYG(form: any) {
-    const URL_API = environment.apiUrl + "guardarFacturasPYG";
+  public guardarFacturasPYG(form: any) {
+    const URL_API = environment.apiUrl + "guardarFacturasPYG2";
     return this.httpClient.post(URL_API, form).pipe(catchError(this.handleError));
   }
-  public obtenerRamosCliente(idCliente:any) {
-    const URL_API = environment.efiApi + "clientes/informacionValoresClienteDBroker/"+idCliente;
+  public obtenerRamosCliente(idCliente: any) {
+    const URL_API = environment.efiApi + "clientes/informacionValoresClienteDBroker/" + idCliente;
     return this.httpClient.get(URL_API).pipe(catchError(this.handleError));
   }
-  public obtenerPolizasSugeridas(idCliente:any) {
-    const URL_API = environment.efiApi + "clientes/produccionPagada/"+idCliente;
+  public obtenerPolizasSugeridas(idCliente: any) {
+    const URL_API = environment.efiApi + "clientes/produccionPagada/" + idCliente;
     return this.httpClient.get(URL_API).pipe(catchError(this.handleError));
   }
-  public obtenerFacturasProdPagada(idCliente:any,poliza:any,fechaDesde:any,fechaHasta:any) {
-    const URL_API = environment.efiApi + "/clientes/produccionPagada/"+idCliente+"/"+poliza+"?fechaDesde="+fechaDesde+"&fechaHasta="+fechaHasta;
+  public obtenerFacturasProdPagada(idCliente: any, poliza: any, fechaDesde: any, fechaHasta: any, cdRamo: any) {
+    const URL_API = environment.efiApi + "/clientes/produccionPagada/" + idCliente + "/" + poliza + "?fechaDesde=" + fechaDesde + "&fechaHasta=" + fechaHasta + "&cdRamo=" + cdRamo;
     return this.httpClient.get(URL_API).pipe(catchError(this.handleError));
   }
 }

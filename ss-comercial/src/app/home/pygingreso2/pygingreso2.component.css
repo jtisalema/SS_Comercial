@@ -3390,3 +3390,469 @@ ngx-dropzone-preview {
     padding: 0 8px !important;
   }
 }
+
+.tabla-detalle-ramos {
+  font-size: 11px;
+  text-align: center;
+  white-space: nowrap;
+}
+.tabla-detalle-ramos thead th {
+  background: #eaf3ff;
+  color: #0d47a1;
+  padding: 8px;
+}
+.tabla-detalle-ramos tbody td {
+  vertical-align: middle;
+  padding: 7px;
+}
+.tabla-detalle-ramos tfoot th {
+  background: #e8f5e9;
+  padding: 8px;
+}
+
+.pyg-detalle-compacto {
+  padding-top: 12px !important;
+}
+.pyg-detalle-compacto > .mb-3 {
+  margin-bottom: 4px !important;
+  font-size: 14px;
+}
+.pyg-detalle-compacto > .seccion-tabla {
+  margin-top: 5px !important;
+}
+.pyg-detalle-compacto .seccion-titulo {
+  margin-bottom: 5px !important;
+}
+.pyg-scroll-ramos {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.pyg-scroll-ramos .tabla-detalle-ramos {
+  width: max-content;
+  min-width: 100%;
+  font-size: 11px;
+}
+.pyg-scroll-ramos .tabla-detalle-ramos th,
+.pyg-scroll-ramos .tabla-detalle-ramos td {
+  padding: 5px 6px;
+}
+@media (max-width: 768px) {
+  .pyg-scroll-ramos .tabla-detalle-ramos {
+    font-size: 11px;
+  }
+  .pyg-detalle-compacto > .mb-3 {
+    font-size: 12px;
+  }
+}
+
+.pyg-programa-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  margin: 4px 0 8px;
+  border: 1px solid #dbeafe;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #eff6ff 0%, #ffffff 100%);
+}
+.pyg-programa-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: 14px;
+}
+.pyg-programa-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.pyg-programa-tipo {
+  font-size: 10px;
+  font-weight: 600;
+  color: #64748b;
+}
+.pyg-programa-texto strong {
+  color: #173b68;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.pyg-programa-cantidad {
+  background: #ffffff;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  padding: 4px 9px;
+  color: #1d4ed8;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+@media (max-width: 576px) {
+  .pyg-programa-header { padding: 8px; gap: 7px; }
+  .pyg-programa-texto strong { font-size: 12px; }
+  .pyg-programa-cantidad { padding: 3px 6px; }
+}
+
+.tabla-gastos-facturas{font-size:10px;min-width:900px;}
+.tabla-gastos-facturas td{vertical-align:middle;}
+.tabla-gastos-facturas thead th{white-space:normal;}
+
+/* Mejoras puntuales: jerarquía de encabezados y alcances */
+.pyg-titulo-ampliado{display:flex;width:100%;justify-content:flex-start;border-radius:9px;padding:10px 14px;font-size:12px;letter-spacing:.15px;margin-bottom:10px;}
+.seccion-titulo-danger.pyg-titulo-ampliado{background:#fff0e9;color:#a64024;border-color:#ffd7c7;}
+.tabla-gastos-facturas tbody tr.pyg-fila-alcance td,.tabla-lstContactos tbody tr.pyg-fila-alcance td{background:#fff3bd!important;border-color:#ffe08a!important;}
+.tabla-gastos-facturas tbody tr.pyg-fila-alcance:hover td,.tabla-lstContactos tbody tr.pyg-fila-alcance:hover td{background:#ffe99a!important;}
+
+/* Tarjeta compacta de revisión de producción */
+.pyg-revision-produccion{width:335px;max-width:100%;border:1px solid #d7e5f0;border-radius:10px;overflow:hidden;font-size:12px;}
+.pyg-revision-produccion .card-header{background:#f2f7fb;border-bottom:1px solid #d7e5f0;font-size:13px;}
+.pyg-revision-produccion table th,.pyg-revision-produccion table td{padding:7px 9px;vertical-align:middle;border-color:#e0eaf2;}
+.pyg-revision-produccion table th{font-weight:700;}
+.pyg-revision-produccion thead th{background:#f7fafc;}
+
+/* Selector de cliente y botón de ramos sugeridos alineados */
+.cliente-selector-acciones{display:flex;align-items:center;gap:8px;width:100%;flex-wrap:nowrap;}
+.cliente-selector-acciones ng-select{flex:1 1 0;min-width:0;width:0;}
+.cliente-selector-acciones .btn-ramo-sugerido{flex:0 0 36px;min-width:36px;height:38px;padding:0;display:inline-flex;align-items:center;justify-content:center;align-self:center;white-space:nowrap;}
+
+.scroll-ramos-x{
+  width:100%;
+  max-width:100%;
+  overflow-x:auto;
+  overflow-y:hidden;
+  -webkit-overflow-scrolling:touch;
+}
+
+.scroll-ramos-x .tabla-detalle-ramos{
+  min-width:1450px;
+  width:100%;
+  white-space:nowrap;
+  margin-bottom:0;
+}
+
+.scroll-ramos-x .tabla-detalle-ramos th,
+.scroll-ramos-x .tabla-detalle-ramos td{
+  vertical-align:middle;
+  white-space:nowrap;
+}
+
+.scroll-ramos-x .tabla-detalle-ramos td:last-child{
+  min-width:95px;
+}
+
+/* Únicamente desplazamiento horizontal: no modifica el ancho de las otras columnas. */
+.table-responsive.pyg-scroll-solo-x {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+/* En Gastos y Facturas, limitar solo la columna # (cantidad). */
+.tabla-gastos.tabla-gastos-facturas {
+  min-width: 1080px;
+}
+
+
+
+/* GASTOS Y FACTURAS: ancho intrínseco salvo las dos descripciones.
+   Selectores limitados a esta tabla para no alterar otras secciones. */
+.table-responsive.pyg-scroll-solo-x {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+.tabla-gastos.tabla-gastos-facturas {
+  table-layout: auto !important;
+  width: max-content !important;
+  min-width: 100% !important;
+  max-width: none !important;
+}
+.tabla-gastos.tabla-gastos-facturas col.pyg-col-descripcion-gasto {
+  width: 230px !important;
+}
+.tabla-gastos.tabla-gastos-facturas col.pyg-col-descripcion-factura {
+  width: 250px !important;
+}
+.tabla-gastos.tabla-gastos-facturas th,
+.tabla-gastos.tabla-gastos-facturas td {
+  width: auto;
+  min-width: 0;
+  max-width: none;
+  white-space: nowrap;
+}
+.tabla-gastos.tabla-gastos-facturas th.pyg-descripcion-gasto,
+.tabla-gastos.tabla-gastos-facturas td.pyg-descripcion-gasto {
+  width: 230px !important;
+  min-width: 230px !important;
+  max-width: 230px !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+}
+.tabla-gastos.tabla-gastos-facturas th.pyg-descripcion-factura,
+.tabla-gastos.tabla-gastos-facturas td.pyg-descripcion-factura {
+  width: 250px !important;
+  min-width: 250px !important;
+  max-width: 250px !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+}
+
+
+/* Ajuste contextual: sin facturas no se fuerza ancho horizontal.
+   Con facturas se conserva el ancho intrínseco y el scroll previo. */
+.tabla-gastos.tabla-gastos-facturas.pyg-tabla-solo-gastos {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  table-layout: auto !important;
+}
+
+/* Evita que la descripción extensa ensanche la tabla. */
+.tabla-gastos.tabla-gastos-facturas.pyg-tabla-solo-gastos
+  th.pyg-descripcion-gasto,
+.tabla-gastos.tabla-gastos-facturas.pyg-tabla-solo-gastos
+  td.pyg-descripcion-gasto {
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+}
+
+
+/* ==============================================================
+   Ajuste final y localizado: GASTOS Y FACTURAS sin scroll horizontal.
+   Se preservan los colores de grupo y la identificación de Alcances.
+   =============================================================== */
+.table-responsive.pyg-scroll-solo-x.pyg-sin-scroll-gastos {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden !important;
+}
+.table-responsive.pyg-scroll-solo-x > table.tabla-gastos.tabla-gastos-facturas {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  table-layout: fixed !important;
+  box-sizing: border-box;
+}
+/* El ancho de ambas descripciones se controla por proporciones para
+   adaptarse incluso cuando las facturas no están visibles. */
+.table-responsive.pyg-scroll-solo-x > table.tabla-gastos.tabla-gastos-facturas col.pyg-col-descripcion-gasto {
+  width: 24% !important;
+}
+.table-responsive.pyg-scroll-solo-x > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas col.pyg-col-descripcion-gasto {
+  width: 19% !important;
+}
+.table-responsive.pyg-scroll-solo-x > table.tabla-gastos.tabla-gastos-facturas col.pyg-col-descripcion-factura {
+  width: 19% !important;
+}
+.table-responsive.pyg-scroll-solo-x > table.tabla-gastos.tabla-gastos-facturas th,
+.table-responsive.pyg-scroll-solo-x > table.tabla-gastos.tabla-gastos-facturas td {
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  line-height: 1.35;
+  padding: 6px 4px !important;
+}
+/* Las celdas de factura heredan el fondo de la fila del gasto.
+   Solo los bordes posteriores delimitan la sección de Facturas. */
+@media (max-width: 768px) {
+  .table-responsive.pyg-scroll-solo-x > table.tabla-gastos.tabla-gastos-facturas {
+    font-size: 9px !important;
+  }
+  .table-responsive.pyg-scroll-solo-x > table.tabla-gastos.tabla-gastos-facturas th,
+  .table-responsive.pyg-scroll-solo-x > table.tabla-gastos.tabla-gastos-facturas td {
+    padding: 4px 2px !important;
+  }
+}
+
+/* Bordes diferenciados de las columnas de facturas (sin cambiar tamaños ni filas). */
+.table-responsive.pyg-scroll-solo-x .tabla-gastos-facturas thead th.pyg-bloque-facturas {
+  border: 2px solid #7197ca !important;
+  border-bottom-width: 3px !important;
+}
+.table-responsive.pyg-scroll-solo-x .tabla-gastos-facturas thead th.pyg-celda-factura,
+.table-responsive.pyg-scroll-solo-x .tabla-gastos-facturas tbody td.pyg-celda-factura,
+.table-responsive.pyg-scroll-solo-x .tabla-gastos-facturas tfoot td.pyg-total-factura {
+  border-color: #a5bfdf !important;
+}
+/* Frontera visible entre gastos y facturas. */
+.table-responsive.pyg-scroll-solo-x .tabla-gastos-facturas thead th.pyg-descripcion-factura,
+.table-responsive.pyg-scroll-solo-x .tabla-gastos-facturas tbody td.pyg-descripcion-factura,
+.table-responsive.pyg-scroll-solo-x .tabla-gastos-facturas tfoot td.pyg-total-factura:first-of-type {
+  border-left: 3px solid #7197ca !important;
+}
+
+/* Controles de revisión PYG: no afecta las tablas ni los estilos anteriores. */
+.pyg-revision-registro { margin-left: auto; }
+.pyg-revision-selector { min-width: 215px; max-width: 100%; }
+.pyg-revision-selector .form-select { font-size: 12px; }
+.pyg-revision-guardar { min-height: 31px; padding: 5px 16px; }
+
+
+/* Selector de decisión: estilos exclusivos del panel de revisión PYG. */
+.pyg-revision-registro {
+  gap: 12px !important;
+  align-items: flex-end !important;
+  padding: 12px 14px;
+  background: #f8fafc;
+  border: 1px solid #dce6f0;
+  border-radius: 13px;
+  width: fit-content;
+  max-width: 100%;
+  box-shadow: 0 3px 12px rgba(30, 58, 95, .06);
+}
+.pyg-revision-selector { min-width: 245px; }
+.pyg-revision-label { font-size: 11px; color: #40536d; letter-spacing: .1px; }
+.pyg-revision-selector .pyg-revision-select {
+  width: 100%; min-height: 38px; border: 1px solid #b9cce1;
+  border-radius: 9px; background-color: #fff; color: #234362;
+  font-size: 12px; font-weight: 700; padding: 8px 35px 8px 12px;
+  box-shadow: 0 1px 3px rgba(30,58,95,.04);
+}
+.pyg-revision-selector .pyg-revision-select:focus {
+  border-color: #4285c4; outline: 0;
+  box-shadow: 0 0 0 3px rgba(66,133,196,.16);
+}
+.pyg-revision-guardar { min-height: 38px; padding: 8px 19px; border-radius: 9px; font-weight: 700; }
+
+/* SweetAlert se inserta fuera del componente: selector profundo para el overlay. */
+::ng-deep .swal2-popup.pyg-swal-revision { border-radius: 17px; padding: 23px 25px 22px; }
+::ng-deep .pyg-swal-revision .swal2-title { color: #254261; font-size: 21px; font-weight: 800; }
+::ng-deep .pyg-swal-revision .swal2-input-label {
+  color: #475569; font-size: 14px; font-weight: 600; line-height: 1.5;
+  text-align: left; margin: 12px 0 6px;
+}
+::ng-deep .pyg-swal-revision textarea.swal2-textarea {
+  margin: 8px 0 12px; width: 100%; box-sizing: border-box;
+  min-height: 115px; border: 1px solid #cbd5e1; border-radius: 10px;
+  font-size: 13px; padding: 12px; resize: vertical;
+}
+::ng-deep .pyg-swal-revision textarea.swal2-textarea:focus {
+  border-color: #4285c4; box-shadow: 0 0 0 3px rgba(66,133,196,.13);
+}
+::ng-deep .pyg-swal-revision .swal2-actions { gap: 9px; margin-top: 10px; }
+::ng-deep .pyg-swal-revision .swal2-confirm,
+::ng-deep .pyg-swal-revision .swal2-cancel { border-radius: 8px; font-size: 13px; font-weight: 700; padding: 9px 20px; }
+@media (max-width: 576px) { .pyg-revision-registro { width: 100%; } .pyg-revision-selector { flex: 1; min-width: 175px; } }
+
+/* Selector de revisión en la misma fila que Exportar, sin panel ni título. */
+.pyg-revision-registro {
+  margin-left: auto;
+  width: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  gap: 2px !important;
+  align-items: center !important;
+}
+.pyg-revision-selector { min-width: 240px; }
+.pyg-revision-selector .pyg-revision-select { min-height: 46px; }
+.pyg-revision-guardar { min-height: 46px; }
+@media (max-width: 576px) {
+  .pyg-revision-registro { width: auto; max-width: 100%; }
+  .pyg-revision-selector { min-width: 160px; flex: 1; }
+}
+
+/* Estado del PYG en la esquina derecha de cada cabecera de registro. */
+.pyg-programa-header .pyg-estado-registro {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #9a3412;
+}
+.pyg-programa-header .pyg-estado-registro-2 { background: #fffbeb; border-color: #fcd34d; color: #92400e; }
+.pyg-programa-header .pyg-estado-registro-4 { background: #ecfdf5; border-color: #86efac; color: #166534; }
+.pyg-programa-header .pyg-estado-registro-6 { background: #fff1f2; border-color: #fda4af; color: #9f1239; }
+
+/* Aviso compacto de exceso de gastos: solo esta alerta. */
+.pyg-detalle-compacto .pyg-aviso-excedente-compacto {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  column-gap: 5px;
+  row-gap: 2px;
+  width: fit-content;
+  max-width: 100%;
+  margin: 7px 0 10px;
+  padding: 6px 10px !important;
+  font-size: 11px !important;
+  line-height: 1.45;
+  border-radius: 8px;
+}
+.pyg-detalle-compacto .pyg-aviso-excedente-compacto strong { font-weight: 700; }
+
+/* SECCIÓN FACTURAS PRODUCCIÓN */
+.seccion-tabla {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+
+/* CONTENEDOR DE LA TABLA */
+.seccion-tabla .pyg-scroll-solo-x {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+/* TABLA DE PROYECCIÓN */
+.tabla-gastos-facturas.tabla-proyeccion-ajustada {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    table-layout: auto !important;
+    margin-bottom: 0;
+}
+
+/* COLUMNAS */
+.tabla-proyeccion-ajustada th,
+.tabla-proyeccion-ajustada td {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    padding: 6px 5px !important;
+    vertical-align: middle;
+    white-space: normal;
+}
+
+/* FECHAS Y VALORES SIN SALTOS DE LÍNEA */
+.tabla-proyeccion-ajustada tbody td {
+    white-space: nowrap;
+}
+
+/* NÚMERO DE FILA */
+.tabla-proyeccion-ajustada th:first-child,
+.tabla-proyeccion-ajustada tbody td:first-child {
+    width: 35px !important;
+    min-width: 35px !important;
+}
+
+/* ELIMINAR ANCHOS IMPUESTOS POR REGLAS ANTERIORES */
+.tabla-proyeccion-ajustada {
+    min-width: 0 !important;
+}

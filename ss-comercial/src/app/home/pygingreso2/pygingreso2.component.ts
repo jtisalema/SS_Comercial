@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild,  OnDestroy } from '@angular/core';
+import { Component, ElementRef, ViewChild, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AppComponent } from 'src/app/app.component';
 import { AuthService } from 'src/app/services/auth.service';
@@ -28,11 +28,11 @@ import { ActivatedRoute, Router } from '@angular/router';
 export class PygingresoComponent2 implements OnDestroy {
   ngOnDestroy(): void {
 
-  if (this.esFinanciero) {
-    document.body.classList.remove('sidebar-collapse');
-  }
+    if (this.esFinanciero) {
+      document.body.classList.remove('sidebar-collapse');
+    }
 
-}
+  }
   @ViewChild('dataTableFacturas', { static: false }) tableFacturas!: ElementRef;
   ingresoForm!: FormGroup;
   gastoForm!: FormGroup;
@@ -52,6 +52,129 @@ export class PygingresoComponent2 implements OnDestroy {
   lstGastos: any;
   lstPYG: any;
   idRegistro: any;
+  // /:id/1 = consulta exclusiva del registro, sin formulario ni filtros.
+  tipoAcceso: string = "";
+  modoDetalleRegistro: boolean = false;
+  // Revisión de un registro PYG, disponible solo para el usuario autorizado en modo detalle.
+  accionRevisionPYG: 'aprobar' | 'corregir' | 'rechazar' = 'aprobar';
+  registroRevisionOriginal: any = null;
+  guardandoRevisionPYG = false;
+  guardandoRegistrosPYG = false;
+
+  // Modal de espera para las peticiones de guardado y revisión a Laravel.
+  private mostrarProcesandoPYG(titulo: string, mensaje: string): void {
+    Swal.fire({
+      title: titulo,
+      text: mensaje,
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      allowEnterKey: false,
+      showConfirmButton: false,
+      showCancelButton: false,
+      didOpen: () => Swal.showLoading()
+    });
+  }
+
+  get puedeRevisarRegistroPYG(): boolean {
+    return this.modoDetalleRegistro && Number(this.userCurrent?.id) === 1509
+      && !!this.idRegistro && !!this.registroRevisionOriginal;
+  }
+
+  async confirmarRevisionPYG(): Promise<void> {
+    if (!this.puedeRevisarRegistroPYG || this.guardandoRevisionPYG) return;
+    const accion = this.accionRevisionPYG;
+    if (!accion) {
+      await Swal.fire({
+        icon: 'warning', title: 'Seleccione una opción',
+        text: 'Debe elegir Aprobar, Corregir o Rechazar.'
+      });
+      return;
+    }
+
+    const titulos = {
+      aprobar: 'Aprobar Registro PYG',
+      corregir: 'Corregir Registro PYG',
+      rechazar: 'Rechazar Registro PYG'
+    };
+    const comentarioObligatorio = accion !== 'aprobar';
+    const descripciones = {
+      aprobar: 'Desea ingresar algun comentario para la aprobacion de este registro de PYG',
+      corregir: 'Ingrese los cambios que debe realizar en el registro del PYG',
+      rechazar: 'Ingrese los comentarios para rechazar este Registro de PYG'
+    };
+    const resultado = await Swal.fire({
+      title: titulos[accion],
+      input: 'textarea',
+      inputLabel: descripciones[accion],
+      inputPlaceholder: comentarioObligatorio ? 'Escriba aquí sus observaciones...' : 'Comentario opcional...',
+      inputAttributes: { 'aria-label': 'Comentario de revisión PYG' },
+      showCancelButton: true,
+      confirmButtonText: 'Aceptar',
+      cancelButtonText: 'Cancelar',
+      icon: accion === 'aprobar' ? 'question' : accion === 'corregir' ? 'info' : 'warning',
+      confirmButtonColor: accion === 'rechazar' ? '#dc3545' : accion === 'corregir' ? '#d97706' : '#198754',
+      customClass: {
+        popup: 'pyg-swal-revision',
+        title: 'pyg-swal-revision-titulo',
+        input: 'pyg-swal-revision-textarea',
+        confirmButton: 'pyg-swal-revision-confirmar',
+        cancelButton: 'pyg-swal-revision-cancelar'
+      },
+      showLoaderOnConfirm: false,
+      inputValidator: (valor: string) => {
+        if (comentarioObligatorio && !valor?.trim()) {
+          return 'El comentario es obligatorio para corregir o rechazar.';
+        }
+        return null;
+      }
+    });
+    if (!resultado.isConfirmed) return;
+
+    const datosRevision = {
+      idRegistro: this.idRegistro,
+      idUsuario: this.userCurrent.id,
+      accion,
+      comentario: String(resultado.value || '').trim(),
+      registro: this.registroRevisionOriginal
+    };
+    const jsonRevision = JSON.stringify(datosRevision);
+    // Envío del registro completo como cadena JSON al backend.
+    const formD = new FormData();
+    formD.append('datosRevision', jsonRevision);
+    this.guardandoRevisionPYG = true;
+    this.mostrarProcesandoPYG('Procesando revisión', 'Espere mientras se registra su decisión...');
+    this.pygService.guardarRevisionPYG(formD).subscribe({
+      next: async (res: any) => {
+        this.guardandoRevisionPYG = false;
+        Swal.close();
+        if (res?.ok === false || (res?.status != null && Number(res.status) >= 400)) {
+          await Swal.fire({
+            icon: 'error', title: 'No se pudo guardar',
+            text: res?.mensaje || 'El servidor no confirmó la operación.'
+          });
+          return;
+        }
+        this.accionRevisionPYG = 'aprobar';
+        await Swal.fire({
+          icon: 'success', title: 'Revisión guardada',
+          text: res?.mensaje || 'La decisión fue registrada correctamente.'
+        });
+        // Regresar al seguimiento en la pestaña «Por registro» tras confirmar la revisión.
+        await this.router.navigate(['/home/pyg/seguimiento'], {
+          queryParams: { vista: 'registros' }
+        });
+      },
+      error: async () => {
+        this.guardandoRevisionPYG = false;
+        Swal.close();
+        await Swal.fire({
+          icon: 'error', title: 'Error al guardar',
+          text: 'No fue posible enviar la revisión al servidor.'
+        });
+      }
+    });
+  }
+
   clientes: any[] = [];
   clientesInput$ = new Subject<string>();
   loadingClientes = false;
@@ -82,6 +205,8 @@ export class PygingresoComponent2 implements OnDestroy {
 
   }
   ngOnInit(): void {
+    this.tipoAcceso = this.route.snapshot.paramMap.get("tipo") ?? "";
+    this.modoDetalleRegistro = this.tipoAcceso === "1";
     if (this.route.snapshot.paramMap.get("id")) {
       this.idRegistro = this.route.snapshot.paramMap.get("id");
     }
@@ -137,8 +262,15 @@ export class PygingresoComponent2 implements OnDestroy {
         Datos para la Factura
       </h6>
     </div>
-
-    <div class="col-md-4">
+    <div class="col-md-3">
+      <input
+        id="txtNumeroDocumento"
+        type="text"
+        class="form-control form-control-sm"
+        placeholder="Número de factura"
+      >
+    </div>
+    <div class="col-md-3">
       <input
         id="txtDescripcion"
         type="text"
@@ -147,7 +279,7 @@ export class PygingresoComponent2 implements OnDestroy {
       >
     </div>
 
-    <div class="col-md-3">
+    <div class="col-md-2">
       <input
         id="txtFecha"
         type="date"
@@ -164,13 +296,21 @@ export class PygingresoComponent2 implements OnDestroy {
       >
     </div>
 
-    <div class="col-md-2 d-flex gap-2">
-      <button id="btnAceptarFactura" class="btn btn-success btn-sm">
-        Aceptar
+    <div class="col-md-1 d-flex gap-1">
+      <button
+        id="btnAceptarFactura"
+        class="btn btn-success btn-sm"
+        title="Aceptar"
+      >
+        ✓
       </button>
 &nbsp;
-      <button id="btnCancelarFactura" class="btn btn-warning btn-sm">
-        Cancelar
+      <button
+        id="btnCancelarFactura"
+        class="btn btn-danger btn-sm"
+        title="Cancelar"
+      >
+        ✕
       </button>
     </div>
 
@@ -196,6 +336,7 @@ export class PygingresoComponent2 implements OnDestroy {
           $('#rowFacturaManual').slideUp(150);
           $('#txtDescripcion').val('');
           $('#txtFecha').val('');
+          $('#txtNumeroDocumento').val('');
           $('#txtValor').val('');
         });
 
@@ -203,7 +344,7 @@ export class PygingresoComponent2 implements OnDestroy {
           const descripcion = ($('#txtDescripcion').val() as string)?.trim();
           const fecha = ($('#txtFecha').val() as string)?.trim();
           const valor = ($('#txtValor').val() as string)?.trim();
-
+          const factura = ($('#txtNumeroDocumento').val() as string)?.trim();
           if (!descripcion || !fecha || !valor) {
             alert('Debe ingresar descripción, fecha y valor');
             return;
@@ -214,7 +355,7 @@ export class PygingresoComponent2 implements OnDestroy {
             valor: valor,
             idDetalleFact: '',
             fechaFactura: fecha,
-            numero_documento: '',
+            numero_documento: factura,
             idGasto: this.idGastoSeleccionado
           };
 
@@ -222,7 +363,6 @@ export class PygingresoComponent2 implements OnDestroy {
             this.ramoSeleccionado.facturas = [];
           }
           this.ramoSeleccionado.facturas.push(detFactura);
-
           this.toastrService.success(
             'Correcto!',
             'Datos de factura agregados correctamente.'
@@ -230,6 +370,7 @@ export class PygingresoComponent2 implements OnDestroy {
           $('#rowFacturaManual').slideUp(150);
           $('#txtDescripcion').val('');
           $('#txtFecha').val('');
+          $('#txtNumeroDocumento').val('');
           $('#txtValor').val('');
         });
       },
@@ -305,7 +446,7 @@ export class PygingresoComponent2 implements OnDestroy {
       // order: [
       //   [0, 'desc']
       // ],
-      ordering:false,
+      ordering: false,
       responsive: false,
       autoWidth: false,
       scrollX: true,
@@ -337,7 +478,7 @@ export class PygingresoComponent2 implements OnDestroy {
       porcentajeComision: ['', Validators.required],
       comision: ['', Validators.required],
       comisionAnual: ['', Validators.required],
-      poliza: ['', Validators.required],
+      poliza: [''],
       gastos: [[], ''],
       aseguradora: [null, Validators.required],
     });
@@ -375,31 +516,29 @@ export class PygingresoComponent2 implements OnDestroy {
   }
   async obtenerUsuario() {
     this.userCurrent = await this.authService.getUserInfor();
-    console.log('this.userCurrent',this.userCurrent);
     if (this.userCurrent.get_roles.id == 32) {
       this.esFinanciero = true;
-        // Colapsar sidebar automáticamente
-  document.body.classList.add('sidebar-collapse');
+      // Colapsar sidebar automáticamente
+      document.body.classList.add('sidebar-collapse');
+    }
+    if (this.idRegistro && this.modoDetalleRegistro) {
+      this.selectRamo = 999;
+      this.selectVigencia = null;
+      this.cargarDatosRegistro();
+      return;
     }
     if (this.idRegistro) {
       this.pygService.obtenerFiltrosPYG(this.idRegistro).subscribe((res: any) => {
-        let listaRamos = res.ramos;//[20, 27, 38, 55, 59, 60]
-        let ramos = listaRamos.map((id: number) => {
-          const ramo = this.lstRamos.find((item: any) => item.cdRamo == id);
-
-          return {
-            id: id,
-            nombre: ramo ? ramo.nmRamo : ''
-          };
-        });
-        let anios = res.anios
+        if (res.idCliente != null) {
+          this.clienteSeleccionado = { ...(this.clienteSeleccionado ?? {}), id: res.idCliente };
+        }
+        let anios = (res.anios ?? [])
           .sort((a: number, b: number) => b - a)
           .map((anio: number) => ({
             id: anio,
             value: anio
           }));
         this.selectVigencia = anios[0]?.value;
-        this.lstRamosCargados = ramos;
         this.lstAniosCargados = anios;
         this.cargarDatosRegistro();
       });
@@ -439,36 +578,55 @@ export class PygingresoComponent2 implements OnDestroy {
     }
   }
   changePrimaMensual() {
-    const mensualControl = this.ingresoForm.get('primaMensual');
-    const anualControl = this.ingresoForm.get('primaAnual');
-    const anual = mensualControl?.value * 12;
-
-    anualControl?.setValue(anual, { emitEvent: false });
+    const prima = Number(this.ingresoForm.get('primaMensual')?.value || 0);
+    this.ingresoForm.get('primaAnual')?.setValue(Number((prima * 12).toFixed(2)), { emitEvent: false });
     this.changePorcentaje();
   }
   changePorcentaje() {
-    const mensualControl = this.ingresoForm.get('primaMensual');
-    const porcentaje = this.ingresoForm.get('porcentajeComision');
-    const comision = this.ingresoForm.get('comision');
-    const comisionAnual = this.ingresoForm.get('comisionAnual');
-    const valorComision = ((mensualControl?.value * porcentaje?.value) / 100).toFixed(2);
-    const valorComisionAnual = (((mensualControl?.value * porcentaje?.value) / 100) * 12).toFixed(2);
-    comision?.setValue(valorComision, { emitEvent: false });
-    comisionAnual?.setValue(valorComisionAnual, { emitEvent: false });
+    const prima = Number(this.ingresoForm.get('primaMensual')?.value || 0);
+    const porcentaje = Number(this.ingresoForm.get('porcentajeComision')?.value || 0);
+    const mensual = Number((prima * porcentaje / 100).toFixed(2));
+    this.ingresoForm.get('comision')?.setValue(mensual, { emitEvent: false });
+    this.ingresoForm.get('comisionAnual')?.setValue(Number((mensual * 12).toFixed(2)), { emitEvent: false });
+  }
+  changeComisionMensual() {
+    const mensual = Number(this.ingresoForm.get('comision')?.value || 0);
+    const porcentaje = Number(this.ingresoForm.get('porcentajeComision')?.value || 0);
+    this.ingresoForm.get('comisionAnual')?.setValue(Number((mensual * 12).toFixed(2)), { emitEvent: false });
+    if (porcentaje > 0) {
+      const prima = Number((mensual * 100 / porcentaje).toFixed(2));
+      this.ingresoForm.get('primaMensual')?.setValue(prima, { emitEvent: false });
+      this.ingresoForm.get('primaAnual')?.setValue(Number((prima * 12).toFixed(2)), { emitEvent: false });
+    }
+  }
+  changeComisionAnual() {
+    const anual = Number(this.ingresoForm.get('comisionAnual')?.value || 0);
+    const mensual = Number((anual / 12).toFixed(2));
+    const porcentaje = Number(this.ingresoForm.get('porcentajeComision')?.value || 0);
+    this.ingresoForm.get('comision')?.setValue(mensual, { emitEvent: false });
+    if (porcentaje > 0) {
+      const prima = Number((anual * 100 / porcentaje / 12).toFixed(2));
+      this.ingresoForm.get('primaMensual')?.setValue(prima, { emitEvent: false });
+      this.ingresoForm.get('primaAnual')?.setValue(Number((prima * 12).toFixed(2)), { emitEvent: false });
+    }
   }
   esEdicion: boolean = false;
   indexEditar: any;
   //para EL GASTO
   agregarGasto() {
+    if (!this.puedeAgregarGasto()) {
+      this.toastrService.warning('Aviso', 'El estado del registro no permite agregar gastos.');
+      return;
+    }
     if (this.gastoForm.valid) {
       let tipo = 'Inicial';
-      if (this.ingresoRamoSeleccionado && this.idRamoSeleccionado) {
+      if ((this.ingresoRamoSeleccionado && this.idRamoSeleccionado) || this.programaAnteriorEdicion?.idGrupo != null) {
         tipo = 'Alcance';
       }
       let gasto = {
         descripcion: this.gastoForm.value.descripcion,
         valor: this.gastoForm.value.valor,
-        cantidad:this.gastoForm.value.cantidad,
+        cantidad: this.gastoForm.value.cantidad,
         tipo: tipo,
         fecha: this.formatearFechaExcel(new Date())
       }
@@ -493,44 +651,55 @@ export class PygingresoComponent2 implements OnDestroy {
     }
   }
   editarGasto(item: any) {
-    this.esEdicion = true;
+    const itemEditar = this.lstGastos[item];
+    if (!this.puedeEditarGasto(itemEditar)) {
+      this.toastrService.warning('Aviso', 'Este gasto no puede editarse por su estado o porque tiene facturas asignadas.');
+      return;
+    }
     this.indexEditar = item;
-    let itemEditar = this.lstGastos[this.indexEditar];
+    this.esEdicion = true;
     this.gastoForm.patchValue({
       descripcion: itemEditar.descripcion,
-      valor: itemEditar.valor,
-      tipo: itemEditar.tipo,
-      cantidad: itemEditar.cantidad,
-      fecha: itemEditar.fecha,
+      valor: Number(itemEditar.valor),
+      cantidad: Number(itemEditar.cantidad || 1)
     });
+    this.gastoForm.markAsPristine();
   }
   actualizarGasto() {
-    this.esEdicion = false;
-    let tipo = 'Inicial';
-    if (this.ingresoRamoSeleccionado && this.idRamoSeleccionado) {
-      tipo = 'Alcance';
+    if (!this.gastoForm.valid) {
+      this.appComponent.validateAllFormFields(this.gastoForm);
+      return;
     }
-
-    let gasto = {
+    const anterior = this.lstGastos[this.indexEditar];
+    if (!this.puedeEditarGasto(anterior)) {
+      this.toastrService.warning('Aviso', 'Este gasto no puede actualizarse.');
+      return;
+    }
+    const gasto = {
+      ...anterior,
       descripcion: this.gastoForm.value.descripcion,
-      valor: this.gastoForm.value.valor,
-      cantidad: this.gastoForm.value.cantidad,
-      tipo: tipo,
-      fecha: this.formatearFechaExcel(new Date())
-    }
+      valor: Number(this.gastoForm.value.valor),
+      cantidad: Number(this.gastoForm.value.cantidad),
+      tipo: anterior.tipo || (this.programaAnteriorEdicion?.idGrupo != null ? 'Alcance' : 'Inicial'),
+      fecha: anterior.fecha || this.formatearFechaExcel(new Date())
+    };
+    // Mantener el id del gasto existente para que Laravel realice UPDATE y no INSERT.
     this.lstGastos[this.indexEditar] = gasto;
-    this.gastoForm.reset({
-      descripcion: '',
-      valor: null,
-      cantidad: 1,
-      tipo: ''
-    });
-    this.toastrService.success(
-      'Correcto!',
-      'Contacto agregado correctamente.'
-    );
+    // La edición del grupo utiliza los gastos consolidados en el primer ramo.
+    if (this.lstIngresosGastos.length > 0) {
+      this.lstIngresosGastos[0].gastos = [...this.lstGastos];
+      for (let i = 1; i < this.lstIngresosGastos.length; i++) {
+        this.lstIngresosGastos[i].gastos = [];
+      }
+    }
+    this.esEdicion = false;
+    this.indexEditar = null;
+    this.gastoForm.reset({ descripcion: '', valor: null, cantidad: 1 });
+    this.toastrService.success('Correcto!', 'Gasto actualizado en el detalle. Guarde el PYG para persistir el cambio.');
   }
   eliminarGasto(item: any) {
+    const gasto = this.lstGastos[item];
+    if (!gasto || gasto.id != null || !this.puedeAgregarGasto()) return;
     this.lstGastos.splice(item, 1);
   }
   cancelarActualizar() {
@@ -549,11 +718,14 @@ export class PygingresoComponent2 implements OnDestroy {
       0
     );
   }
-    get totalCantidadGastos(): number {
+  get totalCantidadGastos(): number {
     return this.lstGastos.reduce(
       (a: number, b: any) => a + Number(b.cantidad),
       0
     );
+  }
+  get gastosConsolidadosPYG(): any[] {
+    return this.lstIngresosGastos.reduce((gastos: any[], ingreso: any) => gastos.concat(ingreso.gastos || []), []);
   }
   get totalGastos(): number {
     return this.lstIngresosGastos.reduce((totalIngresos: any, ingreso: any) => {
@@ -586,14 +758,224 @@ export class PygingresoComponent2 implements OnDestroy {
 
     return Math.round((totalGastos / presupuesto) * 100 * 100) / 100;
   }
+  get totalPrimaMensualRamos(): number {
+    return this.lstIngresosGastos.reduce((total: number, item: any) => total + Number(item.primaMensual || 0), 0);
+  }
+  get totalPrimaAnualRamos(): number {
+    return this.lstIngresosGastos.reduce((total: number, item: any) => total + Number(item.primaAnual || 0), 0);
+  }
+  get totalComisionMensualRamos(): number {
+    return this.lstIngresosGastos.reduce((total: number, item: any) => total + Number(item.comision || 0), 0);
+  }
   lstIngresosGastos: any = [];
+  programasGenerados: any[] = [];
+  private secuenciaGrupoTemporal: number = 0;
+  generarIdGrupoTemporal(): string {
+    this.secuenciaGrupoTemporal++;
+    return 'tmp-' + this.secuenciaGrupoTemporal;
+  }
+  // Fotografía de los datos persistentes por registro PYG (no incluye cálculos ni proyecciones).
+  private registrosOriginalesPYG = new Map<string, string>();
+
+  private claveRegistroPYG(programa: any): string {
+    return String(programa.idGrupo ?? programa.idGrupoTemporal ?? '');
+  }
+
+  private huellaRegistroPYG(programa: any): string {
+    const texto = (valor: any) => String(valor ?? '').trim();
+    const numero = (valor: any) => Number(valor ?? 0);
+    const gastos: any[] = [];
+    (programa.ramos || []).forEach((ramo: any) => {
+      (ramo.gastos || []).forEach((gasto: any) => {
+        // Los gastos se almacenan a nivel de registro, no por ramo.
+        const clave = gasto.id != null ? 'id:' + gasto.id : null;
+        if (clave && gastos.some((g: any) => g.clave === clave)) return;
+        gastos.push({
+          clave,
+          id: gasto.id ?? null,
+          descripcion: texto(gasto.descripcion),
+          valor: numero(gasto.valor),
+          cantidad: numero(gasto.cantidad ?? 1),
+          tipo: texto(gasto.tipo || 'Inicial')
+        });
+      });
+    });
+    gastos.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)));
+    const ramos = (programa.ramos || []).map((ramo: any) => ({
+      idRamo: ramo.idRamo ?? null,
+      ramo: texto(ramo.ramo),
+      aseguradora: texto(ramo.aseguradora),
+      inicioVigencia: texto(ramo.inicioVigencia).substring(0, 10),
+      finVigencia: texto(ramo.finVigencia).substring(0, 10),
+      primaMensual: numero(ramo.primaMensual),
+      porcentajeComision: numero(ramo.porcentajeComision),
+      poliza: texto(ramo.poliza),
+      archivosNuevos: (ramo.archivosAprobacion || [])
+        .filter((archivo: any) => archivo instanceof File)
+        .map((archivo: File) => `${archivo.name}:${archivo.size}:${archivo.lastModified}`)
+        .sort()
+    })).sort((a: any, b: any) => String(a.idRamo ?? '').localeCompare(String(b.idRamo ?? '')));
+    return JSON.stringify({ nombre: texto(programa.nombre), ramos, gastos });
+  }
+
+  private guardarFotografiaRegistrosPYG(): void {
+    this.registrosOriginalesPYG.clear();
+    this.programasGenerados.forEach((programa: any) => {
+      if (programa.idGrupo != null) {
+        this.registrosOriginalesPYG.set(
+          this.claveRegistroPYG(programa), this.huellaRegistroPYG(programa)
+        );
+      }
+    });
+  }
+
+  // Un registro aprobado modificado solo vuelve a aprobación si los
+  // gastos acumulados sobrepasan el presupuesto máximo autorizado.
+  // La autorización de edición sigue usando el estado persistido.
+  obtenerEstadoVisualPrograma(programa: any): number {
+    const estado = this.obtenerIdEstadoPrograma(programa);
+    if (estado === 4 && programa?.idGrupo != null &&
+      this.registrosOriginalesPYG.has(this.claveRegistroPYG(programa)) &&
+      this.registrosOriginalesPYG.get(this.claveRegistroPYG(programa)) !== this.huellaRegistroPYG(programa) &&
+      this.presupuestoPrograma(programa).excedido) {
+      return 1;
+    }
+    return estado;
+  }
+
+  obtenerProgramasGuardado(): any[] {
+    return this.programasGenerados.filter((programa: any) => {
+      if (programa.idGrupo == null) return true;
+      return this.registrosOriginalesPYG.get(this.claveRegistroPYG(programa))
+        !== this.huellaRegistroPYG(programa);
+    });
+  }
+  get programasVisualizados(): any[] {
+    if (!this.idRegistro || this.modoDetalleRegistro) return this.programasGenerados;
+    const seleccion = String(this.selectRamo ?? '999');
+    const anio = Number(this.selectVigencia);
+    return this.programasGenerados.filter((grupo: any) => {
+      const ramos = grupo.ramos || [];
+      const id = grupo.idGrupo ?? grupo.idGrupoTemporal;
+      const coincideGrupo = seleccion === '999' || seleccion === 'g:' + String(id);
+      const coincideVigencia = !Number.isFinite(anio) || anio <= 0 || ramos.some((ramo: any) => {
+        const inicio = String(ramo.inicioVigencia || '');
+        const anioInicio = Number(inicio.substring(0, 4));
+        return Number.isFinite(anioInicio) && anioInicio >= anio;
+      });
+      return coincideGrupo && coincideVigencia;
+    });
+  }
+  actualizarFiltroVista(): void {
+    // Los filtros se aplican mediante programasVisualizados sin recargar registros.
+  }
+  actualizarOpcionesFiltroGrupos(): void {
+    this.lstRamosCargados = this.programasGenerados.map((grupo: any) => {
+      const ramos = grupo.ramos || [];
+      const id = grupo.idGrupo ?? grupo.idGrupoTemporal;
+      return {
+        id: 'g:' + String(id),
+        nombre: ramos.length > 1 ? (grupo.nombre || 'Grupo ' + id) : (ramos[0]?.nombreRamo || grupo.nombre || 'Ramo'),
+        tipo: ramos.length > 1 ? 'Grupo' : 'Ramo'
+      };
+    });
+  }
+  get totalIngresosGeneral(): number {
+    return this.programasVisualizados.reduce((total: number, programa: any) => total + this.sumarCampoPrograma(programa, 'comisionAnual'), 0);
+  }
+  get totalGastosGeneral(): number {
+    return this.programasVisualizados.reduce((total: number, programa: any) => total + this.totalGastosPrograma(programa), 0);
+  }
+  sumarCampoPrograma(programa: any, campo: string): number {
+    return programa.ramos.reduce((total: number, ramo: any) => total + Number(ramo[campo] || 0), 0);
+  }
+  gastosPrograma(programa: any): any[] {
+    return programa.ramos.reduce((gastos: any[], ramo: any) => gastos.concat(ramo.gastos || []), []);
+  }
+  totalGastosPrograma(programa: any): number {
+    return this.gastosPrograma(programa).reduce((total: number, gasto: any) => total + Number(gasto.valor || 0), 0);
+  }
+  // Muestra las columnas de facturas solo cuando hay facturas asignadas al registro.
+  tieneFacturasAsignadasPrograma(programa: any): boolean {
+    return (programa.ramos || []).some((ramo: any) => (ramo.facturas || []).length > 0);
+  }
+  totalFacturasPrograma(programa: any): number {
+    return programa.ramos.reduce((total: number, ramo: any) => total + (ramo.facturas || []).reduce((valor: number, factura: any) => valor + Number(factura.valor || 0), 0), 0);
+  }
+  get totalFacturasGeneral(): number {
+    return this.programasVisualizados.reduce((total: number, programa: any) => total + this.totalFacturasPrograma(programa), 0);
+  }
+  get filasGastosResumenGeneral(): number {
+    return this.totalGastosGeneral ? this.totalFacturasGeneral / this.totalGastosGeneral * 100 : 0;
+  }
+  getGastosFacturasPrograma(programa: any): any[] {
+    const filas: any[] = [];
+    const facturas = (programa.ramos || []).reduce((lista: any[], ramo: any) => lista.concat(ramo.facturas || []), []);
+    this.gastosPrograma(programa).forEach((gasto: any, indice: number) => {
+      const relacionadas = facturas.filter((factura: any) => gasto.id != null && factura.idGasto != null && Number(factura.idGasto) === Number(gasto.id));
+      const cantidadFilas = Math.max(relacionadas.length, 1);
+      for (let i = 0; i < cantidadFilas; i++) {
+        filas.push({ gasto, factura: relacionadas[i] || null, mostrarGasto: i === 0, cantidadFilas, totalFacturas: relacionadas.reduce((total: number, factura: any) => total + Number(factura.valor || 0), 0), indice, indexFactura: i });
+      }
+    });
+    return filas;
+  }
+  quitarFacturaPrograma(programa: any, fila: any): void {
+    if (!fila.factura) return;
+    const ramo = (programa.ramos || []).find((item: any) => (item.facturas || []).includes(fila.factura));
+    if (!ramo) return;
+    this.quitarFactura(fila.factura, ramo, ramo.facturas.indexOf(fila.factura));
+  }
+  indiceProgramaEdicion: number | null = null;
+  programaAnteriorEdicion: any = null;
+  editarProgramaGenerado(index: number): void {
+    if (this.lstIngresosGastos.length > 0) {
+      this.toastrService.error('Atención', 'Genere primero el registro que está preparando.');
+      return;
+    }
+    const programa = this.programasGenerados[index];
+    if (!programa) return;
+    const estado = this.obtenerIdEstadoPrograma(programa);
+    if (programa.idGrupo != null && estado !== 2 && estado !== 4) {
+      this.toastrService.warning('Aviso', 'El estado del registro no permite modificar sus gastos.');
+      return;
+    }
+    this.indiceProgramaEdicion = index;
+    this.programaAnteriorEdicion = programa;
+    this.nombrePrograma = programa.nombre;
+    this.lstIngresosGastos = programa.ramos.map((ramo: any) => ({ ...ramo, gastos: [...(ramo.gastos || [])] }));
+    this.lstGastos = this.gastosPrograma(programa).map((gasto: any) => ({ ...gasto }));
+    this.esEdicion = false;
+    this.editarIngresoGasto = false;
+    this.ingresoRamoSeleccionado = [];
+    this.idRamoSeleccionado = null;
+    if (programa.idGrupo != null) {
+      Swal.fire({
+        title: 'Aviso',
+        text: 'Los nuevos registros de gastos se ingresan como alcance al PYG.',
+        icon: 'warning'
+      });
+    }
+    this.programasGenerados.splice(index, 1);
+    this.registroGenerado = false;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  cancelarEdicionPrograma(): void {
+    if (this.indiceProgramaEdicion === null) return;
+    this.programasGenerados.splice(this.indiceProgramaEdicion, 0, this.programaAnteriorEdicion);
+    this.lstIngresosGastos = [];
+    this.lstGastos = [];
+    this.indiceProgramaEdicion = null;
+    this.programaAnteriorEdicion = null;
+    this.nombrePrograma = '';
+    this.editarIngresoGasto = false;
+    this.limpiarFormIngreso();
+    this.gastoForm.reset({ descripcion: '', valor: null, cantidad: 1 });
+  }
+  registroGenerado: boolean = false;
+  nombrePrograma: string = '';
   async guardarIngresoGastos() {
     try {
-      if (this.lstGastos.length < 1) {
-        this.toastrService.error('Error', 'Debe agregar el detalle de gastos');
-        return;
-      }
-
       if (this.ingresoForm.valid) {
         const ramo = this.lstRamos.find((r: any) => r.cdRamo == this.ingresoForm.value.ramo);
         const aseguradora = this.lstAseguradoras.find((r: any) => r.id == this.ingresoForm.value.aseguradora);
@@ -601,8 +983,8 @@ export class PygingresoComponent2 implements OnDestroy {
         let ingreso = {
           idIngreso: '',
           cliente: this.ingresoForm.getRawValue().cliente,
-          nombreCliente: this.clienteSeleccionado.NOMBRES,
-          idCliente: this.clienteSeleccionado.ID,
+          nombreCliente: this.clienteSeleccionado?.nombres ?? this.clienteSeleccionado?.NOMBRES ?? '',
+          idCliente: this.clienteSeleccionado.id,
           ramo: this.ingresoForm.value.ramo,
           nombreRamo: ramo.nmRamo,
           aseguradora: this.ingresoForm.value.aseguradora,
@@ -615,7 +997,7 @@ export class PygingresoComponent2 implements OnDestroy {
           comision: this.ingresoForm.value.comision,
           comisionAnual: this.ingresoForm.value.comisionAnual,
           poliza: this.ingresoForm.value.poliza,
-          gastos: this.lstGastos,
+          gastos: [],
           archivosAprobacion: [] as File[],
           nombresUsuario: (
             (this.userCurrent?.get_persona.nombre ?? '') + ' ' +
@@ -623,17 +1005,9 @@ export class PygingresoComponent2 implements OnDestroy {
           ).trim()
         };
 
-        // Si supera o alcanza el porcentaje máximo, se solicita respaldo de aprobación.
-        // Si confirma con un archivo válido, se registra la aprobación y
-        // se continúa con el flujo normal de guardado.
-        const puedeIngresarNormal = await this.validarPorcentajeMaximoGasto(ingreso);
-        if (!puedeIngresarNormal) {
-          return;
-        }
-
-        this.loadingService.showLoading();
         this.lstIngresosGastos.push(ingreso);
         this.limpiarFormIngreso();
+        this.toastrService.success('Correcto!', 'Ramo agregado al detalle.');
       } else {
         const camposInvalidos: string[] = [];
 
@@ -679,9 +1053,9 @@ export class PygingresoComponent2 implements OnDestroy {
       comision: '',
       comisionAnual: '',
       aseguradora: null,
-      gastos: []
+      gastos: [],
+      poliza: ''
     });
-    this.lstGastos = [];
   }
   sumarGastos(gastos: any[]): number {
     if (!gastos) return 0;
@@ -811,37 +1185,71 @@ export class PygingresoComponent2 implements OnDestroy {
   }
 
   async validarPorcentajeMaximoGasto(registro: any): Promise<boolean> {
-    const comisionAnual = Number(registro?.comisionAnual || 0);
-    const porcMaxGasto = Number(this.userCurrent?.porcMaxgasto || 0);
-
-    const totalGastos = (registro?.gastos || []).reduce(
-      (total: number, gasto: any) => total + Number(gasto.valor || 0),
-      0
-    );
-
-    // Si no existe una comisión anual válida, no se puede calcular el porcentaje.
-    if (comisionAnual <= 0) {
-      return true;
+    const exceso = this.obtenerExcesoPresupuesto(registro);
+    if (exceso.excedido) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Presupuesto sobrepasado',
+        html: `Presupuesto máximo (${exceso.limitePorcentaje}%): <b>$${exceso.maximo.toFixed(2)}</b><br>Gastos registrados: <b>$${exceso.gastos.toFixed(2)}</b><br>Excedente: <b>$${exceso.excedente.toFixed(2)}</b><br>Inversión actual: <b>${exceso.porcentaje.toFixed(2)}%</b>`,
+        confirmButtonText: 'Entendido'
+      });
     }
-
-    // Si el usuario no tiene configurado un porcentaje máximo, no se aplica restricción.
-    if (porcMaxGasto <= 0) {
-      return true;
-    }
-
-    const porcentajeGasto = (totalGastos / comisionAnual) * 100;
-    const maximoValorGastos = (comisionAnual * porcMaxGasto) / 100;
-
-    if (porcentajeGasto >= porcMaxGasto) {
-      return await this.abrirModalAprobacionGastos(
-        registro,
-        porcentajeGasto,
-        porcMaxGasto,
-        maximoValorGastos
-      );
-    }
-
     return true;
+  }
+  obtenerExcesoPresupuesto(registro: any): any {
+    const ingresos = Number(registro?.comisionAnual || 0);
+    const limitePorcentaje = Number(this.userCurrent?.porcMaxgasto || 0);
+    const gastos = (registro?.gastos || []).reduce((suma: number, gasto: any) => suma + Number(gasto.valor || 0), 0);
+    const maximo = ingresos * limitePorcentaje / 100;
+    const porcentaje = ingresos > 0 ? gastos / ingresos * 100 : 0;
+    return { excedido: ingresos > 0 && limitePorcentaje > 0 && gastos > maximo, limitePorcentaje, maximo, gastos, porcentaje, excedente: Math.max(0, gastos - maximo) };
+  }
+  polizasPendientes(programa: any): number {
+    return programa.ramos.filter((ramo: any) => !String(ramo.poliza ?? '').trim()).length;
+  }
+  presupuestoPrograma(programa: any): any {
+    return this.obtenerExcesoPresupuesto({ comisionAnual: this.sumarCampoPrograma(programa, 'comisionAnual'), gastos: this.gastosPrograma(programa) });
+  }
+  obtenerIdEstadoPrograma(programa: any): number {
+    const estadoGuardado = programa?.idEstado ?? programa?.ramos?.[0]?.idEstado;
+    if (estadoGuardado !== null && estadoGuardado !== undefined && estadoGuardado !== '') return Number(estadoGuardado);
+    return this.presupuestoPrograma(programa).excedido ? 1 : 4;
+  }
+  // Reglas para la edición de gastos según el estado persistido del PYG.
+  estadoProgramaEnEdicion(): number | null {
+    const programa = this.programaAnteriorEdicion;
+    return programa?.idGrupo != null ? this.obtenerIdEstadoPrograma(programa) : null;
+  }
+  gastoTieneFacturasAsignadas(gasto: any, programa: any = this.programaAnteriorEdicion): boolean {
+    if (gasto?.id == null || !programa) return false;
+    return (programa.ramos || []).some((ramo: any) =>
+      (ramo.facturas || []).some((factura: any) =>
+        factura.idGasto != null && Number(factura.idGasto) === Number(gasto.id)));
+  }
+  puedeEditarGasto(gasto: any): boolean {
+    if (!gasto || this.modoDetalleRegistro) return false;
+    const estado = this.estadoProgramaEnEdicion();
+    if (estado === 1 || estado === 4 || estado === 6) return false;
+    if (estado === 2) return !this.gastoTieneFacturasAsignadas(gasto);
+    return gasto.id == null;
+  }
+  puedeAgregarGasto(): boolean {
+    if (this.modoDetalleRegistro) return false;
+    const estado = this.estadoProgramaEnEdicion();
+    return estado === null || estado === 2 || estado === 4;
+  }
+  nombreEstadoPYG(estado: number): string {
+    if (estado === 1) return 'Pendiente aprobación';
+    if (estado === 2) return 'Corrección solicitada';
+    if (estado === 4) return 'Aprobado';
+    if (estado === 6) return 'Rechazado';
+    return 'Estado ' + estado;
+  }
+  nombreEstadoPrograma(programa: any): string {
+    const idEstado = this.obtenerIdEstadoPrograma(programa);
+    if (idEstado === 1) return 'Pendiente aprobación';
+    if (idEstado === 4) return 'Ingresado Aprobado';
+    return 'Estado ' + idEstado;
   }
 
   /**
@@ -893,9 +1301,6 @@ export class PygingresoComponent2 implements OnDestroy {
   onSelectAprobacion(event: any): void {
     const archivosAgregados: File[] = event?.addedFiles ?? [];
     const archivosRechazados: any[] = event?.rejectedFiles ?? [];
-
-    console.log('Archivos agregados:', archivosAgregados);
-    console.log('Archivos rechazados:', archivosRechazados);
 
     // Solo mostramos un mensaje específico si realmente podemos identificar
     // que el rechazo fue por tamaño o por tipo. Evitamos mostrar
@@ -956,15 +1361,6 @@ export class PygingresoComponent2 implements OnDestroy {
         this.archivosAprobacionTemp.push(archivo);
       }
     });
-
-    console.log(
-      'Archivos actuales de aprobación:',
-      this.archivosAprobacionTemp
-    );
-    console.log(
-      'Peso acumulado:',
-      this.formatearTamanoArchivo(this.totalPesoArchivosAprobacion)
-    );
   }
 
   /**
@@ -975,14 +1371,6 @@ export class PygingresoComponent2 implements OnDestroy {
       (item: File) => item !== archivo
     );
 
-    console.log(
-      'Archivos restantes:',
-      this.archivosAprobacionTemp
-    );
-    console.log(
-      'Peso acumulado:',
-      this.formatearTamanoArchivo(this.totalPesoArchivosAprobacion)
-    );
   }
 
   /**
@@ -1067,10 +1455,6 @@ export class PygingresoComponent2 implements OnDestroy {
       ...archivos
     ];
 
-    console.log('===== INGRESO CON APROBACIÓN =====');
-    console.log('Datos del ramo:', registro);
-    console.log('Archivos de aprobación:', registro.archivosAprobacion);
-
     console.table(
       archivos.map((archivo: File) => ({
         nombre: archivo.name,
@@ -1151,38 +1535,52 @@ export class PygingresoComponent2 implements OnDestroy {
   }
   cargarRamosBase(abrir: number) {
 
-    if (this.clienteSeleccionado?.ID) {
+    if (this.clienteSeleccionado?.id) {
       this.loadingService.showLoading();
-      this.pygService.obtenerPolizasSugeridas(this.clienteSeleccionado.ID)
+
+      this.pygService.obtenerPolizasSugeridas(this.clienteSeleccionado.id)
         .subscribe((res: any) => {
+          if (!res?.resultado || res.resultado.length === 0) {
+            this.lstRamosSugeridos = [];
+            this.loadingService.hideLoading();
+            return;
+          }
+
           const hoy = new Date();
-          // Traigo todas las polizas del cliente, agrupo por numero Poliza y obtengo la que tenga el FC_desde mayor
-          // Fecha mínima permitida: hace 1 año desde hoy
+
           const fechaLimite = new Date();
           fechaLimite.setFullYear(hoy.getFullYear() - 1);
 
           let polizas = Object.values(
             res.resultado
               .filter((item: any) =>
+                item.fcDesde &&
                 new Date(item.fcDesde) >= fechaLimite
               )
               .reduce((acc: any, item: any) => {
 
-                const poliza = item.poliza;
+                // Identificar cada combinación de póliza y ramo.
+                const clave = `${item.poliza}|${item.nmRamo}`;
 
+                // Si existen duplicados del mismo ramo y póliza,
+                // conservar el de fecha de inicio más reciente.
                 if (
-                  !acc[poliza] ||
-                  new Date(item.fcDesde) > new Date(acc[poliza].fcDesde)
+                  !acc[clave] ||
+                  new Date(item.fcDesde) > new Date(acc[clave].fcDesde)
                 ) {
-                  acc[poliza] = item;
+                  acc[clave] = item;
                 }
 
                 return acc;
 
               }, {})
           );
+
+
           this.lstRamosSugeridos = [];
+          console.log('polizas',polizas);
           polizas.forEach((element: any) => {
+
             const fechaBase = new Date(element.fcDesde);
 
             const fechaDesdeFormateada = fechaBase
@@ -1192,8 +1590,9 @@ export class PygingresoComponent2 implements OnDestroy {
               .join('-');
 
             const fechaHasta = new Date(fechaBase);
-            //fechaHasta.setMonth(fechaHasta.getMonth() + 2);
+
             fechaHasta.setMonth(fechaHasta.getMonth());
+
             const fechaHastaFormateada = fechaHasta
               .toLocaleDateString('es-EC')
               .split('/')
@@ -1208,25 +1607,39 @@ export class PygingresoComponent2 implements OnDestroy {
               .reverse()
               .join('-');
 
-            this.pygService.obtenerFacturasProdPagada(this.clienteSeleccionado.ID, element.poliza, fechaDesdeFormateada, fechaHastaFormateada)
+            this.pygService.obtenerFacturasProdPagada(
+              this.clienteSeleccionado.id,
+              element.poliza,
+              fechaDesdeFormateada,
+              fechaHastaFormateada,
+              element.cdRamo,
+            )
               .subscribe((res: any) => {
-                if (res.length > 0) {///si hay 1 factura a partir de la emision
+                if (res?.length > 0) {
+
                   const tiposExcluir = ['C_MAESTRA', 'RENOVACION MST'];
-                  const facturasFiltradas = res.resultado.filter(
+
+                  const facturasFiltradas = (res.resultado || []).filter(
                     (item: any) => !tiposExcluir.includes(item.tipo)
                   );
+
                   const mapaRamos = new Map(
                     this.lstRamos.map((r: any) => [r.cdRamo, r.nmRamo])
                   );
+
                   const mapaAseguradoras2 = new Map(
                     this.lstAseguradoras.map((a: any) => [a.alias, a.id])
                   );
+
                   const facturasAgrupadas = Object.values(
                     facturasFiltradas.reduce((acc: any, item: any) => {
+
                       const fecha = new Date(item.fcDesde);
                       const hasta = new Date(fecha);
                       hasta.setFullYear(hasta.getFullYear() + 1);
+
                       const clave = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
+
                       if (!acc[clave]) {
                         acc[clave] = {
                           periodo: clave,
@@ -1247,38 +1660,61 @@ export class PygingresoComponent2 implements OnDestroy {
                           seleccionado: false
                         };
                       }
+
                       acc[clave].primaMensual += Number(item.priNet || 0);
                       acc[clave].primaAnual = Number((acc[clave].primaMensual * 12).toFixed(2));
                       acc[clave].valPrima += Number(item.priNet || 0);
                       acc[clave].registros.push(item);
                       acc[clave].comisionMensual = Number((acc[clave].primaMensual * item.pctComBroker / 100).toFixed(2));
                       acc[clave].comisionAnual = Number(((acc[clave].primaMensual * item.pctComBroker / 100) * 12).toFixed(2));
+
                       return acc;
 
                     }, {})
                   );
+
                   if (facturasAgrupadas.length > 0) {
                     this.lstRamosSugeridos.push(facturasAgrupadas);
                   }
+
                   this.loadingService.hideLoading();
-                } else {//si no hay tomo maxmo 6 hacia atras y hago las comparativas
-                  this.pygService.obtenerFacturasProdPagada(this.clienteSeleccionado.ID, element.poliza, fechaAtrasFormateada, fechaDesdeFormateada)
+
+                } else {
+
+                  this.pygService.obtenerFacturasProdPagada(
+                    this.clienteSeleccionado.id,
+                    element.poliza,
+                    fechaAtrasFormateada,
+                    fechaDesdeFormateada,
+                    element.cdRamo,
+                  )
                     .subscribe((res: any) => {
+
                       const tiposExcluir = ['C_MAESTRA', 'RENOVACION MST'];
-                      const facturasFiltradas = res.resultado.filter(
+
+                      const facturasFiltradas = (res?.resultado || []).filter(
                         (item: any) => !tiposExcluir.includes(item.tipo)
                       );
+
+                      if (facturasFiltradas.length === 0) {
+                        this.loadingService.hideLoading();
+                        return;
+                      }
+
                       const mapaRamos = new Map(
                         this.lstRamos.map((r: any) => [r.cdRamo, r.nmRamo])
                       );
+
                       const mapaAseguradoras2 = new Map(
                         this.lstAseguradoras.map((a: any) => [a.alias, a.id])
                       );
+
                       const facturasAgrupadas = Object.values(
                         facturasFiltradas.reduce((acc: any, item: any) => {
                           const fecha = new Date(item.fcDesde);
                           const hasta = new Date(fecha);
                           hasta.setFullYear(hasta.getFullYear() + 1);
+
                           const clave = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
 
                           if (!acc[clave]) {
@@ -1301,60 +1737,55 @@ export class PygingresoComponent2 implements OnDestroy {
                               seleccionado: false
                             };
                           }
+
                           acc[clave].primaMensual += Number(item.priNet || 0);
                           acc[clave].primaAnual = Number((acc[clave].primaMensual * 12).toFixed(2));
                           acc[clave].valPrima += Number(item.priNet || 0);
                           acc[clave].registros.push(item);
                           acc[clave].comisionMensual = Number((acc[clave].primaMensual * item.pctComBroker / 100).toFixed(2));
                           acc[clave].comisionAnual = Number(((acc[clave].primaMensual * item.pctComBroker / 100) * 12).toFixed(2));
+
                           return acc;
 
                         }, {})
                       );
+
                       const registros = (facturasAgrupadas as any[]).sort(
                         (a, b) => new Date(a.fcDesde).getTime() - new Date(b.fcDesde).getTime()
                       );
-                      const primas = registros.map(x => x.primaMensual);
-                      let subidas = 0;
-                      let bajadas = 0;
-                      for (let i = 1; i < primas.length; i++) {
-                        if (primas[i] > primas[i - 1]) subidas++;
-                        else if (primas[i] < primas[i - 1]) bajadas++;
+
+                      if (registros.length === 0) {
+                        this.loadingService.hideLoading();
+                        return;
                       }
+
+                      const primas = registros.map(x => x.primaMensual);
+
+                      const promedioPrima =
+                        primas.reduce((a, b) => a + b, 0) / primas.length;
+
+                      const promedioComision =
+                        registros.reduce((a: number, b: any) => a + b.comisionMensual, 0) /
+                        registros.length;
 
                       const ultimo = registros[registros.length - 1];
 
-                      let resultado;
+                      const resultado = {
+                        ...ultimo,
+                        primaMensual: Number(promedioPrima.toFixed(2)),
+                        primaAnual: Number((promedioPrima * 12).toFixed(2)),
+                        valPrima: Number(promedioPrima.toFixed(2)),
+                        comisionMensual: Number(promedioComision.toFixed(2)),
+                        comisionAnual: Number((promedioComision * 12).toFixed(2)),
+                        estadoCrecimiento: 'PROMEDIO'
+                      };
 
-                      // if (subidas === 0 || bajadas === 0) {
-                      //   // Tendencia clara (sube o baja)
-                      //   resultado = {
-                      //     ...ultimo,
-                      //     estadoCrecimiento: subidas > 0 ? 'SUBE' : 'BAJA'
-                      //   };
-                      // } else {
-                        // Comportamiento mixto
-                        const promedioPrima =
-                          primas.reduce((a, b) => a + b, 0) / primas.length;
-
-                        const promedioComision =
-                          registros.reduce((a: number, b: any) => a + b.comisionMensual, 0) /
-                          registros.length;
-
-                        resultado = {
-                          ...ultimo,
-                          primaMensual: Number(promedioPrima.toFixed(2)),
-                          primaAnual: Number((promedioPrima * 12).toFixed(2)),
-                          valPrima: Number(promedioPrima.toFixed(2)),
-                          comisionMensual: Number(promedioComision.toFixed(2)),
-                          comisionAnual: Number((promedioComision * 12).toFixed(2)),
-                          estadoCrecimiento: 'PROMEDIO'
-                        };
-                     // }
                       if (resultado?.registros?.length > 0) {
                         this.lstRamosSugeridos.push(resultado);
                       }
+
                       this.loadingService.hideLoading();
+
                     }, (error: any) => {
                       this.loadingService.hideLoading();
                     });
@@ -1363,10 +1794,13 @@ export class PygingresoComponent2 implements OnDestroy {
               }, (error: any) => {
                 this.loadingService.hideLoading();
               });
+
           });
+
         }, (error: any) => {
           this.loadingService.hideLoading();
         });
+
       if (abrir == 1) {
         $('#modalRamosEstandar').modal('show');
       }
@@ -1387,7 +1821,6 @@ export class PygingresoComponent2 implements OnDestroy {
       if (result.isConfirmed) {
         // Elimina el item del array
         this.lstIngresosGastos.splice(dato, 1);
-
         // Opcional: mostrar mensaje de éxito
         Swal.fire(
           'Eliminado',
@@ -1413,13 +1846,6 @@ export class PygingresoComponent2 implements OnDestroy {
       archivosAprobacion: [...(ingresoOriginal.archivosAprobacion ?? [])]
     };
     this.idRamoSeleccionado = this.ingresoRamoSeleccionado.idRamo ?? '';
-    if (this.idRamoSeleccionado) {
-      Swal.fire({
-        title: "Aviso!",
-        text: "Los nuevos registros de gastos se ingresan como alcance al PYG!",
-        icon: "warning"
-      });
-    }
     this.ingresoForm.patchValue({
       // cliente: dato.cliente,
       // nombreCliente: dato.nombreClienete,
@@ -1438,7 +1864,6 @@ export class PygingresoComponent2 implements OnDestroy {
       facturas: this.ingresoRamoSeleccionado.facturas,
       poliza: this.ingresoRamoSeleccionado.poliza
     });
-    this.lstGastos = this.ingresoRamoSeleccionado.gastos;
     // this.lstGastos = dato.gastos.filter(
     //   (item: any) => !item.idDetalleFact
     // );
@@ -1450,8 +1875,8 @@ export class PygingresoComponent2 implements OnDestroy {
 
     let ingreso = {
       cliente: this.ingresoForm.getRawValue().cliente,
-      nombreCliente: this.clienteSeleccionado?.NOMBRES ?? '',
-      idCliente: this.clienteSeleccionado.ID,
+      nombreCliente: this.clienteSeleccionado?.nombres ?? this.clienteSeleccionado?.NOMBRES ?? '',
+      idCliente: this.clienteSeleccionado.id,
       ramo: this.ingresoForm.value.ramo,
       idRamo: this.idRamoSeleccionado,
       nombreRamo: ramo.nmRamo,
@@ -1464,7 +1889,7 @@ export class PygingresoComponent2 implements OnDestroy {
       porcentajeComision: this.ingresoForm.value.porcentajeComision,
       comision: this.ingresoForm.value.comision,
       comisionAnual: this.ingresoForm.value.comisionAnual,
-      gastos: this.lstGastos,
+      gastos: this.ingresoRamoSeleccionado.gastos ?? [],
       facturas: this.ingresoRamoSeleccionado.facturas,
       poliza: this.ingresoForm.value.poliza,
       archivosAprobacion: [...(this.ingresoRamoSeleccionado.archivosAprobacion ?? [])],
@@ -1474,12 +1899,13 @@ export class PygingresoComponent2 implements OnDestroy {
       ).trim()
     };
 
-    const puedeActualizarNormal = await this.validarPorcentajeMaximoGasto(ingreso);
+    const puedeActualizarNormal = this.registroGenerado || this.idRamoSeleccionado ? await this.validarPorcentajeMaximoGasto(ingreso) : true;
     if (!puedeActualizarNormal) {
       return;
     }
 
-    this.lstIngresosGastos[this.indexIGActualizar] = ingreso;
+    this.lstIngresosGastos[this.indexIGActualizar] = { ...this.ingresoRamoSeleccionado, ...ingreso, idGrupo: this.ingresoRamoSeleccionado.idGrupo ?? null, idGrupoTemporal: this.ingresoRamoSeleccionado.idGrupoTemporal ?? null, idEstado: this.ingresoRamoSeleccionado.idEstado ?? 4 };
+
     this.limpiarFormIngreso();
     this.toastrService.success(
       'Correcto!',
@@ -1508,8 +1934,73 @@ export class PygingresoComponent2 implements OnDestroy {
     return campos;
   }
 
+  async generarRegistroPrograma() {
+    if (this.lstIngresosGastos.length < 1) {
+      this.toastrService.error('ERROR', 'Debe agregar al menos un ramo al detalle.');
+      return;
+    }
+    if (this.programaAnteriorEdicion?.idGrupo != null) {
+      // El nombre de un registro guardado no se puede modificar.
+      this.nombrePrograma = this.programaAnteriorEdicion.nombre;
+    } else if (this.lstIngresosGastos.length > 1) {
+      const resultado = await Swal.fire({
+        title: 'Nombre del programa o grupo de ramos',
+        input: 'text',
+        inputValue: this.indiceProgramaEdicion !== null ? this.nombrePrograma : '',
+        inputPlaceholder: 'Ingrese el nombre del programa',
+        showCancelButton: true,
+        confirmButtonText: 'Continuar',
+        cancelButtonText: 'Cancelar',
+        inputValidator: (valor) => !valor?.trim() ? 'Ingrese el nombre del programa.' : null
+      });
+      if (!resultado.isConfirmed) return;
+      this.nombrePrograma = resultado.value.trim();
+    } else {
+      this.nombrePrograma = this.lstIngresosGastos[0].nombreRamo;
+    }
+    const registroConsolidado = {
+      comisionAnual: this.totalIngresos,
+      gastos: this.lstGastos,
+      archivosAprobacion: this.lstIngresosGastos[0].archivosAprobacion || []
+    };
+    const autorizado = await this.validarPorcentajeMaximoGasto(registroConsolidado);
+    if (!autorizado) return;
+    this.lstIngresosGastos.forEach((ramo: any, i: number) => {
+      ramo.gastos = i === 0 ? [...this.lstGastos] : [];
+      ramo.nombrePrograma = this.nombrePrograma;
+      if (i === 0) ramo.archivosAprobacion = registroConsolidado.archivosAprobacion;
+    });
+    const idEstado = this.programaAnteriorEdicion?.idGrupo != null ? this.programaAnteriorEdicion.idEstado : (this.obtenerExcesoPresupuesto(registroConsolidado).excedido ? 1 : 4);
+    const programaGenerado = {
+      idGrupo: this.programaAnteriorEdicion?.idGrupo ?? null,
+      idGrupoTemporal: this.programaAnteriorEdicion?.idGrupoTemporal ?? (this.programaAnteriorEdicion?.idGrupo != null ? null : this.generarIdGrupoTemporal()),
+      nombre: this.nombrePrograma,
+      idEstado: idEstado,
+      ramos: this.lstIngresosGastos.map((ramo: any) => ({ ...ramo, idEstado: idEstado, gastos: [...(ramo.gastos || [])], archivosAprobacion: [...(ramo.archivosAprobacion || [])] }))
+    };
+    programaGenerado.ramos.forEach((ramo: any) => {
+      ramo.idGrupo = programaGenerado.idGrupo;
+      ramo.idGrupoTemporal = programaGenerado.idGrupoTemporal;
+    });
+    if (this.indiceProgramaEdicion !== null) this.programasGenerados.splice(this.indiceProgramaEdicion, 0, programaGenerado);
+    else this.programasGenerados.push(programaGenerado);
+    this.indiceProgramaEdicion = null;
+    this.programaAnteriorEdicion = null;
+    this.lstIngresosGastos = [];
+    this.lstGastos = [];
+    this.gastoForm.reset({ descripcion: '', valor: null, cantidad: 1 });
+    this.limpiarFormIngreso();
+    this.nombrePrograma = '';
+    this.registroGenerado = false;
+    this.toastrService.success('Correcto!', 'Programa agregado. Puede ingresar otro registro.');
+  }
   guardarPYG() {
-    if (this.ingresoForm.invalid && this.lstIngresosGastos.length < 1) {
+    if (this.guardandoRegistrosPYG) return;
+    if (this.programasGenerados.length < 1) {
+      this.toastrService.error('ERROR', 'Primero debe generar el registro con sus ramos y gastos.');
+      return;
+    }
+    if (this.ingresoForm.invalid && this.programasGenerados.length < 1 && this.lstIngresosGastos.length < 1) {
       this.toastrService.error('ERROR', 'Debe ingresar por lo menos 1 detalle de gastos!');
       this.appComponent.validateAllFormFields(this.ingresoForm);
       const camposInvalidos = this.obtenerCamposInvalidos();
@@ -1524,24 +2015,61 @@ export class PygingresoComponent2 implements OnDestroy {
       this.toastrService.error('ERROR', 'Debe ingresar/seleccionar un cliente!');
       return;
     }
-    if (this.lstIngresosGastos.length < 1) {
-
+    if (this.lstIngresosGastos.length > 0) {
+      this.toastrService.error('ERROR', 'Existen ramos pendientes. Genere ese registro antes de guardar.');
       return;
     }
+    if (this.programasGenerados.length < 1 && this.lstIngresosGastos.length < 1) return;
 
 
     let formD = new FormData();
     formD.append('idRegistro', this.ingresoForm.value.id ?? '');
     formD.append('cliente', JSON.stringify(this.ingresoForm.getRawValue().cliente));
-    formD.append('aseguradora', this.ingresoForm.value.aseguradora);
-    formD.append('nombreCliente', this.clienteSeleccionado.NOMBRES);
-    formD.append('idCliente', this.clienteSeleccionado.ID);
+    formD.append('aseguradora', String(this.ingresoForm.value.aseguradora ?? ''));
+    formD.append('nombreCliente', this.clienteSeleccionado.nombres ?? this.clienteSeleccionado.NOMBRES);
+    formD.append('idCliente', this.clienteSeleccionado.id);
     formD.append('idUsuario', this.userCurrent.id);
+    formD.append('porcMaxgasto', String(this.userCurrent?.porcMaxgasto ?? ''));
 
     // Los objetos File no deben viajar dentro de JSON.stringify.
     // Se agregan al FormData como archivos reales y se relacionan
     // con cada ramo mediante el índice de lstIngresosGastos.
-    const ingresosParaEnviar = this.lstIngresosGastos.map(
+    const programasModificados = this.obtenerProgramasGuardado();
+    if (programasModificados.length === 0) {
+      this.toastrService.info('Sin cambios', 'No existen registros PYG modificados para guardar.');
+      return;
+    }
+    // En estado 2, si la corrección no supera el porcentaje máximo,
+    // el registro queda aprobado (4); si lo supera, vuelve a revisión (1).
+    // El servidor recalculará esta regla con los datos guardados.
+    const programasGuardar = programasModificados.map((programa: any) => {
+      const estadoActual = Number(programa.idEstado ?? 4);
+      const nuevoEstado = programa.idGrupo != null && estadoActual === 2
+        ? (this.presupuestoPrograma(programa).excedido ? 1 : 4)
+        : programa.idGrupo != null && estadoActual === 4
+          ? (this.presupuestoPrograma(programa).excedido ? 1 : 4)
+          : estadoActual;
+      return {
+        ...programa,
+        idEstado: nuevoEstado,
+        ramos: (programa.ramos || []).map((ramo: any) => ({ ...ramo, idEstado: nuevoEstado }))
+      };
+    });
+    const ramosGuardar = programasGuardar.reduce((ramos: any[], programa: any) => {
+      const esPrograma = programa.ramos.length > 1;
+      programa.ramos.forEach((ramo: any) => {
+        ramos.push({
+          ...ramo,
+          idGrupo: programa.idGrupo ?? null,
+          idGrupoTemporal: programa.idGrupoTemporal ?? null,
+          tipoRegistro: esPrograma ? 'Programa' : 'Individual',
+          nombrePrograma: esPrograma ? programa.nombre : ramo.nombreRamo,
+          idEstado: programa.idEstado ?? ramo.idEstado ?? 4
+        });
+      });
+      return ramos;
+    }, []);
+    const ingresosParaEnviar = ramosGuardar.map(
       (ingreso: any, indexRamo: number) => {
         const archivos = Array.isArray(ingreso.archivosAprobacion)
           ? ingreso.archivosAprobacion
@@ -1581,25 +2109,54 @@ export class PygingresoComponent2 implements OnDestroy {
     );
 
     formD.append('lstIngresosGastos', JSON.stringify(ingresosParaEnviar));
-    // return;
-    this.pygService.guardarPYG(formD).subscribe((res: any) => {
-      Swal.fire({
-        icon: 'success',
-        title: '¡Éxito!',
-        text: 'PYG guardado Correctamente',
-        confirmButtonText: 'OK',
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-        allowEnterKey: true,
-        showCloseButton: false
-      }).then((result) => {
-        if (result.isConfirmed) {
-          this.router.navigate(['/home/pyg/seguimiento']);
+    formD.append('nombrePrograma', programasGuardar.length === 1 ? programasGuardar[0].nombre : 'Varios programas');
+    formD.append('programas', JSON.stringify(programasGuardar.map((programa: any) => ({
+      idGrupo: programa.idGrupo ?? null,
+      idGrupoTemporal: programa.idGrupoTemporal ?? null,
+      nombre: programa.ramos.length > 1 ? programa.nombre : programa.ramos[0]?.nombreRamo,
+      tipoRegistro: programa.ramos.length > 1 ? 'Programa' : 'Individual',
+      idEstado: programa.idEstado ?? programa.ramos[0]?.idEstado ?? 4,
+      ramos: programa.ramos.map((ramo: any) => ramo.ramo)
+    }))));
+    this.guardandoRegistrosPYG = true;
+    this.mostrarProcesandoPYG('Guardando registros PYG', 'Procesando, espere mientras se guardan los cambios...');
+    this.pygService.guardarPYG(formD).subscribe({
+      next: (res: any) => {
+        this.guardandoRegistrosPYG = false;
+        Swal.close();
+        if (res?.ok === false || (res?.status != null && Number(res.status) >= 400)) {
+          Swal.fire({
+            icon: 'error',
+            title: 'No se pudo guardar',
+            text: res?.mensaje || 'El servidor no confirmó la operación.'
+          });
+          return;
         }
-      });
-    }, (error: any) => {
-      this.loadingService.hideLoading();
-      this.toastrService.error('ERROR', 'No se pudo actualizar el registro!');
+        Swal.fire({
+          icon: 'success',
+          title: '¡Éxito!',
+          text: 'PYG guardado Correctamente',
+          confirmButtonText: 'OK',
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          allowEnterKey: true,
+          showCloseButton: false
+        }).then((result) => {
+          if (result.isConfirmed) {
+            this.router.navigate(['/home/pyg/seguimiento']);
+          }
+        });
+      },
+      error: (error: any) => {
+        this.guardandoRegistrosPYG = false;
+        Swal.close();
+        this.loadingService.hideLoading();
+        Swal.fire({
+          icon: 'error',
+          title: 'Error al guardar',
+          text: error?.error?.mensaje || 'No se pudo actualizar el registro.'
+        });
+      }
     });
   }
 
@@ -1607,26 +2164,47 @@ export class PygingresoComponent2 implements OnDestroy {
   lstAniosCargados: any = [];
   selectRamo: any = 999;
   selectVigencia: any;
+  get ramosGuardados(): any[] {
+    return this.programasGenerados.reduce((todos: any[], programa: any) => todos.concat(programa.ramos || []), []);
+  }
   tieneFacturas(): boolean {
-    return this.lstIngresosGastos?.some((item: any) => item.facturas?.length > 0);
+    return this.ramosGuardados.some((item: any) => item.facturas?.length > 0);
   }
   cargarDatosRegistro() {
+    this.registroRevisionOriginal = null;
+    this.accionRevisionPYG = 'aprobar';
     this.lstFacturasBorradas = [];
     this.lstIngresosGastos = [];
-    this.clienteSeleccionado = {};
+    this.lstGastos = [];
+    this.programasGenerados = [];
+    this.registrosOriginalesPYG.clear();
+    this.registroGenerado = true;
+    this.clienteSeleccionado = this.clienteSeleccionado ?? {};
     this.loadingService.showLoading();
     //if (this.esFinanciero) {
     let formD = new FormData();
-    formD.append('idRegistro', this.idRegistro);
-    formD.append('ramo', this.selectRamo);
-    formD.append('vigencia', this.selectVigencia);
-    formD.append('cliente', this.clienteSeleccionado.ID);
+    formD.append('idRegistro', String(this.idRegistro ?? ''));
+    formD.append('ramo', '999');
+    formD.append('vigencia', '');
+    if (this.clienteSeleccionado?.id != null) formD.append('cliente', String(this.clienteSeleccionado.id));
 
-    this.pygService.obtenerRegistrosPYGFinanciero(formD).subscribe((res: any) => {
+    const consultaRegistro$ = this.modoDetalleRegistro
+      ? this.pygService.obtenerRegistrosPYGbyID(String(this.idRegistro))
+      : this.pygService.obtenerRegistrosPYGFinanciero(formD);
+
+    consultaRegistro$.subscribe((res: any) => {
       let respuesta = res.data;
+      this.registroRevisionOriginal = respuesta ?? null;
+
+      if (!respuesta) {
+        this.loadingService.hideLoading();
+        this.toastrService.error('ERROR', 'No se encontraron datos del registro!');
+        return;
+      }
       if (respuesta) {
+        this.clienteSeleccionado.nombres = respuesta.cliente;
         this.clienteSeleccionado.NOMBRES = respuesta.cliente;
-        this.clienteSeleccionado.ID = respuesta.idCliente;
+        this.clienteSeleccionado.id = respuesta.idCliente;
         this.objCliente = {
           id: respuesta.idCliente,
           nombre: respuesta.cliente
@@ -1637,16 +2215,21 @@ export class PygingresoComponent2 implements OnDestroy {
         id: respuesta.id,
         cliente: respuesta.cliente ?? '',
       });
-      respuesta.ramos.forEach((element: any) => {
+      const gruposCargados = new Map<string, any>();
+      (respuesta.ramos || []).forEach((element: any) => {
         // para las listas 
-        let nombreRamo = this.lstRamos.find((item: any) => item.cdRamo == element.ramo).nmRamo;
-        let nombreAseguradora = this.lstAseguradoras.find((r: any) => r.id == element.aseguradora).alias;
+        let nombreRamo = this.lstRamos.find((item: any) => item.cdRamo == element.ramo)?.nmRamo ?? String(element.ramo);
+        let nombreAseguradora = this.lstAseguradoras.find((r: any) => r.id == element.aseguradora)?.alias ?? String(element.aseguradora);
         let ingreso = {
-          idIngreso: respuesta.idRegistro,
+          idIngreso: element.idRegistro ?? respuesta.id ?? '',
           cliente: respuesta.idCliente ?? '',
           nombreCliente: respuesta.cliente ?? '',
           ramo: element.ramo ?? '',
           idRamo: element.idRegistroReg ?? '',
+          idGrupo: element.idRegistro ?? null,
+          idGrupoTemporal: null,
+          idEstado: element.estado ?? respuesta.estado ?? 4,
+          nombrePrograma: element.nombreGrupo || nombreRamo,
           aseguradora: element.aseguradora ?? '',
           nombreAseguradora: nombreAseguradora ?? '',
           nombreRamo: nombreRamo ?? '',
@@ -1663,8 +2246,8 @@ export class PygingresoComponent2 implements OnDestroy {
           comisionAnual: element.comision
             ? (element.primaMensual * element.comision) / 100 * 12
             : '',
-          gastos: element.gastos,
-          facturas: element.facturas,
+          gastos: element.gastos ?? [],
+          facturas: element.facturas ?? [],
           archivosAprobacion: element.archivosAprobacion ?? [],
           nombresUsuario: element.nombresUsuario ?? '',
           poliza: element.poliza ?? '',
@@ -1678,44 +2261,67 @@ export class PygingresoComponent2 implements OnDestroy {
           proyeccionComision: 0,
           mesRevision: ''
         }
+        if (!this.modoDetalleRegistro) {
+          this.consultarFacturasProyeccion(
+            ingreso.cliente,
+            ingreso.poliza,
+            ingreso.inicioVigencia,
+            ingreso.finVigencia,
+            ingreso.ramo
+          ).subscribe((facturas: any[]) => {
+            ingreso.proyeccion = facturas;
+            ingreso.totalPrima = facturas.reduce(
+              (sum: number, p: any) => sum + Number(p.priNet || 0),
+              0
+            );
 
-        this.consultarFacturasProyeccion(
-          ingreso.cliente,
-          ingreso.poliza,
-          ingreso.inicioVigencia,
-          ingreso.finVigencia
-        ).subscribe((facturas: any[]) => {
-          ingreso.proyeccion = facturas;
-          ingreso.totalPrima = facturas.reduce(
-            (sum: number, p: any) => sum + Number(p.priNet || 0),
-            0
-          );
+            ingreso.totalComision = facturas.reduce(
+              (sum: number, p: any) => sum + Number(p.valcombroker || 0),
+              0
+            );
 
-          ingreso.totalComision = facturas.reduce(
-            (sum: number, p: any) => sum + Number(p.valcombroker || 0),
-            0
-          );
+            ingreso.mesesFacturados = facturas.length;
+            ingreso.mesesRestantes = 12 - ingreso.mesesFacturados;
 
-          ingreso.mesesFacturados = facturas.length;
-          ingreso.mesesRestantes = 12 - ingreso.mesesFacturados;
+            ingreso.proyeccionPrima =
+              ingreso.mesesFacturados > 0
+                ? (ingreso.totalPrima / ingreso.mesesFacturados) * ingreso.mesesRestantes
+                : 0;
 
-          ingreso.proyeccionPrima =
-            ingreso.mesesFacturados > 0
-              ? (ingreso.totalPrima / ingreso.mesesFacturados) * ingreso.mesesRestantes
-              : 0;
-
-          ingreso.proyeccionComision =
-            ingreso.mesesFacturados > 0
-              ? (ingreso.totalComision / ingreso.mesesFacturados) * ingreso.mesesRestantes
-              : 0;
-        });
+            ingreso.proyeccionComision =
+              ingreso.mesesFacturados > 0
+                ? (ingreso.totalComision / ingreso.mesesFacturados) * ingreso.mesesRestantes
+                : 0;
+          });
+        }
         ingreso.mesRevision = this.obtenerMesVigencia(
           element.inicioVigencia,
           element.finVigencia
         ).toUpperCase();
-        this.lstIngresosGastos.push(ingreso);
+        const idGrupo = ingreso.idGrupo;
+        const claveGrupo = String(idGrupo ?? ingreso.idRamo);
+        if (!gruposCargados.has(claveGrupo)) {
+          gruposCargados.set(claveGrupo, {
+            idGrupo: idGrupo,
+            idGrupoTemporal: null,
+            nombre: element.nombreGrupo || ingreso.nombreRamo,
+            idEstado: ingreso.idEstado,
+            ramos: []
+          });
+        }
+        gruposCargados.get(claveGrupo).ramos.push(ingreso);
       });
+      this.programasGenerados = Array.from(gruposCargados.values());
+      // Guardar estado original ANTES de cualquier edición del usuario.
+      this.guardarFotografiaRegistrosPYG();
+      this.actualizarOpcionesFiltroGrupos();
+      this.lstIngresosGastos = [];
+      this.lstGastos = [];
       //consulto las facturas
+      if (this.modoDetalleRegistro && !this.esFinanciero) {
+        this.loadingService.hideLoading();
+        return;
+      }
       let formd = new FormData();
       formd.append('idCliente', respuesta.idCliente);
       this.pygService.obtenerFacturasPYG(formd).subscribe((res: any) => {
@@ -1736,7 +2342,7 @@ export class PygingresoComponent2 implements OnDestroy {
       this.router.navigate(['/home/pyg/seguimiento']);
     });
     setTimeout(() => {
-      this.cargarRamosBase(0);
+      if (!this.modoDetalleRegistro) this.cargarRamosBase(0);
       this.loadingService.hideLoading();
     }, 1000);
   }
@@ -1745,23 +2351,38 @@ export class PygingresoComponent2 implements OnDestroy {
     idCliente: any,
     poliza: any,
     fcDesde: any,
-    fcHasta: any
+    fcHasta: any,
+    cdRamo:any
   ) {
     return this.pygService
-      .obtenerFacturasProdPagada(idCliente, poliza, fcDesde, fcHasta)
+      .obtenerFacturasProdPagada(idCliente, poliza, fcDesde, fcHasta, cdRamo)
       .pipe(
         map((res: any) => {
           const tiposExcluir = ['C_MAESTRA', 'RENOVACION MST'];
 
-          const facturasFiltradas = res.resultado.filter(
-            (item: any) => !tiposExcluir.includes(item.tipo)
+          // Validar que la respuesta contenga un arreglo
+          const resultado = Array.isArray(res?.resultado)
+            ? res.resultado
+            : [];
+
+          const facturasFiltradas = resultado.filter(
+            (item: any) =>
+              item && !tiposExcluir.includes(item.tipo)
           );
 
-          return Object.values(
-            facturasFiltradas.reduce((acc: any, item: any) => {
+          // Agrupar por año y mes
+          const agrupadas = facturasFiltradas.reduce(
+            (acc: any, item: any) => {
+              if (!item.fcDesde) {
+                return acc;
+              }
+
               const fecha = new Date(item.fcDesde);
-              const hasta = new Date(fecha);
-              hasta.setFullYear(hasta.getFullYear() + 1);
+
+              // Evitar fechas inválidas
+              if (isNaN(fecha.getTime())) {
+                return acc;
+              }
 
               const clave = `${fecha.getFullYear()}-${String(
                 fecha.getMonth() + 1
@@ -1780,8 +2401,8 @@ export class PygingresoComponent2 implements OnDestroy {
                 };
               }
 
-              acc[clave].priNet += Number(item.priNet || 0);
-              acc[clave].valcombroker += Number(item.valComBroker || 0);
+              acc[clave].priNet += Number(item.priNet) || 0;
+              acc[clave].valcombroker += Number(item.valComBroker) || 0;
               acc[clave].registros.push(item);
 
               // Agregar factura evitando duplicados
@@ -1793,17 +2414,48 @@ export class PygingresoComponent2 implements OnDestroy {
               }
 
               return acc;
-
-            }, {})
+            },
+            {}
           );
 
+          // Siempre retornar un arreglo, aunque no existan datos
+          return Object.values(agrupadas);
         })
       );
   }
 
+  asignarFacturaGastoPrograma(programa: any, gasto: any): void {
+    if (this.obtenerIdEstadoPrograma(programa) !== 4) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Pendiente de aprobación',
+        text: 'Para agregar detalle de facturas debe aprobarse primero.',
+        confirmButtonText: 'Aceptar'
+      });
+      return;
+    }
+    const ramo = programa?.ramos?.find((item: any) => (item.gastos || []).some((g: any) => g === gasto || (g.id != null && g.id === gasto.id))) || programa?.ramos?.[0];
+    const index = this.ramosGuardados.indexOf(ramo);
+    if (index < 0 || gasto?.id == null) {
+      this.toastrService.warning('Aviso', 'El gasto debe estar guardado antes de asignar una factura.');
+      return;
+    }
+    this.asignarFacturas(index, gasto.id);
+  }
   idGastoSeleccionado: any = '';
   asignarFacturas(id: any, idGasto?: any) {
-    this.ramoSeleccionado = this.lstIngresosGastos[id];
+    const ramo = this.ramosGuardados[id];
+    const programa = this.programasVisualizados.find((item: any) => (item.ramos || []).includes(ramo));
+    if (!programa || this.obtenerIdEstadoPrograma(programa) !== 4) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Pendiente de aprobación',
+        text: 'Para agregar detalle de facturas debe aprobarse primero.',
+        confirmButtonText: 'Aceptar'
+      });
+      return;
+    }
+    this.ramoSeleccionado = ramo;
     if (idGasto) {
       this.idGastoSeleccionado = idGasto;
     } else {
@@ -1817,11 +2469,61 @@ export class PygingresoComponent2 implements OnDestroy {
     let factura = this.lstFacturasCliente.find(
       (element: any) => element.id == id
     );
-    if (factura?.factura_registrada == 1) {
+    if (!factura) {
+      return;
+    }
+
+    const agregarFactura = () => {
+
+      factura.seleccionado = 1;
+
+      let detFactura = {
+        idRamo: this.ramoSeleccionado.idRamo,
+        descripcion: factura.observacion ?? (factura.nombre_cuenta + ' ' + factura.nombre),
+        valor: factura.base_con_iva ?? factura.valor_debe,//asientos contables se pone el valor debe
+        idDetalleFact: factura.id,
+        fechaFactura: factura.fecha_emision ?? factura.fecha,
+        numero_documento: factura.numero_documento,
+        idGasto: this.idGastoSeleccionado
+      };
+
+      // Mantener relación con ramo
+      if (!this.ramoSeleccionado.facturas) {
+        this.ramoSeleccionado.facturas = [];
+      }
+
+      this.ramoSeleccionado.facturas.push(detFactura);
+
+
+      // NUEVO: Mostrar también en detalle de gastos
+      if (!this.idGastoSeleccionado) this.ramoSeleccionado.gastos = this.ramoSeleccionado.gastos || [];
+      if (!this.idGastoSeleccionado) this.ramoSeleccionado.gastos.push({
+        descripcion: factura.observacion,
+        valor: factura.base_con_iva,
+        cantidad: 1,
+        fecha: factura.fecha_emision,
+        tipo: 'Factura',
+        idDetalleFact: factura.id,
+        numero_documento: factura.numero_documento
+      });
+
+
+      this.refrescarTablaFacturas();
+
+      this.toastrService.success(
+        'Correcto!',
+        'Factura agregada correctamente al detalle de gastos.'
+      );
+
+    };
+
+
+    if (factura.factura_registrada == 1) {
+
       Swal.fire({
         icon: 'warning',
         title: 'Factura ya registrada',
-        text: 'Esta factura ya se encuentra atada a un detalle de gastos. ¿Desea volverla a ingresar en este detalle?',
+        text: 'Esta factura ya se encuentra atada a un detalle de gastos. ¿Desea volverla a ingresar?',
         showCancelButton: true,
         confirmButtonText: 'Aceptar',
         cancelButtonText: 'Cancelar',
@@ -1830,59 +2532,19 @@ export class PygingresoComponent2 implements OnDestroy {
         allowOutsideClick: false,
         allowEscapeKey: false,
         reverseButtons: true
+
       }).then((result) => {
+
         if (result.isConfirmed) {
-          if (factura) {
-            factura.seleccionado = 1;
-          }
-          let detFactura = {
-            idRamo: this.ramoSeleccionado.idRamo,
-            descripcion: factura.observacion,
-            valor: factura.base_con_iva,
-            idDetalleFact: factura.id,
-            fechaFactura: factura.fecha_emision,
-            numero_documento: factura.numero_documento,
-            idGasto: this.idGastoSeleccionado
-          };
-
-          if (!this.ramoSeleccionado.facturas) {
-            this.ramoSeleccionado.facturas = [];
-          }
-          this.ramoSeleccionado.facturas.push(detFactura);
-
-          // Refrescar tabla
-          this.refrescarTablaFacturas();
-          this.toastrService.success(
-            'Correcto!',
-            'Datos de factura agregados correctamente.'
-          );
+          agregarFactura();
         }
+
       });
+
     } else {
-      if (factura) {
-        factura.seleccionado = 1;
-      }
-      let detFactura = {
-        idRamo: this.ramoSeleccionado.idRamo,
-        descripcion: factura.observacion,
-        valor: factura.base_con_iva,
-        idDetalleFact: factura.id,
-        fechaFactura: factura.fecha_emision,
-        numero_documento: factura.numero_documento,
-        idGasto: this.idGastoSeleccionado
-      };
 
-      if (!this.ramoSeleccionado.facturas) {
-        this.ramoSeleccionado.facturas = [];
-      }
-      this.ramoSeleccionado.facturas.push(detFactura);
+      agregarFactura();
 
-      // Refrescar tabla
-      this.refrescarTablaFacturas();
-      this.toastrService.success(
-        'Correcto!',
-        'Datos de factura agregados correctamente.'
-      );
     }
 
   }
@@ -2016,7 +2678,7 @@ export class PygingresoComponent2 implements OnDestroy {
   lstFacturasBorradas: any = [];
   guardarPyGFacturas() {
     let formD = new FormData();
-    formD.append('datos', JSON.stringify(this.lstIngresosGastos));
+    formD.append('datos', JSON.stringify(this.ramosGuardados));
     formD.append('facturasBorradas', this.lstFacturasBorradas);
     this.pygService.guardarFacturasPYG(formD).subscribe((res: any) => {
       Swal.fire({
@@ -2329,169 +2991,156 @@ export class PygingresoComponent2 implements OnDestroy {
       border: this.bordeCompleto()
     };
   }
-exportarDetalles(): void {
-  const registros = this.lstIngresosGastos ?? [];
 
-  if (!registros.length) {
-    this.toastrService.warning(
-      'No existen detalles de PYG para exportar.',
-      'Exportación'
-    );
-    return;
-  }
-
-  const wb = XLSX.utils.book_new();
-  const wsDetalle: XLSX.WorkSheet = {};
-  const wsResumen: XLSX.WorkSheet = {};
-
-  // Los registros del mismo ramo se colocan horizontalmente, uno junto
-  // al otro. Cuando cambia el ramo, el siguiente grupo comienza debajo
-  // del bloque más alto del grupo anterior.
-  const gruposPorRamo = this.agruparIngresosPorRamo(registros);
-  const columnasPorCuadro = 10; // 9 columnas de datos + 1 separador.
-  const maxObjetosPorRamo = Math.max(
-    1,
-    ...gruposPorRamo.map((grupo: any[]) => grupo.length)
-  );
-  const ultimaColumna = (maxObjetosPorRamo * columnasPorCuadro) - 2;
-
-  XLSX.utils.sheet_add_aoa(
-    wsDetalle,
-    [[`DETALLE PYG - ${this.objCliente?.nombre || 'CLIENTE'}`]],
-    { origin: 'A1' }
-  );
-
-  this.agregarMerge(wsDetalle, 1, 0, 1, ultimaColumna);
-  this.aplicarEstiloRangoMerge(
-    wsDetalle,
-    1,
-    0,
-    1,
-    ultimaColumna,
-    this.estiloTituloPrincipal()
-  );
-
-  let filaBaseGrupo = 3;
-  let numeroRamo = 1;
-
-  gruposPorRamo.forEach((grupoRamo: any[]) => {
-    let filaMaximaGrupo = filaBaseGrupo;
-
-    grupoRamo.forEach((ing: any, indiceHorizontal: number) => {
-      const hojaTemporal: XLSX.WorkSheet = {};
-      const filaFinalTemporal = this.agregarRamoPantallaExcel(
-        hojaTemporal,
-        ing,
-        1,
-        numeroRamo
-      );
-
-      const altoBloque = Math.max(1, filaFinalTemporal - 1);
-      const colInicio = indiceHorizontal * columnasPorCuadro;
-
-      this.copiarBloqueHoja(
-        hojaTemporal,
-        wsDetalle,
-        filaBaseGrupo,
-        colInicio
-      );
-
-      const filaFinalDestino = filaBaseGrupo + altoBloque - 1;
-      filaMaximaGrupo = Math.max(filaMaximaGrupo, filaFinalDestino);
-      numeroRamo++;
+  exportarDetalles(): void {
+    const programas = this.programasVisualizados;
+    if (!programas.length) {
+      this.toastrService.warning('No existen detalles de PYG para exportar.', 'Exportación');
+      return;
+    }
+    const wb = XLSX.utils.book_new();
+    const wsDetalle: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet([]);
+    const wsResumen: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet([]);
+    const moneda = '$#,##0.00;[Red]-$#,##0.00';
+    const porcentaje = '0.00"%"';
+    const entero = '0';
+    const colores = ['E6F0FA', 'EDF8EA', 'FFF4DF', 'F2ECFA', 'FCEBF0'];
+    const coloresGrupo = [{ fondo: 'DCEBFA', texto: '15467B' }, { fondo: 'E0F2E8', texto: '176843' }, { fondo: 'FFF0D7', texto: '8B5405' }, { fondo: 'EEE6FA', texto: '603B87' }, { fondo: 'FCE3EC', texto: '9B3256' }];
+    const escribir = (fila: number, valores: any[], estilos?: any[], inicio: number = 0, formatos?: { [columna: number]: string }) => {
+      XLSX.utils.sheet_add_aoa(wsDetalle, [valores], { origin: { r: fila, c: inicio } });
+      valores.forEach((valor: any, columna: number) => {
+        const celda = wsDetalle[XLSX.utils.encode_cell({ r: fila, c: inicio + columna })];
+        if (!celda) return;
+        if (typeof valor === 'number' && !Number.isNaN(valor)) {
+          celda.z = formatos?.[columna] || moneda;
+        }
+        if (estilos && estilos[columna]) celda.s = estilos[columna];
+      });
+    };
+    const estilo = (fondo: string, negrita: boolean = false, color: string = '1F2937'): any => ({
+      font: { bold: negrita, color: { rgb: color }, sz: 10 },
+      fill: { patternType: 'solid', fgColor: { rgb: fondo } },
+      alignment: { vertical: 'center', wrapText: true },
+      border: { bottom: { style: 'thin', color: { rgb: 'DCE6F1' } } }
     });
-
-    filaBaseGrupo = filaMaximaGrupo + 2;
-  });
-
-  wsDetalle['!cols'] = [];
-
-  for (let i = 0; i < maxObjetosPorRamo; i++) {
-    wsDetalle['!cols'].push(
-      { wch: 29 }, // Descripción gasto
-      { wch: 12 }, // Cantidad
-      { wch: 17 }, // Tipo ingreso
-      { wch: 18 }, // Valor gasto
-      { wch: 34 }, // Descripción factura
-      { wch: 16 }, // Fecha
-      { wch: 18 }, // Valor factura
-      { wch: 18 }, // Total facturas
-      { wch: 17 }, // Restante
-      { wch: 4 }   // Separador
-    );
+    const encabezado = (fondo: string, texto: string, longitud: number = 10) => Array.from({ length: longitud }, () => estilo(fondo, true, texto));
+    let fila = 0;
+    escribir(fila, [`DETALLE PYG - ${this.objCliente?.nombre || this.clienteSeleccionado?.nombres || 'CLIENTE'}`], [this.estiloTituloPrincipal()]);
+    this.agregarMerge(wsDetalle, fila + 1, 0, fila + 1, 10);
+    fila += 2;
+    programas.forEach((programa: any, indicePrograma: number) => {
+      const ramos = programa.ramos || [];
+      const nombre = ramos.length > 1 ? (programa.nombre || ramos[0]?.nombrePrograma || 'GRUPO') : (ramos[0]?.nombreRamo || programa.nombre || 'RAMO');
+      const paleta = coloresGrupo[indicePrograma % coloresGrupo.length];
+      const nombreRegistro = ramos.length > 1 ? `GRUPO: ${nombre}` : `RAMO: ${nombre}`;
+      escribir(fila, [`REGISTRO ${indicePrograma + 1}  |  ${nombreRegistro}`], [estilo(paleta.fondo, true, paleta.texto)]);
+      this.agregarMerge(wsDetalle, fila + 1, 0, fila + 1, 10);
+      fila++;
+      escribir(fila, ['DATOS DE INGRESOS'], [estilo('E5EFF9', true, '174E81')]);
+      this.agregarMerge(wsDetalle, fila + 1, 0, fila + 1, 10);
+      fila++;
+      escribir(fila, ['Ramo', 'Aseguradora', 'Póliza', 'Inicio vigencia', 'Fin vigencia', 'Prima neta mensual', 'Prima neta anual', '% Comisión', 'Comisión mensual', 'Comisión anual'], encabezado('D9EAF8', '15467B'));
+      fila++;
+      ramos.forEach((ramo: any) => {
+        const prima = Number(ramo.primaMensual || 0);
+        const porcentajeComision = Number(ramo.porcentajeComision || 0);
+        const comision = Number(ramo.comision || prima * porcentajeComision / 100);
+        escribir(
+          fila,
+          [ramo.nombreRamo || '', ramo.nombreAseguradora || '', ramo.poliza || 'Pendiente', ramo.inicioVigencia || '', ramo.finVigencia || '', prima, Number(ramo.primaAnual ?? prima * 12), porcentajeComision, comision, Number(ramo.comisionAnual ?? comision * 12)],
+          Array.from({ length: 10 }, () => estilo('FFFFFF')),
+          0,
+          { 7: porcentaje }
+        );
+        fila++;
+      });
+      escribir(
+        fila,
+        ['TOTALES', '', '', '', '', this.sumarCampoPrograma(programa, 'primaMensual'), this.sumarCampoPrograma(programa, 'primaAnual'), '', this.sumarCampoPrograma(programa, 'comision'), this.sumarCampoPrograma(programa, 'comisionAnual')],
+        Array.from({ length: 10 }, () => estilo('E8F5E9', true, '087541'))
+      );
+      this.agregarMerge(wsDetalle, fila + 1, 0, fila + 1, 4);
+      fila += 2;
+      escribir(fila, ['DATOS DE GASTOS Y FACTURAS'], [estilo('FDE9D8', true, '995012')]);
+      this.agregarMerge(wsDetalle, fila + 1, 0, fila + 1, 10);
+      fila++;
+      escribir(fila, ['Descripción gasto', 'Cantidad', 'Tipo ingreso', 'Valor gasto', 'Fecha registro', 'Descripción factura', 'Fecha factura', 'Valor factura', 'Total facturas', 'Restante'], encabezado('FFF1DF', '8B5405'));
+      fila++;
+      const grupos = this.getGastosFacturasPrograma(programa);
+      if (!grupos.length) {
+        escribir(fila, ['Sin gastos registrados']);
+        fila++;
+      } else {
+        grupos.forEach((grupo: any) => {
+          const gasto = grupo.gasto;
+          const esAlcance = String(gasto?.tipo || '').trim().toLowerCase() === 'alcance';
+          const fondo = esAlcance ? 'FFE066' : colores[grupo.indice % colores.length];
+          const restante = Number(gasto.valor || 0) - grupo.totalFacturas;
+          const datos = [
+            grupo.mostrarGasto ? gasto.descripcion : '',
+            grupo.mostrarGasto ? Number(gasto.cantidad || 1) : '',
+            grupo.mostrarGasto ? gasto.tipo : '',
+            grupo.mostrarGasto ? Number(gasto.valor || 0) : '',
+            grupo.mostrarGasto ? (gasto.fecha || '') : '',
+            grupo.factura?.descripcion || 'Sin facturas',
+            grupo.factura?.fechaFactura || '',
+            grupo.factura ? Number(grupo.factura.valor || 0) : '',
+            grupo.mostrarGasto ? grupo.totalFacturas : '',
+            grupo.mostrarGasto ? restante : ''
+          ];
+          const estilos = Array.from({ length: 10 }, () => estilo(fondo, true, esAlcance ? '594000' : '1F2937'));
+          if (grupo.mostrarGasto && restante < 0) estilos[9] = estilo(fondo, true, 'DC3545');
+          if (grupo.mostrarGasto && restante >= 0) estilos[9] = estilo(fondo, true, '008B5A');
+          escribir(fila, datos, estilos, 0, { 1: entero });
+          if (grupo.mostrarGasto && grupo.cantidadFilas > 1) {
+            for (const col of [0, 1, 2, 3, 4, 8, 9]) this.agregarMerge(wsDetalle, fila + 1, col, fila + grupo.cantidadFilas, col);
+          }
+          fila++;
+        });
+      }
+      escribir(
+        fila,
+        ['TOTAL GASTOS', '', '', this.totalGastosPrograma(programa), '', 'TOTAL FACTURAS', '', this.totalFacturasPrograma(programa), '', this.totalGastosPrograma(programa) - this.totalFacturasPrograma(programa)],
+        Array.from({ length: 10 }, () => estilo('FFF0D8', true, '84510B'))
+      );
+      fila++;
+      escribir(
+        fila,
+        [
+          '% INVERSIÓN',
+          '',
+          '',
+          this.sumarCampoPrograma(programa, 'comisionAnual')
+            ? Number((100 * this.totalGastosPrograma(programa) / this.sumarCampoPrograma(programa, 'comisionAnual')).toFixed(2))
+            : 0
+        ],
+        Array.from({ length: 4 }, () => this.estiloNormal()),
+        0,
+        { 3: porcentaje }
+      );
+      fila++;
+      escribir(
+        fila,
+        ['UTILIDAD', '', '', this.sumarCampoPrograma(programa, 'comisionAnual') - this.totalGastosPrograma(programa)],
+        Array.from({ length: 4 }, () => this.estiloNormal())
+      );
+      fila += 3;
+    });
+    wsDetalle['!cols'] = [{ wch: 30 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 19 }, { wch: 34 }, { wch: 18 }, { wch: 19 }, { wch: 20 }, { wch: 20 }, { wch: 4 }];
+    XLSX.utils.sheet_add_aoa(wsResumen, [['RESUMEN PYG']], { origin: 'A1' });
+    this.agregarMerge(wsResumen, 1, 0, 1, 1);
+    this.aplicarEstiloRangoMerge(wsResumen, 1, 0, 1, 1, this.estiloTituloPrincipal());
+    this.agregarResumenPYGExcel(wsResumen, 3, 0);
+    XLSX.utils.sheet_add_aoa(wsResumen, [['RESUMEN GASTOS']], { origin: 'D1' });
+    this.agregarMerge(wsResumen, 1, 3, 1, 4);
+    this.aplicarEstiloRangoMerge(wsResumen, 1, 3, 1, 4, this.estiloTituloPrincipal());
+    this.agregarResumenGastosExcel(wsResumen, 3, 3);
+    wsResumen['!cols'] = [{ wch: 38 }, { wch: 18 }, { wch: 5 }, { wch: 38 }, { wch: 18 }];
+    XLSX.utils.book_append_sheet(wb, wsDetalle, 'Detalle PYG');
+    XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen');
+    const nombreCliente = String(this.objCliente?.nombre || 'Cliente').replace(/[\\/?*[\]:"]/g, '').trim();
+    XLSX.writeFile(wb, `PYG ${nombreCliente}.xlsx`, { compression: true, bookType: 'xlsx' });
   }
-
-  wsDetalle['!rows'] = wsDetalle['!rows'] || [];
-  wsDetalle['!rows'][0] = { hpt: 27 };
-
-  // =========================
-  // HOJA 2: RESUMEN
-  // =========================
-  XLSX.utils.sheet_add_aoa(wsResumen, [['RESUMEN PYG']], {
-    origin: 'A1'
-  });
-
-  this.agregarMerge(wsResumen, 1, 0, 1, 1);
-  this.aplicarEstiloRangoMerge(
-    wsResumen,
-    1,
-    0,
-    1,
-    1,
-    this.estiloTituloPrincipal()
-  );
-
-  this.agregarResumenPYGExcel(wsResumen, 3, 0);
-
-  XLSX.utils.sheet_add_aoa(wsResumen, [['RESUMEN GASTOS']], {
-    origin: 'D1'
-  });
-
-  this.agregarMerge(wsResumen, 1, 3, 1, 4);
-  this.aplicarEstiloRangoMerge(
-    wsResumen,
-    1,
-    3,
-    1,
-    4,
-    this.estiloTituloPrincipal()
-  );
-
-  this.agregarResumenGastosExcel(wsResumen, 3, 3);
-
-  wsResumen['!cols'] = [
-    { wch: 38 },
-    { wch: 18 },
-    { wch: 5 },
-    { wch: 38 },
-    { wch: 18 }
-  ];
-
-  wsResumen['!rows'] = [{ hpt: 26 }];
-
-  const nombreHojaDetalle = (this.objCliente?.nombre || 'Detalle PYG')
-    .toString()
-    .replace(/[\\/?*[\]:]/g, '')
-    .substring(0, 31)
-    .trim();
-
-  const nombreArchivo = `PYG ${(this.objCliente?.nombre || 'Cliente')
-    .toString()
-    .replace(/[\\/?*[\]:"]/g, '')
-    .trim()}.xlsx`;
-
-  XLSX.utils.book_append_sheet(
-    wb,
-    wsDetalle,
-    nombreHojaDetalle || 'Detalle PYG'
-  );
-  XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen');
-
-  XLSX.writeFile(wb, nombreArchivo, {
-    compression: true,
-    bookType: 'xlsx'
-  });
-}
 
   /** Agrupa manteniendo el orden original de aparición de cada ramo. */
   private agruparIngresosPorRamo(lista: any[]): any[][] {
@@ -2582,500 +3231,66 @@ exportarDetalles(): void {
    * Agrega al Excel un ramo con la misma información funcional que se muestra
    * en la tarjeta HTML del detalle PYG.
    */
-private agregarRamoPantallaExcel(
-  ws: XLSX.WorkSheet,
-  ing: any,
-  filaInicio: number,
-  numeroRamo: number
-): number {
-  let fila = filaInicio;
+  private agregarRamoPantallaExcel(
+    ws: XLSX.WorkSheet,
+    ing: any,
+    filaInicio: number,
+    numeroRamo: number
+  ): number {
+    let fila = filaInicio;
 
-  // Columnas desde A hasta I.
-  const colFin = 8;
+    // Columnas desde A hasta I.
+    const colFin = 8;
 
-  const estiloDato = {
-    ...this.estiloNormal(),
-    alignment: {
-      vertical: 'center',
-      wrapText: true
-    }
-  };
-
-  const estiloEtiqueta = {
-    ...estiloDato,
-    font: {
-      bold: true,
-      color: { rgb: '44546A' }
-    },
-    fill: {
-      patternType: 'solid',
-      fgColor: { rgb: 'F7FAFC' }
-    }
-  };
-
-  const estiloCabeceraGasto = {
-    ...this.estiloHeaderAzul(),
-    fill: {
-      patternType: 'solid',
-      fgColor: { rgb: 'EAF3FF' }
-    }
-  };
-
-  const estiloCabeceraFactura = {
-    ...this.estiloHeaderAzul(),
-    font: {
-      bold: true,
-      color: { rgb: '003A8C' }
-    },
-    fill: {
-      patternType: 'solid',
-      fgColor: { rgb: 'EDF4FB' }
-    }
-  };
-
-  // =========================
-  // ENCABEZADO DEL RAMO
-  // =========================
-  XLSX.utils.sheet_add_aoa(
-    ws,
-    [[
-      `${numeroRamo}. ${String(
-        ing?.nombreRamo || 'RAMO'
-      ).toUpperCase()}`
-    ]],
-    {
-      origin: {
-        r: fila - 1,
-        c: 0
+    const estiloDato = {
+      ...this.estiloNormal(),
+      alignment: {
+        vertical: 'center',
+        wrapText: true
       }
-    }
-  );
+    };
 
-  this.agregarMerge(
-    ws,
-    fila,
-    0,
-    fila,
-    colFin
-  );
-
-  this.aplicarEstiloRangoMerge(
-    ws,
-    fila,
-    0,
-    fila,
-    colFin,
-    this.estiloTituloRamo()
-  );
-
-  fila++;
-
-  XLSX.utils.sheet_add_aoa(
-    ws,
-    [[
-      `Número de Póliza: ${ing?.poliza ?? ''}`,
-      '',
-      '',
-      `Porcentaje: ${this.convertirANumero(
-        ing?.porcentajeComision
-      ).toFixed(2)}%`,
-      '',
-      `Aseguradora: ${ing?.nombreAseguradora ?? ''}`,
-      '',
-      '',
-      ''
-    ]],
-    {
-      origin: {
-        r: fila - 1,
-        c: 0
+    const estiloEtiqueta = {
+      ...estiloDato,
+      font: {
+        bold: true,
+        color: { rgb: '44546A' }
+      },
+      fill: {
+        patternType: 'solid',
+        fgColor: { rgb: 'F7FAFC' }
       }
-    }
-  );
+    };
 
-  this.agregarMerge(
-    ws,
-    fila,
-    0,
-    fila,
-    2
-  );
-
-  this.agregarMerge(
-    ws,
-    fila,
-    3,
-    fila,
-    4
-  );
-
-  this.agregarMerge(
-    ws,
-    fila,
-    5,
-    fila,
-    8
-  );
-
-  this.aplicarEstiloRangoMerge(
-    ws,
-    fila,
-    0,
-    fila,
-    2,
-    this.estiloSubtitulo()
-  );
-
-  this.aplicarEstiloRangoMerge(
-    ws,
-    fila,
-    3,
-    fila,
-    4,
-    this.estiloSubtitulo()
-  );
-
-  this.aplicarEstiloRangoMerge(
-    ws,
-    fila,
-    5,
-    fila,
-    8,
-    this.estiloSubtitulo()
-  );
-
-  fila += 2;
-
-  // =========================
-  // INFORMACIÓN Y REVISIÓN
-  // =========================
-  const totalPrimaAnual =
-    this.convertirANumero(ing?.totalPrima) +
-    this.convertirANumero(ing?.proyeccionPrima);
-
-  const totalComisionAnual =
-    this.convertirANumero(ing?.totalComision) +
-    this.convertirANumero(ing?.proyeccionComision);
-
-  const porcentajeRevision =
-    totalPrimaAnual > 0
-      ? totalComisionAnual / totalPrimaAnual
-      : 0;
-
-  const filaInfo = fila;
-
-  XLSX.utils.sheet_add_aoa(
-    ws,
-    [
-      [
-        '',
-        '',
-        '',
-        '',
-        `Revisión en ${String(
-          ing?.mesRevision || ''
-        ).toUpperCase()}`,
-        '',
-        '',
-        ''
-      ],
-      [
-        'Inicio Vigencia',
-        this.formatearFechaExcel(ing?.inicioVigencia),
-        'Fin Vigencia',
-        this.formatearFechaExcel(ing?.finVigencia),
-        '',
-        'Anual',
-        'Mensual',
-        ''
-      ],
-      [
-        'Prima Mensual',
-        this.convertirANumero(ing?.primaMensual),
-        'Prima Anual',
-        this.convertirANumero(ing?.primaAnual),
-        'Prima',
-        totalPrimaAnual,
-        totalPrimaAnual / 12,
-        ''
-      ],
-      [
-        'Comisión Mensual',
-        this.convertirANumero(ing?.comision),
-        'Comisión Anual',
-        this.convertirANumero(ing?.comisionAnual),
-        'Comisión',
-        totalComisionAnual,
-        totalComisionAnual / 12,
-        ''
-      ],
-      [
-        '',
-        '',
-        '',
-        '',
-        '%',
-        porcentajeRevision,
-        porcentajeRevision,
-        ''
-      ]
-    ],
-    {
-      origin: {
-        r: filaInfo - 1,
-        c: 0
+    const estiloCabeceraGasto = {
+      ...this.estiloHeaderAzul(),
+      fill: {
+        patternType: 'solid',
+        fgColor: { rgb: 'EAF3FF' }
       }
-    }
-  );
+    };
 
-  this.agregarMerge(
-    ws,
-    filaInfo,
-    4,
-    filaInfo,
-    6
-  );
-
-  this.aplicarEstiloRangoMerge(
-    ws,
-    filaInfo,
-    4,
-    filaInfo,
-    6,
-    estiloCabeceraFactura
-  );
-
-  // Bloque de información general A:D.
-  for (
-    let filaActual = filaInfo + 1;
-    filaActual <= filaInfo + 3;
-    filaActual++
-  ) {
-    this.aplicarEstiloRango(
-      ws,
-      filaActual,
-      0,
-      filaActual,
-      3,
-      estiloDato
-    );
-
-    const etiquetaA = XLSX.utils.encode_cell({
-      r: filaActual - 1,
-      c: 0
-    });
-
-    const etiquetaC = XLSX.utils.encode_cell({
-      r: filaActual - 1,
-      c: 2
-    });
-
-    if (ws[etiquetaA]) {
-      ws[etiquetaA].s = estiloEtiqueta;
-    }
-
-    if (ws[etiquetaC]) {
-      ws[etiquetaC].s = estiloEtiqueta;
-    }
-  }
-
-  // Tabla de revisión E:G.
-  this.aplicarEstiloRango(
-    ws,
-    filaInfo + 1,
-    4,
-    filaInfo + 4,
-    6,
-    estiloDato
-  );
-
-  for (
-    let filaActual = filaInfo + 1;
-    filaActual <= filaInfo + 4;
-    filaActual++
-  ) {
-    const refEtiqueta = XLSX.utils.encode_cell({
-      r: filaActual - 1,
-      c: 4
-    });
-
-    if (ws[refEtiqueta]) {
-      ws[refEtiqueta].s = estiloEtiqueta;
-    }
-  }
-
-  const refAnual = XLSX.utils.encode_cell({
-    r: filaInfo,
-    c: 5
-  });
-
-  const refMensual = XLSX.utils.encode_cell({
-    r: filaInfo,
-    c: 6
-  });
-
-  if (ws[refAnual]) {
-    ws[refAnual].s = estiloCabeceraFactura;
-  }
-
-  if (ws[refMensual]) {
-    ws[refMensual].s = estiloCabeceraFactura;
-  }
-
-  // Valores monetarios de información general.
-  this.aplicarFormatoMoneda(
-    ws,
-    filaInfo + 2,
-    1,
-    this.estiloMonedaVerde()
-  );
-
-  this.aplicarFormatoMoneda(
-    ws,
-    filaInfo + 2,
-    3,
-    this.estiloMonedaVerde()
-  );
-
-  this.aplicarFormatoMoneda(
-    ws,
-    filaInfo + 3,
-    1,
-    this.estiloMonedaAzul()
-  );
-
-  this.aplicarFormatoMoneda(
-    ws,
-    filaInfo + 3,
-    3,
-    this.estiloMonedaAzul()
-  );
-
-  // Valores monetarios y porcentajes de revisión.
-  this.aplicarFormatoMoneda(
-    ws,
-    filaInfo + 2,
-    5,
-    estiloDato
-  );
-
-  this.aplicarFormatoMoneda(
-    ws,
-    filaInfo + 2,
-    6,
-    estiloDato
-  );
-
-  this.aplicarFormatoMoneda(
-    ws,
-    filaInfo + 3,
-    5,
-    estiloDato
-  );
-
-  this.aplicarFormatoMoneda(
-    ws,
-    filaInfo + 3,
-    6,
-    estiloDato
-  );
-
-  this.aplicarFormatoPorcentaje(
-    ws,
-    filaInfo + 4,
-    5,
-    this.estiloPorcentaje()
-  );
-
-  this.aplicarFormatoPorcentaje(
-    ws,
-    filaInfo + 4,
-    6,
-    this.estiloPorcentaje()
-  );
-
-  fila = filaInfo + 6;
-
-  // =========================
-  // GASTOS Y FACTURAS
-  // =========================
-  XLSX.utils.sheet_add_aoa(
-    ws,
-    [['GASTOS Y FACTURAS']],
-    {
-      origin: {
-        r: fila - 1,
-        c: 0
+    const estiloCabeceraFactura = {
+      ...this.estiloHeaderAzul(),
+      font: {
+        bold: true,
+        color: { rgb: '003A8C' }
+      },
+      fill: {
+        patternType: 'solid',
+        fgColor: { rgb: 'EDF4FB' }
       }
-    }
-  );
+    };
 
-  this.agregarMerge(
-    ws,
-    fila,
-    0,
-    fila,
-    colFin
-  );
-
-  this.aplicarEstiloRangoMerge(
-    ws,
-    fila,
-    0,
-    fila,
-    colFin,
-    estiloCabeceraGasto
-  );
-
-  fila++;
-
-  XLSX.utils.sheet_add_aoa(
-    ws,
-    [[
-      'Descripción gasto',
-      'Cantidad',
-      'Tipo ingreso',
-      'Valor gasto',
-      'Descripción factura',
-      'Fecha',
-      'Valor factura',
-      'Total facturas',
-      'Restante'
-    ]],
-    {
-      origin: {
-        r: fila - 1,
-        c: 0
-      }
-    }
-  );
-
-  this.aplicarEstiloRango(
-    ws,
-    fila,
-    0,
-    fila,
-    colFin,
-    estiloCabeceraFactura
-  );
-
-  fila++;
-
-  const grupos = this.getGastosConFacturas(ing);
-
-  if (!grupos.length) {
+    // =========================
+    // ENCABEZADO DEL RAMO
+    // =========================
     XLSX.utils.sheet_add_aoa(
       ws,
       [[
-        'Sin gastos registrados',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        ''
+        `${numeroRamo}. ${String(
+          ing?.nombreRamo || 'RAMO'
+        ).toUpperCase()}`
       ]],
       {
         origin: {
@@ -3099,333 +3314,343 @@ private agregarRamoPantallaExcel(
       0,
       fila,
       colFin,
-      estiloDato
+      this.estiloTituloRamo()
     );
 
     fila++;
-  } else {
-    grupos.forEach((grupo: any) => {
-      const facturasGrupo =
-        grupo?.facturas?.length
-          ? grupo.facturas
-          : [null];
 
-      const filaGrupoInicio = fila;
-
-      facturasGrupo.forEach(
-        (factura: any, indiceFactura: number) => {
-          const primeraFila = indiceFactura === 0;
-
-          const tipoIngreso = primeraFila
-            ? `${grupo?.gasto?.tipo ?? ''}${
-                grupo?.gasto?.tipo === 'Alcance' &&
-                grupo?.gasto?.fecha
-                  ? ` ${String(
-                      grupo.gasto.fecha
-                    ).split(' ')[0]}`
-                  : ''
-              }`
-            : '';
-
-          XLSX.utils.sheet_add_aoa(
-            ws,
-            [[
-              primeraFila
-                ? grupo?.gasto?.descripcion ?? ''
-                : '',
-              primeraFila
-                ? this.convertirANumero(
-                    grupo?.gasto?.cantidad
-                  )
-                : '',
-              tipoIngreso,
-              primeraFila
-                ? this.convertirANumero(
-                    grupo?.gasto?.valor
-                  )
-                : '',
-              factura?.descripcion ?? 'Sin facturas',
-              factura
-                ? this.formatearFechaExcel(
-                    factura?.fechaFactura
-                  )
-                : '',
-              factura
-                ? this.convertirANumero(
-                    factura?.valor
-                  )
-                : '',
-              primeraFila
-                ? this.getTotalFacturasGasto(grupo)
-                : '',
-              primeraFila
-                ? this.getSaldoGasto(grupo)
-                : ''
-            ]],
-            {
-              origin: {
-                r: fila - 1,
-                c: 0
-              }
-            }
-          );
-
-          this.aplicarEstiloRango(
-            ws,
-            fila,
-            0,
-            fila,
-            colFin,
-            estiloDato
-          );
-
-          if (primeraFila) {
-            this.aplicarFormatoMoneda(
-              ws,
-              fila,
-              3,
-              estiloDato
-            );
-
-            this.aplicarFormatoMoneda(
-              ws,
-              fila,
-              7,
-              estiloDato
-            );
-
-            this.aplicarFormatoMoneda(
-              ws,
-              fila,
-              8,
-              this.estiloTotalFinal()
-            );
-          }
-
-          if (factura) {
-            this.aplicarFormatoMoneda(
-              ws,
-              fila,
-              6,
-              estiloDato
-            );
-          }
-
-          fila++;
-        }
-      );
-
-      const filaGrupoFin = fila - 1;
-
-      if (filaGrupoFin > filaGrupoInicio) {
-        [
-          0, // Descripción gasto
-          1, // Cantidad
-          2, // Tipo ingreso
-          3, // Valor gasto
-          7, // Total facturas
-          8  // Restante
-        ].forEach((columna: number) => {
-          this.agregarMerge(
-            ws,
-            filaGrupoInicio,
-            columna,
-            filaGrupoFin,
-            columna
-          );
-        });
-      }
-    });
-  }
-
-  const totalGastos = this.convertirANumero(
-    this.getTotalGastos(ing?.gastos ?? [])
-  );
-
-  const totalFacturas = this.convertirANumero(
-    this.getTotalFacturasAsignadas(ing)
-  );
-
-  const saldoTotal = this.getSaldoTotal(ing);
-
-  const porcentajeInversion =
-    this.convertirANumero(ing?.comisionAnual) > 0
-      ? totalGastos /
-        this.convertirANumero(ing?.comisionAnual)
-      : 0;
-
-  const disponible =
-    this.convertirANumero(ing?.comisionAnual) -
-    totalGastos;
-
-  XLSX.utils.sheet_add_aoa(
-    ws,
-    [
-      [
-        'TOTAL GASTOS',
-        '',
-        '',
-        totalGastos,
-        'TOTAL FACTURAS',
-        '',
-        '',
-        totalFacturas,
-        saldoTotal
-      ],
-      [
-        '% Inversión',
-        '',
-        '',
-        porcentajeInversion,
-        '',
-        '',
-        '',
-        '',
-        ''
-      ],
-      [
-        'Disponible',
-        '',
-        '',
-        disponible,
-        '',
-        '',
-        '',
-        '',
-        ''
-      ]
-    ],
-    {
-      origin: {
-        r: fila - 1,
-        c: 0
-      }
-    }
-  );
-
-  this.agregarMerge(
-    ws,
-    fila,
-    0,
-    fila,
-    2
-  );
-
-  this.agregarMerge(
-    ws,
-    fila,
-    4,
-    fila,
-    6
-  );
-
-  this.agregarMerge(
-    ws,
-    fila + 1,
-    0,
-    fila + 1,
-    2
-  );
-
-  this.agregarMerge(
-    ws,
-    fila + 2,
-    0,
-    fila + 2,
-    2
-  );
-
-  this.aplicarEstiloRangoMerge(
-    ws,
-    fila,
-    0,
-    fila,
-    3,
-    this.estiloMonedaRoja()
-  );
-
-  this.aplicarEstiloRangoMerge(
-    ws,
-    fila,
-    4,
-    fila,
-    7,
-    this.estiloMonedaAzul()
-  );
-
-  this.aplicarEstiloRangoMerge(
-    ws,
-    fila,
-    8,
-    fila,
-    8,
-    this.estiloTotalFinal()
-  );
-
-  this.aplicarEstiloRangoMerge(
-    ws,
-    fila + 1,
-    0,
-    fila + 1,
-    3,
-    this.estiloPorcentaje()
-  );
-
-  this.aplicarEstiloRangoMerge(
-    ws,
-    fila + 2,
-    0,
-    fila + 2,
-    3,
-    this.estiloTotalFinal()
-  );
-
-  this.aplicarFormatoMoneda(
-    ws,
-    fila,
-    3,
-    this.estiloMonedaRoja()
-  );
-
-  this.aplicarFormatoMoneda(
-    ws,
-    fila,
-    7,
-    this.estiloMonedaAzul()
-  );
-
-  this.aplicarFormatoMoneda(
-    ws,
-    fila,
-    8,
-    this.estiloTotalFinal()
-  );
-
-  this.aplicarFormatoPorcentaje(
-    ws,
-    fila + 1,
-    3,
-    this.estiloPorcentaje()
-  );
-
-  this.aplicarFormatoMoneda(
-    ws,
-    fila + 2,
-    3,
-    this.estiloTotalFinal()
-  );
-
-  fila += 4;
-
-  // =========================
-  // FACTURAS DE PRODUCCIÓN
-  // =========================
-  const proyeccion = ing?.proyeccion ?? [];
-
-  if (proyeccion.length) {
     XLSX.utils.sheet_add_aoa(
       ws,
-      [['FACTURAS PRODUCCIÓN']],
+      [[
+        `Número de Póliza: ${ing?.poliza ?? ''}`,
+        '',
+        '',
+        `Porcentaje: ${this.convertirANumero(
+          ing?.porcentajeComision
+        ).toFixed(2)}%`,
+        '',
+        `Aseguradora: ${ing?.nombreAseguradora ?? ''}`,
+        '',
+        '',
+        ''
+      ]],
+      {
+        origin: {
+          r: fila - 1,
+          c: 0
+        }
+      }
+    );
+
+    this.agregarMerge(
+      ws,
+      fila,
+      0,
+      fila,
+      2
+    );
+
+    this.agregarMerge(
+      ws,
+      fila,
+      3,
+      fila,
+      4
+    );
+
+    this.agregarMerge(
+      ws,
+      fila,
+      5,
+      fila,
+      8
+    );
+
+    this.aplicarEstiloRangoMerge(
+      ws,
+      fila,
+      0,
+      fila,
+      2,
+      this.estiloSubtitulo()
+    );
+
+    this.aplicarEstiloRangoMerge(
+      ws,
+      fila,
+      3,
+      fila,
+      4,
+      this.estiloSubtitulo()
+    );
+
+    this.aplicarEstiloRangoMerge(
+      ws,
+      fila,
+      5,
+      fila,
+      8,
+      this.estiloSubtitulo()
+    );
+
+    fila += 2;
+
+    // =========================
+    // INFORMACIÓN Y REVISIÓN
+    // =========================
+    const totalPrimaAnual =
+      this.convertirANumero(ing?.totalPrima) +
+      this.convertirANumero(ing?.proyeccionPrima);
+
+    const totalComisionAnual =
+      this.convertirANumero(ing?.totalComision) +
+      this.convertirANumero(ing?.proyeccionComision);
+
+    const porcentajeRevision =
+      totalPrimaAnual > 0
+        ? totalComisionAnual / totalPrimaAnual
+        : 0;
+
+    const filaInfo = fila;
+
+    XLSX.utils.sheet_add_aoa(
+      ws,
+      [
+        [
+          '',
+          '',
+          '',
+          '',
+          `Revisión en ${String(
+            ing?.mesRevision || ''
+          ).toUpperCase()}`,
+          '',
+          '',
+          ''
+        ],
+        [
+          'Inicio Vigencia',
+          this.formatearFechaExcel(ing?.inicioVigencia),
+          'Fin Vigencia',
+          this.formatearFechaExcel(ing?.finVigencia),
+          '',
+          'Anual',
+          'Mensual',
+          ''
+        ],
+        [
+          'Prima Mensual',
+          this.convertirANumero(ing?.primaMensual),
+          'Prima Anual',
+          this.convertirANumero(ing?.primaAnual),
+          'Prima',
+          totalPrimaAnual,
+          totalPrimaAnual / 12,
+          ''
+        ],
+        [
+          'Comisión Mensual',
+          this.convertirANumero(ing?.comision),
+          'Comisión Anual',
+          this.convertirANumero(ing?.comisionAnual),
+          'Comisión',
+          totalComisionAnual,
+          totalComisionAnual / 12,
+          ''
+        ],
+        [
+          '',
+          '',
+          '',
+          '',
+          '%',
+          porcentajeRevision,
+          porcentajeRevision,
+          ''
+        ]
+      ],
+      {
+        origin: {
+          r: filaInfo - 1,
+          c: 0
+        }
+      }
+    );
+
+    this.agregarMerge(
+      ws,
+      filaInfo,
+      4,
+      filaInfo,
+      6
+    );
+
+    this.aplicarEstiloRangoMerge(
+      ws,
+      filaInfo,
+      4,
+      filaInfo,
+      6,
+      estiloCabeceraFactura
+    );
+
+    // Bloque de información general A:D.
+    for (
+      let filaActual = filaInfo + 1;
+      filaActual <= filaInfo + 3;
+      filaActual++
+    ) {
+      this.aplicarEstiloRango(
+        ws,
+        filaActual,
+        0,
+        filaActual,
+        3,
+        estiloDato
+      );
+
+      const etiquetaA = XLSX.utils.encode_cell({
+        r: filaActual - 1,
+        c: 0
+      });
+
+      const etiquetaC = XLSX.utils.encode_cell({
+        r: filaActual - 1,
+        c: 2
+      });
+
+      if (ws[etiquetaA]) {
+        ws[etiquetaA].s = estiloEtiqueta;
+      }
+
+      if (ws[etiquetaC]) {
+        ws[etiquetaC].s = estiloEtiqueta;
+      }
+    }
+
+    // Tabla de revisión E:G.
+    this.aplicarEstiloRango(
+      ws,
+      filaInfo + 1,
+      4,
+      filaInfo + 4,
+      6,
+      estiloDato
+    );
+
+    for (
+      let filaActual = filaInfo + 1;
+      filaActual <= filaInfo + 4;
+      filaActual++
+    ) {
+      const refEtiqueta = XLSX.utils.encode_cell({
+        r: filaActual - 1,
+        c: 4
+      });
+
+      if (ws[refEtiqueta]) {
+        ws[refEtiqueta].s = estiloEtiqueta;
+      }
+    }
+
+    const refAnual = XLSX.utils.encode_cell({
+      r: filaInfo,
+      c: 5
+    });
+
+    const refMensual = XLSX.utils.encode_cell({
+      r: filaInfo,
+      c: 6
+    });
+
+    if (ws[refAnual]) {
+      ws[refAnual].s = estiloCabeceraFactura;
+    }
+
+    if (ws[refMensual]) {
+      ws[refMensual].s = estiloCabeceraFactura;
+    }
+
+    // Valores monetarios de información general.
+    this.aplicarFormatoMoneda(
+      ws,
+      filaInfo + 2,
+      1,
+      this.estiloMonedaVerde()
+    );
+
+    this.aplicarFormatoMoneda(
+      ws,
+      filaInfo + 2,
+      3,
+      this.estiloMonedaVerde()
+    );
+
+    this.aplicarFormatoMoneda(
+      ws,
+      filaInfo + 3,
+      1,
+      this.estiloMonedaAzul()
+    );
+
+    this.aplicarFormatoMoneda(
+      ws,
+      filaInfo + 3,
+      3,
+      this.estiloMonedaAzul()
+    );
+
+    // Valores monetarios y porcentajes de revisión.
+    this.aplicarFormatoMoneda(
+      ws,
+      filaInfo + 2,
+      5,
+      estiloDato
+    );
+
+    this.aplicarFormatoMoneda(
+      ws,
+      filaInfo + 2,
+      6,
+      estiloDato
+    );
+
+    this.aplicarFormatoMoneda(
+      ws,
+      filaInfo + 3,
+      5,
+      estiloDato
+    );
+
+    this.aplicarFormatoMoneda(
+      ws,
+      filaInfo + 3,
+      6,
+      estiloDato
+    );
+
+    this.aplicarFormatoPorcentaje(
+      ws,
+      filaInfo + 4,
+      5,
+      this.estiloPorcentaje()
+    );
+
+    this.aplicarFormatoPorcentaje(
+      ws,
+      filaInfo + 4,
+      6,
+      this.estiloPorcentaje()
+    );
+
+    fila = filaInfo + 6;
+
+    // =========================
+    // GASTOS Y FACTURAS
+    // =========================
+    XLSX.utils.sheet_add_aoa(
+      ws,
+      [['GASTOS Y FACTURAS']],
       {
         origin: {
           r: fila - 1,
@@ -3456,15 +3681,15 @@ private agregarRamoPantallaExcel(
     XLSX.utils.sheet_add_aoa(
       ws,
       [[
-        '#',
-        'Facturas',
-        'Desde',
-        'Hasta',
-        'Prima Neta',
-        'Comisión Broker',
-        'Porcentaje',
-        '',
-        ''
+        'Descripción gasto',
+        'Cantidad',
+        'Tipo ingreso',
+        'Valor gasto',
+        'Descripción factura',
+        'Fecha',
+        'Valor factura',
+        'Total facturas',
+        'Restante'
       ]],
       {
         origin: {
@@ -3485,162 +3710,235 @@ private agregarRamoPantallaExcel(
 
     fila++;
 
-    proyeccion.forEach(
-      (proy: any, indice: number) => {
-        const primaNeta = this.convertirANumero(
-          proy?.priNet
-        );
+    const grupos = this.getGastosConFacturas(ing);
 
-        const comisionBroker = this.convertirANumero(
-          proy?.valcombroker
-        );
+    if (!grupos.length) {
+      XLSX.utils.sheet_add_aoa(
+        ws,
+        [[
+          'Sin gastos registrados',
+          '',
+          '',
+          '',
+          '',
+          '',
+          '',
+          '',
+          ''
+        ]],
+        {
+          origin: {
+            r: fila - 1,
+            c: 0
+          }
+        }
+      );
 
-        const porcentaje =
-          primaNeta > 0
-            ? comisionBroker / primaNeta
-            : 0;
+      this.agregarMerge(
+        ws,
+        fila,
+        0,
+        fila,
+        colFin
+      );
 
-        const facturas = Array.isArray(proy?.facturas)
-          ? proy.facturas.join('\n')
-          : '';
+      this.aplicarEstiloRangoMerge(
+        ws,
+        fila,
+        0,
+        fila,
+        colFin,
+        estiloDato
+      );
 
-        XLSX.utils.sheet_add_aoa(
-          ws,
-          [[
-            indice + 1,
-            facturas || '-',
-            this.formatearFechaExcel(proy?.fcdesde),
-            this.formatearFechaExcel(proy?.fchasta),
-            primaNeta,
-            comisionBroker,
-            porcentaje,
-            '',
-            ''
-          ]],
-          {
-            origin: {
-              r: fila - 1,
-              c: 0
+      fila++;
+    } else {
+      grupos.forEach((grupo: any) => {
+        const facturasGrupo =
+          grupo?.facturas?.length
+            ? grupo.facturas
+            : [null];
+
+        const filaGrupoInicio = fila;
+
+        facturasGrupo.forEach(
+          (factura: any, indiceFactura: number) => {
+            const primeraFila = indiceFactura === 0;
+
+            const tipoIngreso = primeraFila
+              ? `${grupo?.gasto?.tipo ?? ''}${grupo?.gasto?.tipo === 'Alcance' &&
+                grupo?.gasto?.fecha
+                ? ` ${String(
+                  grupo.gasto.fecha
+                ).split(' ')[0]}`
+                : ''
+              }`
+              : '';
+
+            XLSX.utils.sheet_add_aoa(
+              ws,
+              [[
+                primeraFila
+                  ? grupo?.gasto?.descripcion ?? ''
+                  : '',
+                primeraFila
+                  ? this.convertirANumero(
+                    grupo?.gasto?.cantidad
+                  )
+                  : '',
+                tipoIngreso,
+                primeraFila
+                  ? this.convertirANumero(
+                    grupo?.gasto?.valor
+                  )
+                  : '',
+                factura?.descripcion ?? 'Sin facturas',
+                factura
+                  ? this.formatearFechaExcel(
+                    factura?.fechaFactura
+                  )
+                  : '',
+                factura
+                  ? this.convertirANumero(
+                    factura?.valor
+                  )
+                  : '',
+                primeraFila
+                  ? this.getTotalFacturasGasto(grupo)
+                  : '',
+                primeraFila
+                  ? this.getSaldoGasto(grupo)
+                  : ''
+              ]],
+              {
+                origin: {
+                  r: fila - 1,
+                  c: 0
+                }
+              }
+            );
+
+            this.aplicarEstiloRango(
+              ws,
+              fila,
+              0,
+              fila,
+              colFin,
+              estiloDato
+            );
+
+            if (primeraFila) {
+              this.aplicarFormatoMoneda(
+                ws,
+                fila,
+                3,
+                estiloDato
+              );
+
+              this.aplicarFormatoMoneda(
+                ws,
+                fila,
+                7,
+                estiloDato
+              );
+
+              this.aplicarFormatoMoneda(
+                ws,
+                fila,
+                8,
+                this.estiloTotalFinal()
+              );
             }
+
+            if (factura) {
+              this.aplicarFormatoMoneda(
+                ws,
+                fila,
+                6,
+                estiloDato
+              );
+            }
+
+            fila++;
           }
         );
 
-        this.aplicarEstiloRango(
-          ws,
-          fila,
-          0,
-          fila,
-          colFin,
-          estiloDato
-        );
+        const filaGrupoFin = fila - 1;
 
-        this.aplicarFormatoMoneda(
-          ws,
-          fila,
-          4,
-          estiloDato
-        );
-
-        this.aplicarFormatoMoneda(
-          ws,
-          fila,
-          5,
-          estiloDato
-        );
-
-        this.aplicarFormatoPorcentaje(
-          ws,
-          fila,
-          6,
-          this.estiloPorcentaje()
-        );
-
-        const facturaRef = XLSX.utils.encode_cell({
-          r: fila - 1,
-          c: 1
-        });
-
-        if (ws[facturaRef]) {
-          ws[facturaRef].s = {
-            ...(ws[facturaRef].s || {}),
-            alignment: {
-              vertical: 'center',
-              horizontal: 'left',
-              wrapText: true
-            }
-          };
+        if (filaGrupoFin > filaGrupoInicio) {
+          [
+            0, // Descripción gasto
+            1, // Cantidad
+            2, // Tipo ingreso
+            3, // Valor gasto
+            7, // Total facturas
+            8  // Restante
+          ].forEach((columna: number) => {
+            this.agregarMerge(
+              ws,
+              filaGrupoInicio,
+              columna,
+              filaGrupoFin,
+              columna
+            );
+          });
         }
+      });
+    }
 
-        fila++;
-      }
+    const totalGastos = this.convertirANumero(
+      this.getTotalGastos(ing?.gastos ?? [])
     );
 
-    const totalPrima = this.convertirANumero(
-      ing?.totalPrima
+    const totalFacturas = this.convertirANumero(
+      this.getTotalFacturasAsignadas(ing)
     );
 
-    const totalComision = this.convertirANumero(
-      ing?.totalComision
-    );
+    const saldoTotal = this.getSaldoTotal(ing);
 
-    const proyeccionPrima = this.convertirANumero(
-      ing?.proyeccionPrima
-    );
+    const porcentajeInversion =
+      this.convertirANumero(ing?.comisionAnual) > 0
+        ? totalGastos /
+        this.convertirANumero(ing?.comisionAnual)
+        : 0;
 
-    const proyeccionComision = this.convertirANumero(
-      ing?.proyeccionComision
-    );
-
-    const totalPrimaGeneral =
-      totalPrima + proyeccionPrima;
-
-    const totalComisionGeneral =
-      totalComision + proyeccionComision;
+    const disponible =
+      this.convertirANumero(ing?.comisionAnual) -
+      totalGastos;
 
     XLSX.utils.sheet_add_aoa(
       ws,
       [
         [
+          'TOTAL GASTOS',
+          '',
+          '',
+          totalGastos,
+          'TOTAL FACTURAS',
+          '',
+          '',
+          totalFacturas,
+          saldoTotal
+        ],
+        [
+          '% Inversión',
+          '',
+          '',
+          porcentajeInversion,
           '',
           '',
           '',
-          `Facturado\n${this.convertirANumero(
-            ing?.mesesFacturados
-          )} meses`,
-          totalPrima,
-          totalComision,
-          totalPrima > 0
-            ? totalComision / totalPrima
-            : 0,
           '',
           ''
         ],
         [
+          'Disponible',
+          '',
+          '',
+          disponible,
           '',
           '',
           '',
-          `Proyección\n${this.convertirANumero(
-            ing?.mesesRestantes
-          )} meses`,
-          proyeccionPrima,
-          proyeccionComision,
-          proyeccionPrima > 0
-            ? proyeccionComision / proyeccionPrima
-            : 0,
-          '',
-          ''
-        ],
-        [
-          '',
-          '',
-          '',
-          'Total',
-          totalPrimaGeneral,
-          totalComisionGeneral,
-          totalPrimaGeneral > 0
-            ? totalComisionGeneral /
-              totalPrimaGeneral
-            : 0,
           '',
           ''
         ]
@@ -3653,86 +3951,436 @@ private agregarRamoPantallaExcel(
       }
     );
 
-    for (
-      let filaActual = fila;
-      filaActual <= fila + 2;
-      filaActual++
-    ) {
+    this.agregarMerge(
+      ws,
+      fila,
+      0,
+      fila,
+      2
+    );
+
+    this.agregarMerge(
+      ws,
+      fila,
+      4,
+      fila,
+      6
+    );
+
+    this.agregarMerge(
+      ws,
+      fila + 1,
+      0,
+      fila + 1,
+      2
+    );
+
+    this.agregarMerge(
+      ws,
+      fila + 2,
+      0,
+      fila + 2,
+      2
+    );
+
+    this.aplicarEstiloRangoMerge(
+      ws,
+      fila,
+      0,
+      fila,
+      3,
+      this.estiloMonedaRoja()
+    );
+
+    this.aplicarEstiloRangoMerge(
+      ws,
+      fila,
+      4,
+      fila,
+      7,
+      this.estiloMonedaAzul()
+    );
+
+    this.aplicarEstiloRangoMerge(
+      ws,
+      fila,
+      8,
+      fila,
+      8,
+      this.estiloTotalFinal()
+    );
+
+    this.aplicarEstiloRangoMerge(
+      ws,
+      fila + 1,
+      0,
+      fila + 1,
+      3,
+      this.estiloPorcentaje()
+    );
+
+    this.aplicarEstiloRangoMerge(
+      ws,
+      fila + 2,
+      0,
+      fila + 2,
+      3,
+      this.estiloTotalFinal()
+    );
+
+    this.aplicarFormatoMoneda(
+      ws,
+      fila,
+      3,
+      this.estiloMonedaRoja()
+    );
+
+    this.aplicarFormatoMoneda(
+      ws,
+      fila,
+      7,
+      this.estiloMonedaAzul()
+    );
+
+    this.aplicarFormatoMoneda(
+      ws,
+      fila,
+      8,
+      this.estiloTotalFinal()
+    );
+
+    this.aplicarFormatoPorcentaje(
+      ws,
+      fila + 1,
+      3,
+      this.estiloPorcentaje()
+    );
+
+    this.aplicarFormatoMoneda(
+      ws,
+      fila + 2,
+      3,
+      this.estiloTotalFinal()
+    );
+
+    fila += 4;
+
+    // =========================
+    // FACTURAS DE PRODUCCIÓN
+    // =========================
+    const proyeccion = ing?.proyeccion ?? [];
+
+    if (proyeccion.length) {
+      XLSX.utils.sheet_add_aoa(
+        ws,
+        [['FACTURAS PRODUCCIÓN']],
+        {
+          origin: {
+            r: fila - 1,
+            c: 0
+          }
+        }
+      );
+
       this.agregarMerge(
         ws,
-        filaActual,
+        fila,
         0,
-        filaActual,
-        2
+        fila,
+        colFin
+      );
+
+      this.aplicarEstiloRangoMerge(
+        ws,
+        fila,
+        0,
+        fila,
+        colFin,
+        estiloCabeceraGasto
+      );
+
+      fila++;
+
+      XLSX.utils.sheet_add_aoa(
+        ws,
+        [[
+          '#',
+          'Facturas',
+          'Desde',
+          'Hasta',
+          'Prima Neta',
+          'Comisión Broker',
+          'Porcentaje',
+          '',
+          ''
+        ]],
+        {
+          origin: {
+            r: fila - 1,
+            c: 0
+          }
+        }
       );
 
       this.aplicarEstiloRango(
         ws,
-        filaActual,
+        fila,
         0,
-        filaActual,
+        fila,
         colFin,
-        this.estiloTotalFinal()
+        estiloCabeceraFactura
       );
 
-      this.aplicarFormatoMoneda(
+      fila++;
+
+      proyeccion.forEach(
+        (proy: any, indice: number) => {
+          const primaNeta = this.convertirANumero(
+            proy?.priNet
+          );
+
+          const comisionBroker = this.convertirANumero(
+            proy?.valcombroker
+          );
+
+          const porcentaje =
+            primaNeta > 0
+              ? comisionBroker / primaNeta
+              : 0;
+
+          const facturas = Array.isArray(proy?.facturas)
+            ? proy.facturas.join('\n')
+            : '';
+
+          XLSX.utils.sheet_add_aoa(
+            ws,
+            [[
+              indice + 1,
+              facturas || '-',
+              this.formatearFechaExcel(proy?.fcdesde),
+              this.formatearFechaExcel(proy?.fchasta),
+              primaNeta,
+              comisionBroker,
+              porcentaje,
+              '',
+              ''
+            ]],
+            {
+              origin: {
+                r: fila - 1,
+                c: 0
+              }
+            }
+          );
+
+          this.aplicarEstiloRango(
+            ws,
+            fila,
+            0,
+            fila,
+            colFin,
+            estiloDato
+          );
+
+          this.aplicarFormatoMoneda(
+            ws,
+            fila,
+            4,
+            estiloDato
+          );
+
+          this.aplicarFormatoMoneda(
+            ws,
+            fila,
+            5,
+            estiloDato
+          );
+
+          this.aplicarFormatoPorcentaje(
+            ws,
+            fila,
+            6,
+            this.estiloPorcentaje()
+          );
+
+          const facturaRef = XLSX.utils.encode_cell({
+            r: fila - 1,
+            c: 1
+          });
+
+          if (ws[facturaRef]) {
+            ws[facturaRef].s = {
+              ...(ws[facturaRef].s || {}),
+              alignment: {
+                vertical: 'center',
+                horizontal: 'left',
+                wrapText: true
+              }
+            };
+          }
+
+          fila++;
+        }
+      );
+
+      const totalPrima = this.convertirANumero(
+        ing?.totalPrima
+      );
+
+      const totalComision = this.convertirANumero(
+        ing?.totalComision
+      );
+
+      const proyeccionPrima = this.convertirANumero(
+        ing?.proyeccionPrima
+      );
+
+      const proyeccionComision = this.convertirANumero(
+        ing?.proyeccionComision
+      );
+
+      const totalPrimaGeneral =
+        totalPrima + proyeccionPrima;
+
+      const totalComisionGeneral =
+        totalComision + proyeccionComision;
+
+      XLSX.utils.sheet_add_aoa(
         ws,
-        filaActual,
-        4,
-        this.estiloTotalFinal()
+        [
+          [
+            '',
+            '',
+            '',
+            `Facturado\n${this.convertirANumero(
+              ing?.mesesFacturados
+            )} meses`,
+            totalPrima,
+            totalComision,
+            totalPrima > 0
+              ? totalComision / totalPrima
+              : 0,
+            '',
+            ''
+          ],
+          [
+            '',
+            '',
+            '',
+            `Proyección\n${this.convertirANumero(
+              ing?.mesesRestantes
+            )} meses`,
+            proyeccionPrima,
+            proyeccionComision,
+            proyeccionPrima > 0
+              ? proyeccionComision / proyeccionPrima
+              : 0,
+            '',
+            ''
+          ],
+          [
+            '',
+            '',
+            '',
+            'Total',
+            totalPrimaGeneral,
+            totalComisionGeneral,
+            totalPrimaGeneral > 0
+              ? totalComisionGeneral /
+              totalPrimaGeneral
+              : 0,
+            '',
+            ''
+          ]
+        ],
+        {
+          origin: {
+            r: fila - 1,
+            c: 0
+          }
+        }
       );
 
-      this.aplicarFormatoMoneda(
-        ws,
-        filaActual,
-        5,
-        this.estiloTotalFinal()
-      );
+      for (
+        let filaActual = fila;
+        filaActual <= fila + 2;
+        filaActual++
+      ) {
+        this.agregarMerge(
+          ws,
+          filaActual,
+          0,
+          filaActual,
+          2
+        );
 
-      this.aplicarFormatoPorcentaje(
-        ws,
-        filaActual,
-        6,
-        this.estiloPorcentaje()
-      );
-    }
+        this.aplicarEstiloRango(
+          ws,
+          filaActual,
+          0,
+          filaActual,
+          colFin,
+          this.estiloTotalFinal()
+        );
 
-    fila += 4;
-  }
+        this.aplicarFormatoMoneda(
+          ws,
+          filaActual,
+          4,
+          this.estiloTotalFinal()
+        );
 
-  // =========================
-  // RESPONSABLE COMERCIAL
-  // =========================
-  XLSX.utils.sheet_add_aoa(
-    ws,
-    [[`Comercial: ${ing?.nombresUsuario ?? ''}`]],
-    {
-      origin: {
-        r: fila - 1,
-        c: 5
+        this.aplicarFormatoMoneda(
+          ws,
+          filaActual,
+          5,
+          this.estiloTotalFinal()
+        );
+
+        this.aplicarFormatoPorcentaje(
+          ws,
+          filaActual,
+          6,
+          this.estiloPorcentaje()
+        );
       }
+
+      fila += 4;
     }
-  );
 
-  this.agregarMerge(
-    ws,
-    fila,
-    5,
-    fila,
-    8
-  );
+    // =========================
+    // RESPONSABLE COMERCIAL
+    // =========================
+    XLSX.utils.sheet_add_aoa(
+      ws,
+      [[`Comercial: ${ing?.nombresUsuario ?? ''}`]],
+      {
+        origin: {
+          r: fila - 1,
+          c: 5
+        }
+      }
+    );
 
-  this.aplicarEstiloRangoMerge(
-    ws,
-    fila,
-    5,
-    fila,
-    8,
-    this.estiloSubtitulo()
-  );
+    this.agregarMerge(
+      ws,
+      fila,
+      5,
+      fila,
+      8
+    );
 
-  return fila + 1;
-}
+    this.aplicarEstiloRangoMerge(
+      ws,
+      fila,
+      5,
+      fila,
+      8,
+      this.estiloSubtitulo()
+    );
+
+    return fila + 1;
+  }
 
   /**
    * Devuelve una fecha en formato yyyy-MM-dd sin aplicar conversiones UTC.
@@ -3784,7 +4432,7 @@ private agregarRamoPantallaExcel(
 
     const data: any[][] = [];
 
-    this.lstIngresosGastos.forEach((ing: any) => {
+    this.ramosGuardados.forEach((ing: any) => {
       data.push([
         `Ingreso Anual ${ing.nombreRamo || ''} - ${(ing.inicioVigencia || '').toString().substring(0, 4)}`,
         Number(ing.comisionAnual || 0)
@@ -3793,10 +4441,10 @@ private agregarRamoPantallaExcel(
 
     data.push(
       ['', ''],
-      ['Total Ingresos', Number(this.totalIngresos || 0)],
-      ['Total Gastos', Number(this.totalGastos || 0)],
-      ['% Inversión', Number(this.calcularPorcentajeGastos() || 0) / 100],
-      ['Total Final', Number(this.totalFinal || 0)]
+      ['Total Ingresos', Number(this.totalIngresosGeneral || 0)],
+      ['Total Gastos', Number(this.totalGastosGeneral || 0)],
+      ['% Inversión', (this.totalIngresosGeneral ? this.totalGastosGeneral / this.totalIngresosGeneral : 0)],
+      ['Total Final', Number(this.totalIngresosGeneral - this.totalGastosGeneral)]
     );
 
     XLSX.utils.sheet_add_aoa(ws, data, {
@@ -3843,15 +4491,15 @@ private agregarRamoPantallaExcel(
     colInicio: number
   ): void {
     const porcentaje =
-      this.totalGastos > 0
-        ? Number(this.totalGastosFacturas || 0) / Number(this.totalGastos || 1)
+      this.totalGastosGeneral > 0
+        ? Number(this.totalGastosFacturas || 0) / Number(this.totalGastosGeneral || 1)
         : 0;
 
     const data: any[][] = [
-      ['Total Ingresos', Number(this.totalIngresos || 0)],
-      ['Total Gastos Proyectados', Number(this.totalGastos || 0)],
+      ['Total Ingresos', Number(this.totalIngresosGeneral || 0)],
+      ['Total Gastos Proyectados', Number(this.totalGastosGeneral || 0)],
       ['Total Gastos Reales', Number(this.totalGastosFacturas || 0)],
-      ['Restante', Number(this.totalGastos || 0) - Number(this.totalGastosFacturas || 0)],
+      ['Restante', Number(this.totalGastosGeneral || 0) - Number(this.totalGastosFacturas || 0)],
       ['% Inversión', porcentaje]
     ];
 
@@ -3916,7 +4564,6 @@ private agregarRamoPantallaExcel(
     const seleccionados = this.lstRamosSugeridos.filter((x: any) => x.seleccionado);
 
     let creados = 0;
-
     seleccionados.forEach((element: any) => {
 
       const inicioVigencia = element.fcDesde?.split('T')[0] ?? '';
@@ -3947,7 +4594,7 @@ private agregarRamoPantallaExcel(
         idIngreso: '',
         cliente: this.ingresoForm.getRawValue().cliente,
         nombreCliente: this.clienteSeleccionado.NOMBRES,
-        idCliente: this.clienteSeleccionado.ID,
+        idCliente: this.clienteSeleccionado.id,
         ramo: cdRamo,
         nombreRamo: element.nombreRamo ?? '',
         aseguradora: element.cdAseguradora ?? '',
@@ -4156,11 +4803,11 @@ private agregarRamoPantallaExcel(
     });
   }
   getTotalFacturasGrupo(grupo: any): number {
-  return (grupo?.facturas ?? []).reduce(
-    (total: number, factura: any) =>
-      total + (Number(factura?.valor) || 0),
-    0
-  );
-}
+    return (grupo?.facturas ?? []).reduce(
+      (total: number, factura: any) =>
+        total + (Number(factura?.valor) || 0),
+      0
+    );
+  }
 
 }

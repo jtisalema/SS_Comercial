@@ -477,6 +477,31 @@ export class ChlingresoComponent {
       }
 
       this.ingresoForm.get('identificacionPagador')?.disable();
+      ////
+                  let contactoSugerido = {
+                    identificacion: '1804153375',
+                    cargo: 'ADMINISTRATIVO',
+                    nombre: 'SEGUSUAREZ AGENCIA ASESORA DE SEGUROS',
+                    email: 'caguilar@segurossuarez.com',
+                    //
+                    celular: '',
+                    fechaNacimiento: '1991-10-17',
+                    telefonoTrabajo: '2421800',
+                    telefonoConvencional: '',
+                    regalo: 0,
+                    usuarioWeb: 1,
+                    advertencia: 1
+                  }
+                  // Validar que no exista la misma identificación
+const existeContacto = this.lstContactos.some(
+  (contacto:any) => contacto.identificacion === contactoSugerido.identificacion
+);
+
+// Agregar solo si no existe
+if (!existeContacto) {
+  this.lstContactos.push(contactoSugerido);
+}
+      ////
     }
   }
   obtenerInformacionCombos() {
@@ -2057,6 +2082,7 @@ export class ChlingresoComponent {
   }
   mostrarSponsor: boolean = false;
   onChangeRamo(event: any) {
+    //console.log('event',event); //75 y 66 viajes
     const numerosBuscados = [1, 6, 72];
     const existe = event.some((ramo: any) => numerosBuscados.includes(ramo.cdRamo));
     if (existe) {

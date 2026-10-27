@@ -10,44 +10,43 @@
 
               <h3 class="card-title mb-0" style="font-weight: bold;">
                 <i class="fas fa-user-alt me-2"></i>
-                Registro Presupuestos y Gastos
+                Pérdidas y Ganancias
               </h3>
 
             </div>
             <div class="card-body">
-              <form [formGroup]="ingresoForm" *ngIf="!esFinanciero">
+              <form [formGroup]="ingresoForm" *ngIf="!esFinanciero && !modoDetalleRegistro">
                 <div class="card mb-4 p-3 position-relative">
                   <h6 class="card-title titulo-sobre-borde">Información del Cliente</h6>
                   <div class="row mb-3">
 
                     <!-- CLIENTE -->
-                    <div [ngClass]="clienteSeleccionado ? 'col-md-3' : 'col-md-4'">
+                    <div class="col-md-4">
                       <label for="identificacion" class="form-label">
                         Cliente
                       </label>
 
-                      <ng-select [items]="clientes" bindLabel="NOMBRES" bindValue="NOMBRES"
-                        [readonly]="ingresoForm.value.id != null" [typeahead]="clientesInput$"
-                        [loading]="loadingClientes" [minTermLength]="3" placeholder="Ingrese el nombre del cliente"
-                        formControlName="cliente" (change)="onClienteChange($event)"
-                        [class.is-invalid]="ingresoForm.get('cliente')?.touched && ingresoForm.get('cliente')?.invalid">
+                      <div class="cliente-selector-acciones">
+                        <ng-select [items]="clientes" bindLabel="nombres" bindValue="nombres"
+                          [readonly]="ingresoForm.value.id != null" [typeahead]="clientesInput$"
+                          [loading]="loadingClientes" [minTermLength]="3" placeholder="Ingrese el nombre del cliente"
+                          formControlName="cliente" (change)="onClienteChange($event)"
+                          [class.is-invalid]="ingresoForm.get('cliente')?.touched && ingresoForm.get('cliente')?.invalid">
 
-                        <ng-template ng-option-tmp let-item="item">
-                          {{item.NOMBRES}}
-                        </ng-template>
+                          <ng-template ng-option-tmp let-item="item">
+                            {{item.nombres}}
+                          </ng-template>
 
-                      </ng-select>
+                        </ng-select>
+                        <button type="button" class="btn btn-primary btn-ramo-sugerido" *ngIf="clienteSeleccionado"
+                          data-bs-toggle="modal" title="Ver Ramos Sugeridos"
+                          data-bs-target="#modalRamosEstandar">+</button>
+                      </div>
 
                       <small class="text-danger"
                         *ngIf="ingresoForm.get('cliente')?.touched && ingresoForm.get('cliente')?.hasError('required')">
                         Debe seleccionar un cliente
                       </small>
-                    </div>
-                    <div class="col-md-1 d-flex align-items-end pb-1" *ngIf="clienteSeleccionado">
-                      <button type="button" class="btn btn-primary" data-bs-toggle="modal" title="Ver Ramos Sugeridos"
-                        data-bs-target="#modalRamosEstandar">
-                        +
-                      </button>
                     </div>
 
                     <!-- RAMO -->
@@ -152,14 +151,12 @@
                         </span>
 
                         <input type="text" class="form-control" formControlName="poliza" placeholder="Número de póliza"
-                          [readonly]="ingresoRamoSeleccionado.idRamo != null"
+                          [readonly]="ingresoRamoSeleccionado.idRamo != null && !!ingresoRamoSeleccionado.poliza"
                           [class.is-invalid]="ingresoForm.get('poliza')?.touched && ingresoForm.get('poliza')?.invalid">
                       </div>
 
-                      <small class="text-danger"
-                        *ngIf="ingresoForm.get('poliza')?.touched && ingresoForm.get('poliza')?.hasError('required')">
-                        Debe ingresar la póliza
-                      </small>
+                      <small class="text-warning" *ngIf="!ingresoForm.get('poliza')?.value">Puede ingresar despues el
+                        número.</small>
                     </div>
                     <!-- PRIMA MENSUAL -->
                     <div class="col-md-2">
@@ -244,8 +241,8 @@
                         <span class="input-group-text bg-light">
                           <i class="fas fa-dollar-sign text-success"></i>
                         </span>
-                        <input id="ciudad" type="number" class="form-control" readonly formControlName="comision"
-                          placeholder="0">
+                        <input id="ciudad" type="number" class="form-control" formControlName="comision"
+                          (input)="changeComisionMensual()" placeholder="0">
                       </div>
                     </div>
                     <!-- CIUDAD -->
@@ -258,187 +255,15 @@
                         <span class="input-group-text bg-light">
                           <i class="fas fa-dollar-sign text-success"></i>
                         </span>
-                        <input id="ciudad" type="number" class="form-control" readonly formControlName="comisionAnual"
-                          placeholder="0">
+                        <input id="ciudad" type="number" class="form-control" formControlName="comisionAnual"
+                          (input)="changeComisionAnual()" placeholder="0">
                       </div>
                     </div>
                   </div>
-                  <!-- GASTOS -->
-                  <form [formGroup]="gastoForm">
-                    <div class="card mb-4 p-3 position-relative">
-                      <h6 class="card-title titulo-sobre-borde">Detalle Gastos</h6>
-
-                      <div class="row">
-
-                        <!-- IZQUIERDA (FORMULARIO) -->
-                        <div class="col-md-5">
-
-                          <div class="mb-3">
-                            <div class="input-group">
-                              <span class="input-group-text bg-light">
-                                <i class="fas fa-file-alt text-info"></i>
-                              </span>
-
-                              <input type="text" class="form-control" placeholder="Ingrese la descripción del gasto"
-                                formControlName="descripcion"
-                                [ngClass]="{'is-invalid': gastoForm.get('descripcion')?.touched && gastoForm.get('descripcion')?.invalid}">
-                            </div>
-
-                            <div class="invalid-feedback d-block"
-                              *ngIf="gastoForm.get('descripcion')?.touched && gastoForm.get('descripcion')?.errors?.['required']">
-                              La descripción es obligatoria
-                            </div>
-                          </div>
-                          <div class="row">
-                            <div class="col-md-8">
-                              <div class="input-group">
-                                <span class="input-group-text bg-light">
-                                  <i class="fas fa-dollar-sign text-success"></i>
-                                </span>
-
-                                <input type="number" class="form-control" placeholder="Ingrese el valor"
-                                  formControlName="valor" min="0"
-                                  [ngClass]="{'is-invalid': gastoForm.get('valor')?.touched && gastoForm.get('valor')?.invalid}">
-                              </div>
-
-                              <div class="invalid-feedback d-block"
-                                *ngIf="gastoForm.get('valor')?.touched && gastoForm.get('valor')?.errors?.['required']">
-                                El valor es obligatorio
-                              </div>
-
-                              <div class="invalid-feedback d-block" *ngIf="gastoForm.get('valor')?.errors?.['min']">
-                                El valor debe ser mayor a 0
-                              </div>
-                            </div>
-                            <div class="col-md-4">
-                              <div class="input-group">
-                                <span class="input-group-text bg-light">
-                                  <i class="fas fa-hashtag text-primary"></i>
-                                </span>
-
-                                <input type="number" class="form-control" placeholder="Ingrese la Cantidad"
-                                  formControlName="cantidad" min="1"
-                                  [ngClass]="{'is-invalid': gastoForm.get('cantidad')?.touched && gastoForm.get('cantidad')?.invalid}">
-                              </div>
-
-                              <div class="invalid-feedback d-block"
-                                *ngIf="gastoForm.get('cantidad')?.touched && gastoForm.get('cantidad')?.errors?.['required']">
-                                La cantidad es obligatoria
-                              </div>
-
-                              <div class="invalid-feedback d-block" *ngIf="gastoForm.get('cantidad')?.errors?.['min']">
-                                La cantidad debe ser mayor a 0
-                              </div>
-                            </div>
-
-                          </div>
-
-                          <div class=" d-flex gap-2 justify-content-end mt-3" *ngIf="gastoForm.valid">
-
-                            <button type="button" class="btn btn-primary" (click)="agregarGasto()" *ngIf="!esEdicion">
-                              + Ingresar
-                            </button>
-
-                            <div *ngIf="esEdicion">
-
-                              <button type="button" class="btn btn-success" (click)="actualizarGasto()"
-                                *ngIf="esEdicion">
-                                Actualizar
-                              </button>&nbsp;
-
-                              <button type="button" class="btn btn-danger" (click)="cancelarActualizar()"
-                                *ngIf="esEdicion">
-                                Cancelar
-                              </button>
-
-                            </div>
-
-                          </div>
-                        </div>
-                        <div class="col-md-1"></div>
-
-                        <!-- DERECHA (TABLA) -->
-                        <div class="col-md-6">
-
-                          <div class="table-responsive">
-
-                            <table class="table table-bordered tabla-lstContactos"
-                              style="font-size:10px;text-align:center;">
-
-                              <thead>
-                                <tr>
-                                  <th>#</th>
-                                  <th>Descripción</th>
-                                  <th>Valor</th>
-                                  <th>Cantidad</th>
-                                  <th>Acción</th>
-                                </tr>
-                              </thead>
-
-                              <tbody>
-
-                                <tr *ngIf="lstGastos.length === 0">
-                                  <td colspan="4" class="text-muted">
-                                    No hay gastos agregados
-                                  </td>
-                                </tr>
-
-                                <tr *ngFor="let con of lstGastos; let i = index">
-                                  <td>{{ i + 1 }}</td>
-                                  <td>{{ con.descripcion }}</td>
-                                  <td>{{ con.valor | currency:'USD':'symbol':'1.2-2'
-                                    }}
-                                  </td>
-                                  <td>{{ con.cantidad }}</td>
-                                  <td>
-
-                                    <button class="btn btn-outline-primary btn-sm" (click)="editarGasto(i)"
-                                      title="editar gasto" *ngIf="!con.id">
-                                      <i class="fas fa-edit"></i>
-                                    </button>
-
-                                    <button class="btn btn-outline-danger btn-sm" (click)="eliminarGasto(i)"
-                                      title="eliminar gasto" *ngIf="!con.id">
-                                      <i class="fas fa-trash-alt"></i>
-                                    </button>
-
-                                  </td>
-                                </tr>
-
-                              </tbody>
-
-                              <tfoot *ngIf="lstGastos.length > 0">
-                                <tr>
-                                  <td colspan="2"><strong>Total</strong></td>
-                                  <td>
-                                    <strong>
-                                      {{ totalDetalleGastos |
-                                      currency:'USD':'symbol':'1.2-2'
-                                      }}
-                                    </strong>
-                                  </td>
-                                  <td>
-                                    <strong>
-                                      {{ totalCantidadGastos}}
-                                    </strong>
-                                  </td>
-                                  <td></td>
-                                </tr>
-                              </tfoot>
-
-                            </table>
-
-                          </div>
-
-                        </div>
-
-                      </div>
-                    </div>
-                  </form>
                   <div class="d-flex gap-2 justify-content-end">
                     <button type="button" class="btn btn-primary" (click)="guardarIngresoGastos()"
                       *ngIf="!editarIngresoGasto">
-                      Agregar
+                      Agregar ramo al detalle
                     </button>
                     <button type="button" class="btn btn-primary" (click)="actualizarIngresoGasto()"
                       *ngIf="editarIngresoGasto">
@@ -451,12 +276,248 @@
                   </div>
                 </div>
               </form>
+              <div class="card mb-4 p-3 position-relative" *ngIf="!esFinanciero && !modoDetalleRegistro && lstIngresosGastos.length > 0">
+                <h6 class="card-title titulo-sobre-borde">Detalle de Ramos Ingresados</h6>
+                <div class="table-responsive scroll-ramos-x pyg-scroll-solo-x">
+                  <table class="table table-bordered table-sm tabla-detalle-ramos">
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Ramo</th>
+                        <th>Aseguradora</th>
+                        <th>Póliza</th>
+                        <th>Inicio Vigencia</th>
+                        <th>Fin Vigencia</th>
+                        <th>Prima Neta Mensual</th>
+                        <th>Prima Neta Anual</th>
+                        <th>% Comisión</th>
+                        <th>Comisión Mensual</th>
+                        <th>Comisión Anual</th>
+                        <th>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let item of lstIngresosGastos; let i = index">
+                        <td>{{i + 1}}</td>
+                        <td>{{item.nombreRamo}}</td>
+                        <td>{{item.nombreAseguradora}}</td>
+                        <td><span *ngIf="item.poliza">{{item.poliza}}</span><span *ngIf="!item.poliza"
+                            class="text-danger" title="Debe actualizar el número de póliza"><i
+                              class="fas fa-exclamation-circle"></i> Pendiente</span></td>
+                        <td>{{item.inicioVigencia | date:'dd/MM/yyyy'}}</td>
+                        <td>{{item.finVigencia | date:'dd/MM/yyyy'}}</td>
+                        <td>{{item.primaMensual | currency:'USD':'symbol':'1.2-2'}}</td>
+                        <td>{{item.primaAnual | currency:'USD':'symbol':'1.2-2'}}</td>
+                        <td>{{item.porcentajeComision}}%</td>
+                        <td>{{item.comision | currency:'USD':'symbol':'1.2-2'}}</td>
+                        <td>{{item.comisionAnual | currency:'USD':'symbol':'1.2-2'}}</td>
+                        <td>
+                          <button type="button" class="btn btn-outline-primary btn-sm" (click)="editarIngreso(i)"
+                            title="Editar ramo"><i class="fas fa-edit"></i></button>
+                          <button type="button" class="btn btn-outline-danger btn-sm" *ngIf="!item.idRamo"
+                            (click)="eliminarIngreso(i)" title="Eliminar ramo"><i class="fas fa-trash-alt"></i></button>
+                        </td>
+                      </tr>
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <th colspan="6">Totales</th>
+                        <th>{{totalPrimaMensualRamos | currency:'USD':'symbol':'1.2-2'}}</th>
+                        <th>{{totalPrimaAnualRamos | currency:'USD':'symbol':'1.2-2'}}</th>
+                        <th></th>
+                        <th>{{totalComisionMensualRamos | currency:'USD':'symbol':'1.2-2'}}</th>
+                        <th>{{totalIngresos | currency:'USD':'symbol':'1.2-2'}}</th>
+                        <th></th>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+              <!-- GASTOS -->
+              <form [formGroup]="gastoForm" *ngIf="!esFinanciero && !modoDetalleRegistro">
+                <div class="card mb-4 p-3 position-relative">
+                  <h6 class="card-title titulo-sobre-borde">Detalle Gastos</h6>
+
+                  <div class="row">
+
+                    <!-- IZQUIERDA (FORMULARIO) -->
+                    <div class="col-md-5">
+
+                      <div class="mb-3">
+                        <div class="input-group">
+                          <span class="input-group-text bg-light">
+                            <i class="fas fa-file-alt text-info"></i>
+                          </span>
+
+                          <input type="text" class="form-control" placeholder="Ingrese la descripción del gasto"
+                            formControlName="descripcion"
+                            [ngClass]="{'is-invalid': gastoForm.get('descripcion')?.touched && gastoForm.get('descripcion')?.invalid}">
+                        </div>
+
+                        <div class="invalid-feedback d-block"
+                          *ngIf="gastoForm.get('descripcion')?.touched && gastoForm.get('descripcion')?.errors?.['required']">
+                          La descripción es obligatoria
+                        </div>
+                      </div>
+                      <div class="row">
+                        <div class="col-md-8">
+                          <div class="input-group">
+                            <span class="input-group-text bg-light">
+                              <i class="fas fa-dollar-sign text-success"></i>
+                            </span>
+
+                            <input type="number" class="form-control" placeholder="Ingrese el valor"
+                              formControlName="valor" min="0"
+                              [ngClass]="{'is-invalid': gastoForm.get('valor')?.touched && gastoForm.get('valor')?.invalid}">
+                          </div>
+
+                          <div class="invalid-feedback d-block"
+                            *ngIf="gastoForm.get('valor')?.touched && gastoForm.get('valor')?.errors?.['required']">
+                            El valor es obligatorio
+                          </div>
+
+                          <div class="invalid-feedback d-block" *ngIf="gastoForm.get('valor')?.errors?.['min']">
+                            El valor debe ser mayor a 0
+                          </div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="input-group">
+                            <span class="input-group-text bg-light">
+                              <i class="fas fa-hashtag text-primary"></i>
+                            </span>
+
+                            <input type="number" class="form-control" placeholder="Ingrese la Cantidad"
+                              formControlName="cantidad" min="1"
+                              [ngClass]="{'is-invalid': gastoForm.get('cantidad')?.touched && gastoForm.get('cantidad')?.invalid}">
+                          </div>
+
+                          <div class="invalid-feedback d-block"
+                            *ngIf="gastoForm.get('cantidad')?.touched && gastoForm.get('cantidad')?.errors?.['required']">
+                            La cantidad es obligatoria
+                          </div>
+
+                          <div class="invalid-feedback d-block" *ngIf="gastoForm.get('cantidad')?.errors?.['min']">
+                            La cantidad debe ser mayor a 0
+                          </div>
+                        </div>
+
+                      </div>
+
+                      <div class=" d-flex gap-2 justify-content-end mt-3" *ngIf="gastoForm.valid">
+
+                        <button type="button" class="btn btn-primary" (click)="agregarGasto()" *ngIf="!esEdicion && puedeAgregarGasto()">
+                          + Ingresar
+                        </button>
+
+                        <div *ngIf="esEdicion">
+
+                          <button type="button" class="btn btn-success" (click)="actualizarGasto()" *ngIf="esEdicion">
+                            Actualizar
+                          </button>&nbsp;
+
+                          <button type="button" class="btn btn-danger" (click)="cancelarActualizar()" *ngIf="esEdicion">
+                            Cancelar
+                          </button>
+
+                        </div>
+
+                      </div>
+                    </div>
+                    <div class="col-md-1"></div>
+
+                    <!-- DERECHA (TABLA) -->
+                    <div class="col-md-6">
+
+                      <div class="table-responsive pyg-scroll-solo-x">
+
+                        <table class="table table-bordered tabla-lstContactos"
+                          style="font-size:10px;text-align:center;">
+
+                          <thead>
+                            <tr>
+                              <th>#</th>
+                              <th>Descripción</th>
+                              <th>Valor</th>
+                              <th *ngIf="esFinanciero">Factura</th>
+                              <th>Cantidad</th>
+                              <th>Acción</th>
+                            </tr>
+                          </thead>
+
+                          <tbody>
+
+                            <tr *ngIf="lstGastos.length === 0">
+                              <td colspan="4" class="text-muted">
+                                No hay gastos agregados
+                              </td>
+                            </tr>
+
+                            <tr *ngFor="let con of lstGastos; let i = index"
+                              [ngClass]="{'pyg-fila-alcance': con.tipo === 'Alcance'}">
+                              <td>{{ i + 1 }}</td>
+                              <td>{{ con.descripcion }}</td>
+                              <td>{{ con.valor | currency:'USD':'symbol':'1.2-2'
+                                }}
+                              </td>
+                              <td>{{ con.cantidad }}</td>
+                              <td>
+
+                                <button class="btn btn-outline-primary btn-sm" (click)="editarGasto(i)"
+                                  *ngIf="puedeEditarGasto(con)" title="editar gasto">
+                                  <i class="fas fa-edit"></i>
+                                </button>
+
+                                <button class="btn btn-outline-danger btn-sm" (click)="eliminarGasto(i)"
+                                  title="eliminar gasto" *ngIf="!con.id && puedeAgregarGasto()">
+                                  <i class="fas fa-trash-alt"></i>
+                                </button>
+
+                              </td>
+                            </tr>
+
+                          </tbody>
+
+                          <tfoot *ngIf="lstGastos.length > 0">
+                            <tr>
+                              <td colspan="2"><strong>Total</strong></td>
+                              <td>
+                                <strong>
+                                  {{ totalDetalleGastos |
+                                  currency:'USD':'symbol':'1.2-2'
+                                  }}
+                                </strong>
+                              </td>
+                              <td>
+                                <strong>
+                                  {{ totalCantidadGastos}}
+                                </strong>
+                              </td>
+                              <td></td>
+                            </tr>
+                          </tfoot>
+
+                        </table>
+
+                      </div>
+
+                    </div>
+
+                  </div>
+                </div>
+              </form>
+              <div class="d-flex gap-2 justify-content-end mb-4" *ngIf="!esFinanciero && !modoDetalleRegistro && lstIngresosGastos.length > 0">
+                <button type="button" class="btn btn-outline-secondary" *ngIf="indiceProgramaEdicion !== null"
+                  (click)="cancelarEdicionPrograma()">Cancelar edición</button>
+                <button type="button" class="btn btn-success" (click)="generarRegistroPrograma()">{{
+                  indiceProgramaEdicion !== null ? 'Actualizar registro' : 'Generar registro con ramos y gastos'
+                  }}</button>
+              </div>
               <!-- Esta Seccion solo para el usuario Financiero -->
               <div class="card mb-4 p-3 position-relative" *ngIf="idRegistro">
                 <h6 class="card-title titulo-sobre-borde">Información del Cliente</h6>
                 <div class="row mb-3 filtros-ejecutivos">
 
-                  <div class="col-md-4">
+                  <div [class.col-md-12]="modoDetalleRegistro" [class.col-md-4]="!modoDetalleRegistro">
                     <div class="filtro-item">
                       <label for="identificacion" class="filtro-label">
                         Cliente
@@ -472,10 +533,10 @@
                     </div>
                   </div>
 
-                  <div class="col-md-4">
+                  <div class="col-md-4" *ngIf="!modoDetalleRegistro">
                     <div class="filtro-item">
                       <label for="finVigencia" class="filtro-label">
-                        Ramos
+                        Ramos / Grupos
                       </label>
 
                       <div class="filtro-control">
@@ -484,17 +545,17 @@
                         </span>
 
                         <select class="form-control filtro-input" [(ngModel)]="selectRamo"
-                          (ngModelChange)="cargarDatosRegistro()">
+                          (ngModelChange)="actualizarFiltroVista()">
                           <option value="999" selected>Todos</option>
                           <option *ngFor="let r of lstRamosCargados" [value]="r.id">
-                            {{ r.nombre }}
+                            {{ r.tipo }}: {{ r.nombre }}
                           </option>
                         </select>
                       </div>
                     </div>
                   </div>
 
-                  <div class="col-md-4">
+                  <div class="col-md-4" *ngIf="!modoDetalleRegistro">
                     <div class="filtro-item">
                       <label for="finVigencia" class="filtro-label">
                         Vigencia desde
@@ -506,7 +567,7 @@
                         </span>
 
                         <select class="form-control filtro-input" [(ngModel)]="selectVigencia"
-                          (ngModelChange)="cargarDatosRegistro()">
+                          (ngModelChange)="actualizarFiltroVista()">
                           <option *ngFor="let r of lstAniosCargados" [value]="r.id">
                             {{ r.value }}
                           </option>
@@ -518,902 +579,368 @@
                 </div>
               </div>
               <div>
-                <div class="row">
-                  <div *ngIf="lstIngresosGastos.length<1 && idRegistro" class="col-md-12">
-                    <div class="card mb-4 p-3 position-relative">
-                      No hay Registros con los filtros Seleccionados
-                    </div>
-                  </div>
-                  <div class="col-md-9">
-                    <div class="card mb-4 p-3 position-relative" *ngIf="lstIngresosGastos.length > 0">
-                      <h6 class="card-title titulo-sobre-borde-centrado">Detalles de PYG
-                      </h6>
-
-                      <div class="row g-3 ingresos-gastos-wrapper">
-
-                        <div class="col-md-12 mb-3" *ngFor="let ing of lstIngresosGastos; let i = index">
-
-                          <div class="card card-ramo shadow-sm border-0 h-100">
-
-                            <div class="card-header-ramo">
-                              <div class="w-100">
-                                <h6 class="titulo-ramo mb-0">
-                                  {{ ing.nombreRamo }}
-                                </h6>
-
-                                <small class="subtitulo-ramo d-flex justify-content-between align-items-center w-100">
-                                  <span>
-                                    Número de Póliza:
-                                    <span style="font-weight: bold;">{{ ing.poliza }}</span>
-                                  </span>
-
-                                  <span class="text-center">
-                                    Porcentaje:
-                                    <span style="font-weight: bold;">{{ ing.porcentajeComision }}%</span>
-                                  </span>
-
-                                  <span class="text-end">
-                                    Aseguradora:
-                                    <span style="font-weight: bold;">{{ ing.nombreAseguradora }}</span>
-                                  </span>
-                                </small>
-                              </div>
-
-                              <div class="acciones-ramo">
-                                <button type="button" class="btn btn-outline-danger btn-sm"
-                                  *ngIf="!esFinanciero && !ing.idRamo" (click)="eliminarIngreso(i)" title="Eliminar">
-                                  <i class="fas fa-times"></i>
-                                </button>
-
-                                <button type="button" *ngIf="!esFinanciero" class="btn btn-outline-primary btn-sm"
-                                  (click)="editarIngreso(i)" title="Editar detalle">
-                                  <i class="fas fa-pencil-alt"></i>
-                                </button>
-
-                                <!-- VISUALIZAR RESPALDOS DE ACEPTACIÓN -->
-                                <button type="button"
-                                  
-                                  *ngIf="esFinanciero"
-                                  class="btn btn-outline-warning btn-sm btn-aceptacion-ramo"
-                                  data-bs-toggle="modal"
-                                  data-bs-target="#modalVisualizarAceptacion"
-                                  (click)="abrirModalAceptacion(ing)"
-                                  title="Visualizar aceptación">
-                                  <i class="fas fa-file-signature me-1"></i>
-                                  Visualizar aceptación
-                                </button>
-
-                              </div>
+                <div class="row align-items-start">
+                  <div class="col-lg-9">
+                    <div class="row" *ngFor="let programa of programasVisualizados; let p = index">
+                      <div class="col-md-12" *ngIf="programa.ramos.length < 1">
+                        <div class="card mb-4 p-3 position-relative">
+                          No hay Registros con los filtros Seleccionados
+                        </div>
+                      </div>
+                      <div class="col-md-12">
+                        <div class="card mb-4 p-3 position-relative pyg-detalle-compacto"
+                          *ngIf="programa.ramos.length > 0">
+                          <h6 class="card-title titulo-sobre-borde-centrado">Detalles de PYG</h6>
+                          <div class="pyg-programa-header">
+                            <span class="pyg-programa-icono"><i class="fas"
+                                [ngClass]="programa.ramos.length > 1 ? 'fa-layer-group' : 'fa-file-contract'"></i></span>
+                            <div class="pyg-programa-texto">
+                              <span class="pyg-programa-tipo">{{ programa.ramos.length > 1 ? 'Grupo de ramos' : 'Ramo
+                                asegurado' }}</span>
+                              <strong>{{ programa.ramos.length > 1 ? programa.nombre : programa.ramos[0]?.nombreRamo
+                                }}</strong>
                             </div>
-
-                            <div class="card-body-ramo">
-                              <div class="row">
-                                <div class="col-md-8">
-                                  <div class="info-grid-ramo mb-1">
-
-                                    <div class="info-item">
-                                      <span>Inicio Vigencia</span>
-                                      <strong>{{ ing.inicioVigencia }}</strong>
-                                    </div>
-
-                                    <div class="info-item">
-                                      <span>Fin Vigencia</span>
-                                      <strong>{{ ing.finVigencia }}</strong>
-                                    </div>
-
-                                    <div class="info-item">
-                                      <span>Prima Mensual</span>
-                                      <strong class="text-success">{{ ing.primaMensual | currency }}</strong>
-                                    </div>
-                                    <div class="info-item">
-                                      <span>Prima Anual</span>
-                                      <strong class="text-success">{{ ing.primaAnual | currency }}</strong>
-                                    </div>
-
-                                    <div class="info-item">
-                                      <span>Comisión Mensual</span>
-                                      <strong class="text-info">{{ ing.comision | currency }}</strong>
-                                    </div>
-
-                                    <div class="info-item">
-                                      <span>Comisión Anual</span>
-                                      <strong class="text-info">{{ ing.comisionAnual | currency }}</strong>
-                                    </div>
-
-                                  </div>
-                                </div>
-                                <div class="col-md-4">
-
-                                  <div class="revision-box">
-
-                                    <div class="revision-title">
-                                      Revisión en <span style="font-weight: bold;">{{ing.mesRevision}}</span>
-                                    </div>
-
-                                    <table class="revision-table">
-
-                                      <thead>
-                                        <tr>
-                                          <th></th>
-                                          <th style="font-weight: bold;">Anual</th>
-                                          <th style="font-weight: bold;">Mensual</th>
-                                        </tr>
-                                      </thead>
-
-                                      <tbody>
-
-                                        <tr>
-                                          <td class="titulo" style="font-weight: bold;">Prima</td>
-                                          <td>{{ (ing.totalPrima + ing.proyeccionPrima) |
-                                            currency:'USD':'symbol':'1.2-2' }}</td>
-                                          <td>{{ (ing.totalPrima + ing.proyeccionPrima)/12 |
-                                            currency:'USD':'symbol':'1.2-2' }}</td>
-                                        </tr>
-
-                                        <tr>
-                                          <td class="titulo" style="font-weight: bold;">Comisión</td>
-                                          <td>{{ (ing.totalComision + ing.proyeccionComision) |
-                                            currency:'USD':'symbol':'1.2-2' }}</td>
-                                          <td>{{ (ing.totalComision + ing.proyeccionComision)/12 |
-                                            currency:'USD':'symbol':'1.2-2' }}</td>
-                                        </tr>
-
-                                        <tr>
-                                          <td class="titulo" style="font-weight: bold;">%</td>
-                                          <td>{{ (ing.totalComision + ing.proyeccionComision)/(ing.totalPrima +
-                                            ing.proyeccionPrima) | percent:'1.2-2' }}</td>
-                                          <td>{{ ((ing.totalComision + ing.proyeccionComision)/12)/((ing.totalPrima +
-                                            ing.proyeccionPrima)/12) | percent:'1.2-2' }}</td>
-                                        </tr>
-
-                                      </tbody>
-
-                                    </table>
-
-                                  </div>
-
-                                </div>
-                              </div>
-
-
-                              <div class="seccion-tabla">
-
-                                <div class="seccion-titulo">
-                                  <i class="fas fa-file-invoice-dollar"></i>
-
-                                  <span>
-                                    {{
-                                    tieneFacturasAsignadas(ing)
-                                    ? 'Gastos y Facturas'
-                                    : 'Gastos'
-                                    }}
-                                  </span>
-                                </div>
-
-<div class="contenedor-tabla-gastos">
-
-  <table
-    class="table mb-0 tabla-gastos-facturas"
-    [class.tabla-con-facturas]="tieneFacturasAsignadas(ing)"
-    [class.tabla-solo-gastos]="!tieneFacturasAsignadas(ing)"
-  >
-
-    <thead>
-
-      <tr class="fila-titulos-principales">
-
-        <th
-          [attr.colspan]="esFinanciero ? 5 : 4"
-          class="encabezado-bloque encabezado-gasto"
-        >
-          <i class="fas fa-wallet me-1"></i>
-          Gastos
-        </th>
-
-        <th
-          *ngIf="tieneFacturasAsignadas(ing)"
-          [attr.colspan]="esFinanciero ? 6 : 5"
-          class="encabezado-bloque encabezado-factura"
-        >
-          <i class="fas fa-receipt me-1"></i>
-          Facturas
-        </th>
-
-      </tr>
-
-      <tr class="fila-encabezados-columnas">
-
-        <th class="col-descripcion-gasto">
-          Descripción
-        </th>
-
-        <th class="text-center col-cantidad">
-          Cantidad
-        </th>
-
-        <th class="text-center col-tipo">
-          Tipo ingreso
-        </th>
-
-        <th
-          class="text-end col-valor"
-          [class.separador-bloques]="!esFinanciero"
-        >
-          Valor
-        </th>
-
-        <th
-          *ngIf="esFinanciero"
-          class="text-center col-accion separador-bloques"
-        >
-          Asignar
-        </th>
-
-        <ng-container *ngIf="tieneFacturasAsignadas(ing)">
-
-          <th class="col-descripcion-factura">
-            Descripción factura
-          </th>
-
-          <th class="text-center col-fecha">
-            Fecha
-          </th>
-
-          <th class="text-end col-valor">
-            Valor factura
-          </th>
-
-          <th
-            *ngIf="esFinanciero"
-            class="text-center col-accion"
-          >
-            Acción
-          </th>
-
-          <th class="text-end col-total-facturas">
-            Total facturas
-          </th>
-
-          <th class="text-center col-saldo">
-            Restante
-          </th>
-
-        </ng-container>
-
-      </tr>
-
-    </thead>
-
-    <tbody>
-
-      <ng-container
-        *ngFor="
-          let grupo of getGastosConFacturas(ing);
-          let indiceGasto = index
-        "
-      >
-
-        <!-- Gasto con una o más facturas -->
-        <ng-container *ngIf="grupo.facturas.length > 0">
-
-          <tr
-            *ngFor="
-              let factura of grupo.facturas;
-              let indiceFactura = index
-            "
-            class="fila-detalle-factura"
-            [ngClass]="'grupo-color-' + grupo.grupoColor"
-          >
-
-            <!-- Las celdas del gasto se crean una sola vez -->
-            <ng-container *ngIf="indiceFactura === 0">
-
-              <td
-                [attr.rowspan]="grupo.cantidadFilas"
-                class="celda-gasto celda-descripcion-gasto"
-              >
-                <div class="contenido-gasto">
-                  <div class="gasto-texto">
-                    {{ grupo.gasto?.descripcion }}
-                  </div>
-                </div>
-              </td>
-
-              <td
-                [attr.rowspan]="grupo.cantidadFilas"
-                class="text-center celda-gasto celda-cantidad"
-              >
-                {{ grupo.gasto?.cantidad ?? 0 }}
-              </td>
-
-              <td
-                [attr.rowspan]="grupo.cantidadFilas"
-                class="text-center celda-gasto celda-tipo"
-              >
-                <span
-                  class="tipo-ingreso"
-                  style="font-weight: bold; cursor: pointer;"
-                  [title]="grupo.gasto?.fecha"
-                >
-                  {{ grupo.gasto?.tipo }}
-                </span>
-              </td>
-
-              <td
-                [attr.rowspan]="grupo.cantidadFilas"
-                class="text-end celda-gasto celda-valor"
-                style="text-align: center;"
-                [class.separador-bloques]="!esFinanciero"
-              >
-                {{ grupo.gasto?.valor | currency }}
-              </td>
-
-              <td
-                *ngIf="esFinanciero"
-                [attr.rowspan]="grupo.cantidadFilas"
-                class="text-center celda-gasto celda-accion separador-bloques"
-              >
-                <button
-                  type="button"
-                  class="btn btn-asignar-factura"
-                  title="Asignar factura"
-                  (click)="asignarFacturas(i, grupo.gasto.id)"
-                >
-                  <i class="bi bi-receipt-cutoff"></i>
-
-                  <span class="texto-boton">
-                    Asignar
-                  </span>
-                </button>
-              </td>
-
-            </ng-container>
-
-            <!-- Factura hija -->
-            <ng-container *ngIf="tieneFacturasAsignadas(ing)">
-
-              <td class="celda-factura celda-descripcion-factura">
-
-                <div class="contenido-factura">
-
-                  <span class="linea-hija"></span>
-
-                  <i class="fas fa-file-invoice icono-factura"></i>
-
-                  <span>
-                    {{ factura.descripcion }}
-                  </span>
-
-                </div>
-
-              </td>
-
-              <td class="text-center celda-factura celda-fecha">
-                {{ factura.fechaFactura }}
-              </td>
-
-              <td
-                class="text-end celda-factura celda-valor-factura"
-                style="text-align: center;"
-              >
-                {{ factura.valor | currency }}
-              </td>
-
-              <td
-                *ngIf="esFinanciero"
-                class="text-center celda-factura celda-accion-factura"
-              >
-                <button
-                  type="button"
-                  class="btn btn-danger btn-quitar"
-                  title="Quitar factura"
-                  (click)="
-                    quitarFactura(
-                      factura,
-                      ing,
-                      ing.facturas.indexOf(factura)
-                    )
-                  "
-                >
-                  <i class="fas fa-times"></i>
-                </button>
-              </td>
-
-              <!-- Total de las facturas asociadas al gasto -->
-              <td
-                *ngIf="indiceFactura === 0"
-                [attr.rowspan]="grupo.cantidadFilas"
-                class="text-end celda-factura celda-total-facturas"
-                style="text-align: center; font-weight: bold;"
-              >
-                {{ getTotalFacturasGrupo(grupo) | currency }}
-              </td>
-
-              <!-- Saldo del gasto -->
-              <td
-                *ngIf="indiceFactura === 0"
-                [attr.rowspan]="grupo.cantidadFilas"
-                class="text-center celda-saldo"
-              >
-                <div
-                  class="indicador-saldo"
-                  [ngClass]="{
-                    'saldo-positivo': getSaldoGasto(grupo) > 0,
-                    'saldo-negativo': getSaldoGasto(grupo) < 0,
-                    'saldo-cero': getSaldoGasto(grupo) === 0
-                  }"
-                >
-                  <i
-                    class="fas"
-                    [ngClass]="{
-                      'fa-arrow-up': getSaldoGasto(grupo) > 0,
-                      'fa-arrow-down': getSaldoGasto(grupo) < 0,
-                      'fa-equals': getSaldoGasto(grupo) === 0
-                    }"
-                  ></i>
-
-                  <span>
-                    {{ getSaldoGasto(grupo) | currency }}
-                  </span>
-                </div>
-              </td>
-
-            </ng-container>
-
-          </tr>
-
-        </ng-container>
-
-        <!-- Gasto sin facturas -->
-        <tr
-          *ngIf="grupo.facturas.length === 0"
-          class="fila-gasto-sin-factura"
-          [ngClass]="'grupo-color-' + grupo.grupoColor"
-        >
-
-          <td class="celda-gasto celda-descripcion-gasto">
-            <div class="contenido-gasto">
-              <div class="gasto-texto">
-                {{ grupo.gasto?.descripcion }}
-              </div>
-            </div>
-          </td>
-
-          <td class="text-center celda-gasto celda-cantidad">
-            {{ grupo.gasto?.cantidad ?? 0 }}
-          </td>
-
-          <td class="text-center celda-gasto celda-tipo">
-            <span
-              class="tipo-ingreso"
-              style="font-weight: bold; cursor: pointer;"
-              [title]="grupo.gasto?.fecha"
-            >
-              {{ grupo.gasto?.tipo }}
-            </span>
-          </td>
-
-          <td
-            class="text-end celda-gasto celda-valor"
-            style="text-align: center;"
-            [class.separador-bloques]="!esFinanciero"
-          >
-            {{ grupo.gasto?.valor | currency }}
-          </td>
-
-          <td
-            *ngIf="esFinanciero"
-            class="text-center celda-gasto celda-accion separador-bloques"
-          >
-            <button
-              type="button"
-              class="btn btn-asignar-factura"
-              title="Asignar factura"
-              (click)="asignarFacturas(i, grupo.gasto.id)"
-            >
-              <i class="bi bi-receipt-cutoff"></i>
-
-              <span class="texto-boton">
-                Asignar
-              </span>
-            </button>
-          </td>
-
-          <ng-container *ngIf="tieneFacturasAsignadas(ing)">
-
-            <td
-              [attr.colspan]="esFinanciero ? 4 : 3"
-              class="celda-sin-factura"
-            >
-              <i class="fas fa-info-circle me-1"></i>
-              Sin facturas
-            </td>
-
-            <td
-              class="text-end celda-total-facturas"
-              style="text-align: center; font-weight: bold;"
-            >
-              {{ 0 | currency }}
-            </td>
-
-            <td class="text-center celda-saldo">
-              <div
-                class="indicador-saldo"
-                [ngClass]="{
-                  'saldo-positivo': getSaldoGasto(grupo) > 0,
-                  'saldo-negativo': getSaldoGasto(grupo) < 0,
-                  'saldo-cero': getSaldoGasto(grupo) === 0
-                }"
-              >
-                <i
-                  class="fas"
-                  [ngClass]="{
-                    'fa-arrow-up': getSaldoGasto(grupo) > 0,
-                    'fa-arrow-down': getSaldoGasto(grupo) < 0,
-                    'fa-equals': getSaldoGasto(grupo) === 0
-                  }"
-                ></i>
-
-                <span>
-                  {{ getSaldoGasto(grupo) | currency }}
-                </span>
-              </div>
-            </td>
-
-          </ng-container>
-
-        </tr>
-
-      </ng-container>
-
-    </tbody>
-
-    <tfoot>
-
-      <tr class="fila-total">
-
-        <td style="font-weight: bold;">
-          TOTAL GASTOS
-        </td>
-
-        <td></td>
-
-        <td></td>
-
-        <td
-          class="text-end"
-          style="text-align: center; font-weight: bold; color: red;"
-        >
-          {{ getTotalGastos(ing.gastos) | currency }}
-        </td>
-
-        <td
-          *ngIf="esFinanciero"
-          class="separador-bloques"
-        ></td>
-
-        <ng-container *ngIf="tieneFacturasAsignadas(ing)">
-
-          <td
-            [attr.colspan]="esFinanciero ? 4 : 3"
-            style="font-weight: bold;"
-          >
-            TOTAL FACTURAS
-          </td>
-
-          <td
-            class="text-end"
-            style="text-align: center; font-weight: bold; color: blue;"
-          >
-            {{ getTotalFacturasAsignadas(ing) | currency }}
-          </td>
-
-          <td class="text-center">
-            <div
-              class="indicador-saldo"
-              [ngClass]="{
-                'saldo-positivo': getSaldoTotal(ing) > 0,
-                'saldo-negativo': getSaldoTotal(ing) < 0,
-                'saldo-cero': getSaldoTotal(ing) === 0
-              }"
-            >
-              <i
-                class="fas"
-                [ngClass]="{
-                  'fa-arrow-up': getSaldoTotal(ing) > 0,
-                  'fa-arrow-down': getSaldoTotal(ing) < 0,
-                  'fa-equals': getSaldoTotal(ing) === 0
-                }"
-              ></i>
-
-              <span>
-                {{ getSaldoTotal(ing) | currency }}
-              </span>
-            </div>
-          </td>
-
-        </ng-container>
-
-      </tr>
-
-      <tr class="fila-porcentaje">
-
-        <td style="font-weight: bold;">
-          % Inversión
-        </td>
-
-        <td></td>
-
-        <td></td>
-
-        <td
-          class="text-end"
-          style="text-align: center; font-weight: bold;"
-        >
-          {{
-            calcularPorcentajeGastosxRamo(
-              ing.gastos,
-              ing.comisionAnual
-            ) | number:'1.2-2'
-          }} %
-        </td>
-
-        <td
-          *ngIf="esFinanciero"
-          class="separador-bloques"
-        ></td>
-
-        <td
-          *ngIf="tieneFacturasAsignadas(ing)"
-          [attr.colspan]="esFinanciero ? 6 : 5"
-        ></td>
-
-      </tr>
-
-      <tr class="fila-total-general">
-
-        <td style="font-weight: bold;">
-          Disponible
-        </td>
-
-        <td></td>
-
-        <td></td>
-
-        <td
-          class="text-end"
-          style="text-align: center; font-weight: bold;"
-        >
-          {{
-            calcularRestanteGastosxRamo(
-              ing.gastos,
-              ing.comisionAnual
-            ) | currency
-          }}
-        </td>
-
-        <td
-          *ngIf="esFinanciero"
-          class="separador-bloques"
-        ></td>
-
-        <td
-          *ngIf="tieneFacturasAsignadas(ing)"
-          [attr.colspan]="esFinanciero ? 6 : 5"
-        ></td>
-
-      </tr>
-
-    </tfoot>
-
-  </table>
-
-</div>
-
-                              </div>
-                              <!---Seccion Facturas Produccion-->
-                              <div class="seccion-tabla" *ngIf="ing.proyeccion?.length">
-
-                                <!-- Título -->
-                                <div class="seccion-titulo" (click)="ing.mostrarFacturas = !ing.mostrarFacturas"
-                                  style="cursor:pointer; display:flex; align-items:center;">
-
-                                  <i class="fas fa-file-invoice-dollar"></i>
-
-                                  <span class="ms-2">Facturas Producción</span>
-
-                                  <i class="fas ms-auto"
-                                    [ngClass]="ing.mostrarFacturas ? 'fa-chevron-up' : 'fa-chevron-down'">
-                                  </i>
-
-                                </div>
-
-                                <!-- Tabla -->
-                                <div class="contenedor-tabla-gastos" *ngIf="ing.mostrarFacturas">
-
-                                  <table class="table mb-0 tabla-gastos-facturas">
-
-                                    <thead>
-                                      <tr>
-                                        <th class="text-center" style="width:55px">#</th>
-                                        <th class="text-center">Facturas</th>
-                                        <th class="text-center">Desde</th>
-                                        <th class="text-center">Hasta</th>
-                                        <th class="text-center">Prima Neta</th>
-                                        <th class="text-center">Comisión Broker</th>
-                                        <th class="text-center">Porcentaje</th>
-                                      </tr>
-                                    </thead>
-
-                                    <tbody>
-
-                                      <tr *ngFor="let proy of ing.proyeccion; let i = index">
-
-                                        <td class="text-center">
-                                          {{ i + 1 }}
-                                        </td>
-
-                                        <td class="text-center">
-
-                                          <span *ngIf="proy.facturas?.length === 1" class="fw-semibold text-primary">
-                                            <i class="fas fa-file-invoice me-1"></i>
-                                            {{ proy.facturas[0] }}
-                                          </span>
-
-                                          <span *ngIf="proy.facturas?.length > 1"
-                                            class="badge rounded-pill badge-factura"
-                                            [attr.title]="proy.facturas.join('&#10;')">
-
-                                            <i class="fas fa-file-invoice me-1"></i>
-
-                                            {{ proy.facturas.length }} Facturas
-
-                                          </span>
-
-                                          <span *ngIf="!proy.facturas?.length" class="text-muted">
-                                            -
-                                          </span>
-
-                                        </td>
-
-                                        <td class="text-center">
-                                          {{ proy.fcdesde | date:'yyyy-MM-dd' }}
-                                        </td>
-
-                                        <td class="text-center">
-                                          {{ proy.fchasta | date:'yyyy-MM-dd' }}
-                                        </td>
-
-                                        <td class="text-center fw-semibold">
-                                          {{ proy.priNet | currency:'USD':'symbol':'1.2-2' }}
-                                        </td>
-
-                                        <td class="text-center fw-semibold">
-                                          {{ proy.valcombroker | currency:'USD':'symbol':'1.2-2' }}
-                                        </td>
-
-                                        <td class="text-center fw-semibold">
-                                          {{ (proy.valcombroker / proy.priNet) | percent:'1.2-2' }}
-                                        </td>
-
-                                      </tr>
-
-                                    </tbody>
-
-                                    <tfoot>
-
-                                      <tr class="fila-total">
-
-                                        <td colspan="3"></td>
-
-                                        <td class="text-center">
-                                          <strong>Facturado</strong><br>
-                                          {{ ing.mesesFacturados }} meses
-                                        </td>
-
-                                        <td class="text-center total-prima">
-                                          {{ ing.totalPrima | currency:'USD':'symbol':'1.2-2' }}
-                                        </td>
-
-                                        <td class="text-center total-comision">
-                                          {{ ing.totalComision | currency:'USD':'symbol':'1.2-2' }}
-                                        </td>
-
-                                        <td class="text-center fw-semibold">
-                                          {{ (ing.totalComision / ing.totalPrima) | percent:'1.2-2' }}
-                                        </td>
-
-                                      </tr>
-
-                                      <tr class="fila-proyeccion">
-
-                                        <td colspan="3"></td>
-
-                                        <td class="text-center">
-                                          <strong>Proyección</strong><br>
-                                          {{ ing.mesesRestantes }} meses
-                                        </td>
-
-                                        <td class="text-center total-prima">
-                                          {{ ing.proyeccionPrima | currency:'USD':'symbol':'1.2-2' }}
-                                        </td>
-
-                                        <td class="text-center total-comision">
-                                          {{ ing.proyeccionComision | currency:'USD':'symbol':'1.2-2' }}
-                                        </td>
-
-                                        <td class="text-center fw-semibold">
-                                          {{ (ing.proyeccionComision / ing.proyeccionPrima) | percent:'1.2-2' }}
-                                        </td>
-
-                                      </tr>
-
-                                      <tr class="fila-total-general">
-
-                                        <td colspan="3"></td>
-
-                                        <td class="text-center">
-                                          <strong>Total</strong>
-                                        </td>
-
-                                        <td class="text-center total-prima">
-                                          <strong>
-                                            {{ (ing.totalPrima + ing.proyeccionPrima) | currency:'USD':'symbol':'1.2-2'
-                                            }}
-                                          </strong>
-                                        </td>
-
-                                        <td class="text-center total-comision">
-                                          <strong>
-                                            {{ (ing.totalComision + ing.proyeccionComision) |
-                                            currency:'USD':'symbol':'1.2-2' }}
-                                          </strong>
-                                        </td>
-
-                                        <td class="text-center fw-semibold" style="font-weight: bold;">
-                                          {{ ((ing.totalComision + ing.proyeccionComision) / (ing.totalPrima +
-                                          ing.proyeccionPrima)) | percent:'1.2-2' }}
-                                        </td>
-
-                                      </tr>
-
-                                    </tfoot>
-
-                                  </table>
-
-                                </div>
-
-                              </div>
-                              <!---->
-                              <small class="subtitulo-ramo d-flex justify-content-between align-items-center w-100">
-                                <span></span>
-                                <span class="text-end">Comercial: <span
-                                    style="font-weight: bold;">{{ing.nombresUsuario}}</span></span>
-                              </small>
+                            <span class="pyg-programa-cantidad">{{ programa.ramos.length }} {{ programa.ramos.length ===
+                              1 ? 'ramo' : 'ramos' }}</span>
+                            <span class="pyg-estado-registro"
+                              [ngClass]="'pyg-estado-registro-' + obtenerEstadoVisualPrograma(programa)">
+                              <i class="fas" [ngClass]="obtenerEstadoVisualPrograma(programa) === 4 ? 'fa-check-circle' : obtenerEstadoVisualPrograma(programa) === 6 ? 'fa-times-circle' : obtenerEstadoVisualPrograma(programa) === 2 ? 'fa-edit' : 'fa-clock'"></i>
+                              {{ nombreEstadoPYG(obtenerEstadoVisualPrograma(programa)) }}
+                            </span>
+                            <button type="button" class="btn btn-outline-primary btn-sm" *ngIf="!esFinanciero && !modoDetalleRegistro && (programa.idGrupo == null || obtenerIdEstadoPrograma(programa) === 2 || obtenerIdEstadoPrograma(programa) === 4)"
+                              (click)="editarProgramaGenerado(programasGenerados.indexOf(programa))"
+                              title="Editar registro"><i class="fas fa-edit"></i> Editar</button>
+                          </div>
+                          <div class="alert alert-warning pyg-aviso-presupuesto"
+                            *ngIf="polizasPendientes(programa) > 0"><i class="fas fa-exclamation-circle"></i> {{
+                            polizasPendientes(programa) }} {{ polizasPendientes(programa) === 1 ? 'póliza pendiente' :
+                            'pólizas pendientes' }} de actualización. Utilice Editar para completar el número de póliza.
+                          </div>
+                          <div class="alert pyg-aviso-presupuesto pyg-aviso-excedente-compacto"
+                            [ngClass]="obtenerEstadoVisualPrograma(programa) === 4 ? 'alert-success' : 'alert-warning'"
+                            *ngIf="presupuestoPrograma(programa).excedido">
+                            <i class="fas"
+                              [ngClass]="obtenerEstadoVisualPrograma(programa) === 4 ? 'fa-check-circle' : 'fa-exclamation-triangle'"></i>
+                            <strong>{{ obtenerEstadoVisualPrograma(programa) === 4 ? 'Gastos excedidos aprobados' : 'Gastos excedidos del presupuesto' }}</strong> ·
+                            Máximo permitido: {{ presupuestoPrograma(programa).maximo | currency:'USD':'symbol':'1.2-2'
+                            }} · Gastos: {{ presupuestoPrograma(programa).gastos | currency:'USD':'symbol':'1.2-2' }} ·
+                            Excedente: {{ presupuestoPrograma(programa).excedente | currency:'USD':'symbol':'1.2-2' }}
+                          </div>
+                          <!-- REVISIÓN DE PRODUCCIÓN, VISIBLE SOLO CON FACTURAS -->
+                          <!-- <div class="d-flex flex-wrap justify-content-end gap-2 mb-3" *ngIf="programa.ramos.length">
+                        <ng-container *ngFor="let ing of programa.ramos">
+                          <div class="card pyg-revision-produccion mb-0" *ngIf="!modoDetalleRegistro && ing.proyeccion?.length">
+                            <div class="card-header text-center fw-bold py-2">Revisión en {{ (ing.mesRevision || '') | uppercase }}<span *ngIf="programa.ramos.length > 1"> — {{ ing.nombreRamo }}</span></div>
+                            <div class="table-responsive pyg-scroll-solo-x">
+                              <table class="table table-sm table-bordered text-center mb-0">
+                                <thead><tr><th></th><th>Anual</th><th>Mensual</th></tr></thead>
+                                <tbody>
+                                  <tr><th>Prima</th><td>{{ ((ing.totalPrima || 0) + (ing.proyeccionPrima || 0)) | currency:'USD':'symbol':'1.2-2' }}</td><td>{{ (((ing.totalPrima || 0) + (ing.proyeccionPrima || 0)) / 12) | currency:'USD':'symbol':'1.2-2' }}</td></tr>
+                                  <tr><th>Comisión</th><td>{{ ((ing.totalComision || 0) + (ing.proyeccionComision || 0)) | currency:'USD':'symbol':'1.2-2' }}</td><td>{{ (((ing.totalComision || 0) + (ing.proyeccionComision || 0)) / 12) | currency:'USD':'symbol':'1.2-2' }}</td></tr>
+                                  <tr><th>%</th><td>{{ ((ing.totalPrima || 0) + (ing.proyeccionPrima || 0)) ? (((ing.totalComision || 0) + (ing.proyeccionComision || 0)) / ((ing.totalPrima || 0) + (ing.proyeccionPrima || 0)) | percent:'1.2-2') : '0%' }}</td><td>{{ ((ing.totalPrima || 0) + (ing.proyeccionPrima || 0)) ? (((ing.totalComision || 0) + (ing.proyeccionComision || 0)) / ((ing.totalPrima || 0) + (ing.proyeccionPrima || 0)) | percent:'1.2-2') : '0%' }}</td></tr>
+                                </tbody>
+                              </table>
                             </div>
+                          </div>
+                        </ng-container>
+                      </div> -->
+                          <div class="seccion-tabla">
+                            <div class="seccion-titulo pyg-titulo-ampliado"><i class="fas fa-layer-group"></i> Ramos del Registro</div>
+                            <div class="table-responsive pyg-scroll-ramos pyg-scroll-solo-x">
+                              <table class="table table-bordered table-sm tabla-detalle-ramos">
+                                <thead>
+                                  <tr>
+                                    <th>Ramo</th>
+                                    <th>Aseguradora</th>
+                                    <th>Póliza</th>
+                                    <th>Inicio Vigencia</th>
+                                    <th>Fin Vigencia</th>
+                                    <th>Prima Neta Mensual</th>
+                                    <!----<th>Prima Neta Anual</th>--->
+                                    <th>% Comisión</th>
+                                    <th>Comisión Mensual</th>
+                                    <th>Comisión Anual</th>
 
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  <tr *ngFor="let ing of programa.ramos; let i = index">
+                                    <td>{{ ing.nombreRamo }}</td>
+                                    <td>{{ ing.nombreAseguradora }}</td>
+                                    <td><span *ngIf="ing.poliza">{{ ing.poliza }}</span><span *ngIf="!ing.poliza"
+                                        class="text-danger" title="Debe actualizar el número de póliza"><i
+                                          class="fas fa-exclamation-circle"></i> Actualizar</span></td>
+                                    <td>{{ ing.inicioVigencia | date:'dd/MM/yyyy' }}</td>
+                                    <td>{{ ing.finVigencia | date:'dd/MM/yyyy' }}</td>
+                                    <td>{{ ing.primaMensual | currency:'USD':'symbol':'1.2-2' }}</td>
+                                    <!----<td>{{ ing.primaAnual | currency:'USD':'symbol':'1.2-2' }}</td>-->
+                                    <td>{{ ing.porcentajeComision }}%</td>
+                                    <td>{{ ing.comision | currency:'USD':'symbol':'1.2-2' }}</td>
+                                    <td>{{ ing.comisionAnual | currency:'USD':'symbol':'1.2-2' }}</td>
+
+                                  </tr>
+                                </tbody>
+                                <tfoot>
+                                  <tr>
+                                    <th colspan="5">Totales</th>
+                                    <th>{{ sumarCampoPrograma(programa, 'primaMensual') |
+                                      currency:'USD':'symbol':'1.2-2' }}</th>
+                                    <!---<th>{{ sumarCampoPrograma(programa, 'primaAnual') | currency:'USD':'symbol':'1.2-2'
+                                      }}</th>--->
+                                    <th></th>
+                                    <th>{{ sumarCampoPrograma(programa, 'comision') | currency:'USD':'symbol':'1.2-2' }}
+                                    </th>
+                                    <th>{{ sumarCampoPrograma(programa, 'comisionAnual') |
+                                      currency:'USD':'symbol':'1.2-2' }}</th>
+
+                                  </tr>
+                                </tfoot>
+                              </table>
+                            </div>
                           </div>
 
+
+                          <div class="seccion-tabla">
+                            <div class="seccion-titulo seccion-titulo-danger pyg-titulo-ampliado"
+                              (click)="programa.mostrarGastos = !programa.mostrarGastos"
+                              style="cursor:pointer;display:flex;align-items:center;" role="button"
+                              [attr.aria-expanded]="programa.mostrarGastos !== false"
+                              title="Mostrar u ocultar gastos y facturas">
+                              <i class="fas fa-file-invoice-dollar"></i>
+                              <span class="ms-2">Gastos y Facturas</span>
+                              <i class="fas ms-auto"
+                                [ngClass]="programa.mostrarGastos === false ? 'fa-chevron-down' : 'fa-chevron-up'"></i>
+                            </div>
+                            <div class="table-responsive pyg-scroll-solo-x pyg-sin-scroll-gastos" *ngIf="programa.mostrarGastos !== false">
+                              <table class="table table-bordered table-sm tabla-gastos tabla-gastos-facturas"
+                                [class.pyg-tabla-solo-gastos]="!tieneFacturasAsignadasPrograma(programa)"
+                                [class.pyg-tabla-con-facturas]="tieneFacturasAsignadasPrograma(programa)">
+                                <colgroup>
+                                  <col class="pyg-col-descripcion-gasto">
+                                  <col>
+                                  <col>
+                                  <col>
+                                  <col *ngIf="esFinanciero">
+                                  <col *ngIf="tieneFacturasAsignadasPrograma(programa)" class="pyg-col-descripcion-factura">
+                                  <col *ngIf="tieneFacturasAsignadasPrograma(programa)">
+                                  <col *ngIf="tieneFacturasAsignadasPrograma(programa)">
+                                  <col *ngIf="esFinanciero && tieneFacturasAsignadasPrograma(programa)">
+                                  <col *ngIf="tieneFacturasAsignadasPrograma(programa)">
+                                  <col *ngIf="tieneFacturasAsignadasPrograma(programa)">
+                                </colgroup>
+                                <thead>
+                                  <tr>
+                                    <th [attr.colspan]="esFinanciero ? 5 : 4">Gastos</th>
+                                    <th class="pyg-bloque-facturas" *ngIf="tieneFacturasAsignadasPrograma(programa)" [attr.colspan]="esFinanciero ? 6 : 5">Facturas</th>
+                                  </tr>
+                                  <tr>
+                                    <th class="pyg-descripcion-gasto">Descripción</th>
+                                    <th>#</th>
+                                    <th>Tipo</th>
+                                    <th>Valor</th>
+                                    <th *ngIf="esFinanciero">Asignar</th>
+                                    <th *ngIf="tieneFacturasAsignadasPrograma(programa)" class="pyg-descripcion-factura pyg-celda-factura">Descripción</th>
+                                    <th class="pyg-celda-factura" *ngIf="tieneFacturasAsignadasPrograma(programa)">Fecha</th>
+                                    <th class="pyg-celda-factura" *ngIf="tieneFacturasAsignadasPrograma(programa)">Valor</th>
+                                    <th class="pyg-celda-factura" *ngIf="esFinanciero && tieneFacturasAsignadasPrograma(programa)">Acción</th>
+                                    <th class="pyg-celda-factura" *ngIf="tieneFacturasAsignadasPrograma(programa)">Total</th>
+                                    <th class="pyg-celda-factura" *ngIf="tieneFacturasAsignadasPrograma(programa)">Restante</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  <ng-container *ngFor="let fila of getGastosFacturasPrograma(programa)">
+                                    <tr
+                                      [ngClass]="[fila.gasto.tipo === 'Alcance' ? 'pyg-fila-alcance' : 'grupo-color-' + (fila.indice % 5), fila.mostrarGasto ? 'inicio-grupo' : '']">
+                                      <td *ngIf="fila.mostrarGasto" [attr.rowspan]="fila.cantidadFilas" class="fw-bold pyg-descripcion-gasto">
+                                        {{ fila.gasto.descripcion }}</td>
+                                      <td *ngIf="fila.mostrarGasto" [attr.rowspan]="fila.cantidadFilas"
+                                        class="text-center fw-bold">{{ fila.gasto.cantidad }}</td>
+                                      <td *ngIf="fila.mostrarGasto" [attr.rowspan]="fila.cantidadFilas"
+                                        class="text-center fw-bold"
+                                        [attr.title]="fila.gasto.fecha ? ('Registrado: '+fila.gasto.fecha) : 'Fecha no disponible'"
+                                        style="cursor:pointer;font-weight: bold;">{{ fila.gasto.tipo }}</td>
+                                      <td *ngIf="fila.mostrarGasto" [attr.rowspan]="fila.cantidadFilas"
+                                        class="text-end fw-bold">{{ fila.gasto.valor | currency:'USD':'symbol':'1.2-2'
+                                        }}</td>
+                                      <td *ngIf="esFinanciero && fila.mostrarGasto" [attr.rowspan]="fila.cantidadFilas"
+                                        class="text-center">
+                                        <button *ngIf="obtenerIdEstadoPrograma(programa) === 4" type="button"
+                                          class="btn btn-outline-success btn-sm"
+                                          (click)="asignarFacturaGastoPrograma(programa, fila.gasto)">Asignar</button>
+                                        <button *ngIf="obtenerIdEstadoPrograma(programa) !== 4" type="button"
+                                          class="btn btn-outline-warning btn-sm"
+                                          (click)="asignarFacturaGastoPrograma(programa, fila.gasto)"
+                                          title="Para agregar detalle de facturas debe aprobarse primero"><i
+                                            class="fas fa-lock me-1"></i> Pendiente aprobación</button>
+                                      </td>
+                                      <ng-container *ngIf="tieneFacturasAsignadasPrograma(programa)">
+                                        <td class="fw-bold pyg-descripcion-factura pyg-celda-factura" style="font-weight: bold;">{{ fila.factura?.descripcion ||
+                                          'Sin facturas' }}</td>
+                                        <td class="pyg-celda-factura">{{ fila.factura?.fechaFactura | date:'yyyy-MM-dd' }}</td>
+                                        <td class="text-end fw-bold pyg-celda-factura">{{ fila.factura ? (fila.factura.valor |
+                                          currency:'USD':'symbol':'1.2-2') : '' }}</td>
+                                        <td *ngIf="esFinanciero" class="text-center pyg-celda-factura"><button type="button"
+                                            class="btn btn-outline-danger btn-sm" *ngIf="fila.factura"
+                                            (click)="quitarFacturaPrograma(programa, fila)"><i
+                                              class="fas fa-times"></i></button></td>
+                                        <td *ngIf="fila.mostrarGasto" [attr.rowspan]="fila.cantidadFilas"
+                                          class="text-end fw-bold pyg-celda-factura">{{ fila.totalFacturas |
+                                          currency:'USD':'symbol':'1.2-2' }}</td>
+                                        <td *ngIf="fila.mostrarGasto" [attr.rowspan]="fila.cantidadFilas"
+                                          class="text-end fw-bold pyg-celda-factura" style="font-weight: bold;"
+                                          [ngClass]="(fila.gasto.valor - fila.totalFacturas) < 0 ? 'text-danger' : 'text-success'">
+                                          <i class="fas me-1"
+                                            [ngClass]="(fila.gasto.valor - fila.totalFacturas) < 0 ? 'fa-arrow-down' : 'fa-arrow-up'"></i>{{
+                                          (fila.gasto.valor - fila.totalFacturas) | currency:'USD':'symbol':'1.2-2' }}
+                                        </td>
+                                      </ng-container>
+                                    </tr>
+                                  </ng-container>
+                                  <tr *ngIf="gastosPrograma(programa).length === 0">
+                                    <td [attr.colspan]="tieneFacturasAsignadasPrograma(programa) ? (esFinanciero ? 11 : 9) : (esFinanciero ? 5 : 4)" class="text-center text-muted">No hay
+                                      gastos registrados</td>
+                                  </tr>
+                                </tbody>
+                                <tfoot>
+                                  <tr class="fila-total">
+                                    <td colspan="3"><strong>TOTAL GASTOS</strong></td>
+                                    <td class="text-end"><strong>{{ totalGastosPrograma(programa) |
+                                        currency:'USD':'symbol':'1.2-2' }}</strong></td>
+                                    <td *ngIf="esFinanciero && !tieneFacturasAsignadasPrograma(programa)"></td>
+                                    <td *ngIf="tieneFacturasAsignadasPrograma(programa)" colspan="2" class="text-end pyg-total-factura"><strong>TOTAL FACTURAS</strong></td>
+                                    <td *ngIf="tieneFacturasAsignadasPrograma(programa)" [attr.colspan]="esFinanciero ? 4 : 2" class="text-end pyg-total-factura"><strong>{{
+                                        totalFacturasPrograma(programa) | currency:'USD':'symbol':'1.2-2' }}</strong>
+                                    </td>
+                                    <td *ngIf="tieneFacturasAsignadasPrograma(programa)" class="text-end pyg-total-factura"><strong>{{ (totalGastosPrograma(programa) -
+                                        totalFacturasPrograma(programa)) | currency:'USD':'symbol':'1.2-2' }}</strong>
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <td colspan="3"><strong>% Inversión</strong></td>
+                                    <td class="text-end">{{ sumarCampoPrograma(programa, 'comisionAnual') ?
+                                      (totalGastosPrograma(programa) / sumarCampoPrograma(programa, 'comisionAnual') |
+                                      percent:'1.2-2') : '0%' }}</td>
+                                    <td *ngIf="esFinanciero || tieneFacturasAsignadasPrograma(programa)" [attr.colspan]="tieneFacturasAsignadasPrograma(programa) ? (esFinanciero ? 7 : 5) : 1"></td>
+                                  </tr>
+                                  <tr>
+                                    <td colspan="3"><strong>{{ (sumarCampoPrograma(programa, 'comisionAnual') -
+                                        totalGastosPrograma(programa)) >= 0 ? 'Utilidad' : 'Pérdida' }}</strong></td>
+                                    <td class="text-end"><strong>{{ (sumarCampoPrograma(programa, 'comisionAnual') -
+                                        totalGastosPrograma(programa)) | currency:'USD':'symbol':'1.2-2' }}</strong>
+                                    </td>
+                                    <td *ngIf="esFinanciero || tieneFacturasAsignadasPrograma(programa)" [attr.colspan]="tieneFacturasAsignadasPrograma(programa) ? (esFinanciero ? 7 : 5) : 1"></td>
+                                  </tr>
+                                </tfoot>
+                              </table>
+                            </div>
+                          </div>
+                          <!-- DETALLE DE PRODUCCIÓN POR RAMO -->
+                          <div class="seccion-tabla" *ngFor="let ing of programa.ramos">
+                            <div class="seccion-titulo pyg-titulo-ampliado"
+                              (click)="ing.mostrarFacturas = !ing.mostrarFacturas"
+                              style="cursor:pointer;display:flex;align-items:center;" *ngIf="!modoDetalleRegistro && ing.proyeccion?.length">
+                              <i class="fas fa-file-invoice-dollar"></i>
+                              <span class="ms-2">Facturas Producción — {{ ing.nombreRamo }}</span>
+                              <i class="fas ms-auto"
+                                [ngClass]="ing.mostrarFacturas === false ? 'fa-chevron-down' : 'fa-chevron-up'"></i>
+                            </div>
+<div class="table-responsive pyg-scroll-solo-x"
+  *ngIf="!modoDetalleRegistro && ing.proyeccion?.length && ing.mostrarFacturas === true">
+
+  <table class="table table-bordered table-sm tabla-gastos-facturas ">
+                                <thead>
+                                  <tr>
+                                    <th class="text-center" >#</th>
+                                    <th class="text-center" >Facturas</th>
+                                    <th class="text-center" >Desde</th>
+                                    <th class="text-center">Hasta</th>
+                                    <th class="text-center" >Prima Neta</th>
+                                    <th class="text-center" >Comisión Broker</th>
+                                    <th class="text-center">Porcentaje</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  <tr *ngFor="let proy of ing.proyeccion; let i = index">
+                                    <td class="text-center" style="width: 10px;">{{ i + 1 }}</td>
+                                    <td class="text-center">
+                                      <span *ngIf="proy.facturas?.length === 1" class="fw-semibold text-primary"><i
+                                          class="fas fa-file-invoice me-1"></i>{{ proy.facturas[0] }}</span>
+                                      <span *ngIf="proy.facturas?.length > 1" class="badge rounded-pill badge-factura"
+                                        [attr.title]="proy.facturas.join('&#10;')"><i
+                                          class="fas fa-file-invoice me-1"></i>{{ proy.facturas.length }}
+                                        Facturas</span>
+                                      <span *ngIf="!proy.facturas?.length" class="text-muted">-</span>
+                                    </td>
+                                    <td class="text-center">{{ proy.fcdesde | date:'yyyy-MM-dd' }}</td>
+                                    <td class="text-center">{{ proy.fchasta | date:'yyyy-MM-dd' }}</td>
+                                    <td class="text-center fw-semibold">{{ proy.priNet | currency:'USD':'symbol':'1.2-2'
+                                      }}</td>
+                                    <td class="text-center fw-semibold">{{ proy.valcombroker |
+                                      currency:'USD':'symbol':'1.2-2' }}</td>
+                                    <td class="text-center fw-semibold">{{ proy.priNet ? (proy.valcombroker /
+                                      proy.priNet | percent:'1.2-2') : '0%' }}</td>
+                                  </tr>
+                                </tbody>
+                                <tfoot>
+                                  <tr class="fila-total">
+                                    <td colspan="3"></td>
+                                    <td class="text-center"><strong>Facturado</strong><br>{{ ing.mesesFacturados }}
+                                      meses</td>
+                                    <td class="text-center total-prima">{{ ing.totalPrima |
+                                      currency:'USD':'symbol':'1.2-2' }}</td>
+                                    <td class="text-center total-comision">{{ ing.totalComision |
+                                      currency:'USD':'symbol':'1.2-2' }}</td>
+                                    <td class="text-center fw-semibold">{{ ing.totalPrima ? (ing.totalComision /
+                                      ing.totalPrima | percent:'1.2-2') : '0%' }}</td>
+                                  </tr>
+                                  <tr class="fila-proyeccion">
+                                    <td colspan="3"></td>
+                                    <td class="text-center"><strong>Proyección</strong><br>{{ ing.mesesRestantes }}
+                                      meses</td>
+                                    <td class="text-center total-prima">{{ ing.proyeccionPrima |
+                                      currency:'USD':'symbol':'1.2-2' }}</td>
+                                    <td class="text-center total-comision">{{ ing.proyeccionComision |
+                                      currency:'USD':'symbol':'1.2-2' }}</td>
+                                    <td class="text-center fw-semibold">{{ ing.proyeccionPrima ? (ing.proyeccionComision
+                                      / ing.proyeccionPrima | percent:'1.2-2') : '0%' }}</td>
+                                  </tr>
+                                  <tr class="fila-total-general">
+                                    <td colspan="3"></td>
+                                    <td class="text-center"><strong>Total</strong></td>
+                                    <td class="text-center total-prima"><strong>{{ (ing.totalPrima +
+                                        ing.proyeccionPrima) | currency:'USD':'symbol':'1.2-2' }}</strong></td>
+                                    <td class="text-center total-comision"><strong>{{ (ing.totalComision +
+                                        ing.proyeccionComision) | currency:'USD':'symbol':'1.2-2' }}</strong></td>
+                                    <td class="text-center fw-semibold">{{ (ing.totalPrima + ing.proyeccionPrima) ?
+                                      ((ing.totalComision + ing.proyeccionComision) / (ing.totalPrima +
+                                      ing.proyeccionPrima) | percent:'1.2-2') : '0%' }}</td>
+                                  </tr>
+                                </tfoot>
+                              </table>
+                            </div>
+                          </div>
+                          <small class="subtitulo-ramo d-flex justify-content-end align-items-center w-100 mt-2 mb-2">
+                            <span class="text-end">Comercial: <strong>{{ programa.ramos[0]?.nombresUsuario ||
+                                ((userCurrent?.get_persona?.nombre || '') + ' ' + (userCurrent?.get_persona?.apellido ||
+                                '')).trim() }}</strong></span>
+                          </small>
+
                         </div>
-                        <div class="d-flex gap-2 justify-content-end">
-                          <button type="button" class="btn btn-success" title="Exportar Datos"
-                            (click)="exportarDetalles()">
-                            Exportar
-                          </button>
-                        </div>
+
                       </div>
 
                     </div>
+
                   </div>
-                  <div class="col-md-3">
-                    <div class="card mb-4 p-3 position-relative" *ngIf="lstIngresosGastos.length > 0">
+                  <div class="col-lg-3" *ngIf="programasVisualizados.length > 0">
+                    <div class="card mb-4 p-3 position-relative" *ngIf="programasVisualizados.length > 0">
                       <h6 class="card-title titulo-sobre-borde-centrado">Resumen PYG</h6>
-                      <div class="table-responsive">
-                        <div class="table-responsive">
+                      <div class="table-responsive pyg-scroll-solo-x">
+                        <div class="table-responsive pyg-scroll-solo-x">
                           <table class="table tabla-resumen-ejecutiva align-middle mb-0" id="tablaExportar">
 
                             <tbody>
-                              <tr class="resumen-row resumen-ingreso" *ngFor="let ingresos of lstIngresosGastos">
+                              <tr class="resumen-row resumen-ingreso" *ngFor="let programa of programasVisualizados">
                                 <td>
                                   <div class="resumen-concepto">
                                     <span class="resumen-icono bg-success-soft">
@@ -1422,14 +949,13 @@
 
                                     <div>
                                       <span class="resumen-label">Ingreso Anual</span>
-                                      <strong class="resumen-ramo">{{ ingresos.nombreRamo }}-{{ ingresos.inicioVigencia
-                                        | date:'yyyy' }}</strong>
+                                      <strong class="resumen-ramo">{{ programa.nombre }}</strong>
                                     </div>
                                   </div>
                                 </td>
 
                                 <td class="text-end resumen-valor text-success">
-                                  {{ ingresos.comisionAnual | currency }}
+                                  {{ sumarCampoPrograma(programa, 'comisionAnual') | currency }}
                                 </td>
                               </tr>
                             </tbody>
@@ -1448,7 +974,7 @@
                                 </td>
 
                                 <td class="text-end resumen-valor text-success">
-                                  {{ totalIngresos | currency }}
+                                  {{ totalIngresosGeneral | currency }}
                                 </td>
                               </tr>
 
@@ -1464,26 +990,7 @@
                                 </td>
 
                                 <td class="text-end resumen-valor text-danger">
-                                  {{ totalGastos | currency }}
-                                </td>
-                              </tr>
-
-                              <tr class="resumen-row resumen-retorno" *ngFor="let ingresos of lstIngresosGastos" hidden>
-                                <td>
-                                  <div class="resumen-concepto">
-                                    <span class="resumen-icono bg-primary-soft">
-                                      <i class="bi bi-arrow-return-left"></i>
-                                    </span>
-
-                                    <div>
-                                      <span class="resumen-label">Retorno</span>
-                                      <strong class="resumen-ramo">{{ ingresos.nombreRamo }}</strong>
-                                    </div>
-                                  </div>
-                                </td>
-
-                                <td class="text-end resumen-valor text-primary">
-                                  {{ 0 | currency }}
+                                  {{ totalGastosGeneral | currency }}
                                 </td>
                               </tr>
 
@@ -1499,7 +1006,8 @@
                                 </td>
 
                                 <td class="text-end resumen-valor text-warning">
-                                  {{ calcularPorcentajeGastos() | number:'1.2-2' }} %
+                                  {{ (totalIngresosGeneral ? totalGastosGeneral / totalIngresosGeneral * 100 : 0) |
+                                  number:'1.2-2' }} %
                                 </td>
                               </tr>
 
@@ -1510,12 +1018,14 @@
                                       <i class="bi bi-check2-circle"></i>
                                     </span>
 
-                                    <strong>Total Final</strong>
+                                    <strong>{{ (totalIngresosGeneral - totalGastosGeneral) >= 0 ? 'Utilidad' : 'Pérdida'
+                                      }}</strong>
                                   </div>
                                 </td>
 
-                                <td class="text-end resumen-valor-final">
-                                  {{ totalFinal | currency }}
+                                <td class="text-end resumen-valor-final"
+                                  [ngClass]="(totalIngresosGeneral - totalGastosGeneral) >= 0 ? 'text-success' : 'text-danger'">
+                                  {{ (totalIngresosGeneral - totalGastosGeneral) | currency }}
                                 </td>
                               </tr>
 
@@ -1527,129 +1037,86 @@
                       <div class="row">
                       </div>
                     </div>
-                    <div class="card mb-4 p-3 position-relative" *ngIf="tieneFacturas()">
+
+                    <div class="card mb-4 p-3 position-relative" *ngIf="esFinanciero || totalFacturasGeneral > 0">
                       <h6 class="card-title titulo-sobre-borde-centrado">Resumen Gastos</h6>
-                      <div class="table-responsive">
-                        <div class="table-responsive">
-                          <table class="table tabla-resumen-ejecutiva align-middle mb-0">
-
-                            <tfoot>
-
-                              <tr class="resumen-row resumen-total-ingresos">
-                                <td>
-                                  <div class="resumen-concepto">
-                                    <span class="resumen-icono bg-success-soft">
-                                      <i class="bi bi-plus-lg"></i>
-                                    </span>
-
-                                    <strong>Total Ingresos</strong>
-                                  </div>
-                                </td>
-
-                                <td class="text-end resumen-valor text-success">
-                                  {{ totalIngresos | currency }}
-                                </td>
-                              </tr>
-
-                              <tr class="resumen-row resumen-gastos">
-                                <td>
-                                  <div class="resumen-concepto">
-                                    <span class="resumen-icono bg-danger-soft">
-                                      <i class="bi bi-graph-down-arrow"></i>
-                                    </span>
-
-                                    <strong>Total Gastos</strong>
-                                  </div>
-                                </td>
-
-                                <td class="text-end resumen-valor text-danger">
-                                  {{ totalGastos | currency }}
-                                </td>
-                              </tr>
-
-                              <tr class="resumen-row resumen-gastos">
-                                <td>
-                                  <div class="resumen-concepto">
-                                    <span class="resumen-icono bg-danger-soft">
-                                      <i class="bi bi-receipt"></i>
-                                    </span>
-
-                                    <strong>Total Gastos Reales</strong>
-                                  </div>
-                                </td>
-
-                                <td class="text-end resumen-valor text-danger">
-                                  {{ totalGastosFacturas | currency }}
-                                </td>
-                              </tr>
-
-                              <tr class="resumen-row resumen-retorno">
-                                <td>
-                                  <div class="resumen-concepto">
-                                    <span class="resumen-icono bg-primary-soft">
-                                      <i class="bi bi-wallet2"></i>
-                                    </span>
-
-                                    <strong>Restante</strong>
-                                  </div>
-                                </td>
-
-                                <td class="text-end resumen-valor text-primary">
-                                  {{ totalGastos - totalGastosFacturas | currency }}
-                                </td>
-                              </tr>
-
-                              <tr class="resumen-row resumen-porcentaje">
-                                <td>
-                                  <div class="resumen-concepto">
-                                    <span class="resumen-icono bg-warning-soft">
-                                      <i class="bi bi-percent"></i>
-                                    </span>
-
-                                    <strong>% Inversión</strong>
-                                  </div>
-                                </td>
-
-                                <td class="text-end resumen-valor text-warning">
-                                  {{ ((totalGastosFacturas / totalGastos) * 100) | number:'1.2-2' }}%
-                                </td>
-                              </tr>
-
-                            </tfoot>
-
-                          </table>
-                        </div>
-                      </div>
-                      <div class="row">
+                      <div class="table-responsive pyg-scroll-solo-x">
+                      <table class="table tabla-resumen-ejecutiva align-middle mb-0">
+                        <tbody>
+                          <tr class="resumen-row resumen-total-ingresos">
+                            <td><strong>Total Ingresos</strong></td>
+                            <td class="text-end resumen-valor text-success">{{ totalIngresosGeneral | currency }}</td>
+                          </tr>
+                          <tr class="resumen-row resumen-gastos">
+                            <td><strong>Total Gastos</strong></td>
+                            <td class="text-end resumen-valor text-danger">{{ totalGastosGeneral | currency }}</td>
+                          </tr>
+                          <tr class="resumen-row resumen-gastos">
+                            <td><strong>Total Gastos Reales</strong></td>
+                            <td class="text-end resumen-valor text-danger">{{ totalFacturasGeneral | currency }}</td>
+                          </tr>
+                          <tr class="resumen-row resumen-retorno">
+                            <td><strong>Restante</strong></td>
+                            <td class="text-end resumen-valor text-primary">{{ (totalGastosGeneral -
+                              totalFacturasGeneral) | currency }}</td>
+                          </tr>
+                          <tr class="resumen-row resumen-porcentaje">
+                            <td><strong>% Inversión</strong></td>
+                            <td class="text-end resumen-valor text-warning">{{ filasGastosResumenGeneral |
+                              number:'1.2-2' }}%</td>
+                          </tr>
+                        </tbody>
+                      </table>
                       </div>
                     </div>
                   </div>
-
                 </div>
-                <div class="d-flex gap-2 justify-content-end" *ngIf="!this.ingresoForm.value.id || !esFinanciero">
-                  <button type="button" class="btn btn-success" title="Guardar PYG" (click)="guardarPYG()">
-                    Guardar
+              </div>
+              <div class="d-flex align-items-center justify-content-between flex-wrap gap-2" *ngIf="idRegistro">
+                <button type="button" class="btn btn-primary" title="Exportar Datos"
+                  (click)="exportarDetalles()">Exportar</button>
+                <!-- Revisión exclusiva /:id/1 y usuario 5490, alineada con Exportar. -->
+                <div class="d-flex align-items-center gap-2 pyg-revision-registro" *ngIf="puedeRevisarRegistroPYG">
+                  <div class="pyg-revision-selector">
+                    <select id="accionRevisionPYG" class="form-select pyg-revision-select"
+                      aria-label="Decisión del registro"
+                      [value]="accionRevisionPYG"
+                      (change)="accionRevisionPYG = $any($event.target).value"
+                      [disabled]="guardandoRevisionPYG">
+                      <option value="aprobar">Aprobar</option>
+                      <option value="corregir">Corregir</option>
+                      <option value="rechazar">Rechazar</option>
+                    </select>
+                  </div>
+                  <button type="button" class="btn btn-success btn-sm pyg-revision-guardar"
+                    [disabled]="guardandoRevisionPYG" (click)="confirmarRevisionPYG()">
+                    <i class="fas fa-save me-1"></i> Guardar
                   </button>
                 </div>
-                <div class="d-flex gap-2 justify-content-end">
-                  <button type="button" class="btn btn-success" *ngIf="this.ingresoForm.value.id && esFinanciero"
-                    title="Guardar Facturas" (click)="guardarPyGFacturas()">
-                    Guardar
-                  </button>
-                </div>
-                <!-- <div class="d-flex gap-2 justify-content-end" *ngIf="this.ingresoForm.value.id">
+              </div>
+              <div class="d-flex gap-2 justify-content-end"
+                *ngIf="!modoDetalleRegistro && (!this.ingresoForm.value.id || !esFinanciero) && (programasGenerados.length > 0 || idRegistro)">
+                <button type="button" class="btn btn-success" title="Guardar PYG" (click)="guardarPYG()">
+                  Guardar
+                </button>
+              </div>
+              <div class="d-flex gap-2 justify-content-end">
+                <button type="button" class="btn btn-success" *ngIf="this.ingresoForm.value.id && esFinanciero"
+                  title="Guardar Facturas" (click)="guardarPyGFacturas()">
+                  Guardar
+                </button>
+              </div>
+              <!-- <div class="d-flex gap-2 justify-content-end" *ngIf="this.ingresoForm.value.id">
                                     <button type="button" class="btn btn-success" (click)="actualizarPYG()">
                                         Actualizar
                                     </button>
                                 </div> -->
-              </div>
-
             </div>
 
           </div>
+
         </div>
       </div>
-
     </div>
   </section>
   <div class="modal fade" id="modalFacturas">
@@ -1686,7 +1153,7 @@
 
             <h5 class="modal-title mb-1">
               <i class="fas fa-layer-group me-2"></i>
-              Ramos sugeridos para {{ clienteSeleccionado?.NOMBRES }}
+              Ramos sugeridos para {{ clienteSeleccionado?.nombres }}
             </h5>
 
             <small>
@@ -1826,15 +1293,8 @@
 </div>
 
 <!-- MODAL RESPALDO DE APROBACIÓN DE GASTOS -->
-<div
-  class="modal fade"
-  id="modalAprobacionGastos"
-  tabindex="-1"
-  aria-labelledby="modalAprobacionGastosLabel"
-  aria-hidden="true"
-  data-bs-backdrop="static"
-  data-bs-keyboard="false"
->
+<div class="modal fade" id="modalAprobacionGastos" tabindex="-1" aria-labelledby="modalAprobacionGastosLabel"
+  aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
 
@@ -1873,12 +1333,8 @@
           Respaldos de aprobación
         </label>
 
-        <ngx-dropzone
-          [multiple]="true"
-          [maxFileSize]="maxArchivoAprobacion"
-          [expandable]="true"
-          (change)="onSelectAprobacion($event)"
-        >
+        <ngx-dropzone [multiple]="true" [maxFileSize]="maxArchivoAprobacion" [expandable]="true"
+          (change)="onSelectAprobacion($event)">
           <ngx-dropzone-label>
             <div class="text-center">
               <i class="fas fa-cloud-upload-alt fa-2x mb-2"></i>
@@ -1892,12 +1348,8 @@
             </div>
           </ngx-dropzone-label>
 
-          <ngx-dropzone-preview
-            *ngFor="let archivo of archivosAprobacionTemp"
-            [file]="archivo"
-            [removable]="true"
-            (removed)="onRemoveAprobacion(archivo)"
-          >
+          <ngx-dropzone-preview *ngFor="let archivo of archivosAprobacionTemp" [file]="archivo" [removable]="true"
+            (removed)="onRemoveAprobacion(archivo)">
             <ngx-dropzone-label>
               <div>
                 <strong>{{ archivo.name }}</strong>
@@ -1908,10 +1360,7 @@
         </ngx-dropzone>
 
         <!-- BARRA DE PESO ACUMULADO -->
-        <div
-          class="mt-3"
-          *ngIf="archivosAprobacionTemp.length > 0"
-        >
+        <div class="mt-3" *ngIf="archivosAprobacionTemp.length > 0">
           <div class="d-flex justify-content-between align-items-center mb-1">
             <small class="fw-bold">
               <i class="fas fa-weight-hanging me-1"></i>
@@ -1924,15 +1373,9 @@
           </div>
 
           <div class="progress" style="height: 22px;">
-            <div
-              class="progress-bar progress-bar-striped"
-              role="progressbar"
-              [style.width.%]="porcentajePesoArchivosAprobacion"
-              [attr.aria-valuenow]="porcentajePesoArchivosAprobacion"
-              aria-valuemin="0"
-              aria-valuemax="100"
-              style="min-width: 65px;"
-            >
+            <div class="progress-bar progress-bar-striped" role="progressbar"
+              [style.width.%]="porcentajePesoArchivosAprobacion" [attr.aria-valuenow]="porcentajePesoArchivosAprobacion"
+              aria-valuemin="0" aria-valuemax="100" style="min-width: 65px;">
               {{ formatearTamanoArchivo(totalPesoArchivosAprobacion) }}
             </div>
           </div>
@@ -1940,7 +1383,8 @@
           <div class="d-flex justify-content-between mt-1">
             <small class="text-muted">
               {{ archivosAprobacionTemp.length }}
-              archivo{{ archivosAprobacionTemp.length === 1 ? '' : 's' }} cargado{{ archivosAprobacionTemp.length === 1 ? '' : 's' }}
+              archivo{{ archivosAprobacionTemp.length === 1 ? '' : 's' }} cargado{{ archivosAprobacionTemp.length === 1
+              ? '' : 's' }}
             </small>
 
             <small class="text-muted">
@@ -1949,10 +1393,7 @@
           </div>
         </div>
 
-        <div
-          class="alert alert-info mt-3 mb-0"
-          *ngIf="archivosAprobacionTemp.length > 0"
-        >
+        <div class="alert alert-info mt-3 mb-0" *ngIf="archivosAprobacionTemp.length > 0">
           <i class="fas fa-paperclip me-1"></i>
           {{ archivosAprobacionTemp.length }}
           archivo{{ archivosAprobacionTemp.length === 1 ? '' : 's' }}
@@ -1963,21 +1404,13 @@
       </div>
 
       <div class="modal-footer">
-        <button
-          type="button"
-          class="btn btn-outline-secondary"
-          (click)="cancelarAprobacionGastos()"
-        >
+        <button type="button" class="btn btn-outline-secondary" (click)="cancelarAprobacionGastos()">
           <i class="fas fa-arrow-left me-1"></i>
           Reducir gastos
         </button>
 
-        <button
-          type="button"
-          class="btn btn-primary"
-          (click)="confirmarAprobacionGastos()"
-          [disabled]="archivosAprobacionTemp.length < 1"
-        >
+        <button type="button" class="btn btn-primary" (click)="confirmarAprobacionGastos()"
+          [disabled]="archivosAprobacionTemp.length < 1">
           <i class="fas fa-check me-1"></i>
           Aceptar y continuar
         </button>
@@ -1988,8 +1421,8 @@
 </div>
 
 <!-- MODAL VISUALIZAR ARCHIVOS DE ACEPTACIÓN -->
-<div class="modal fade" id="modalVisualizarAceptacion" tabindex="-1"
-  aria-labelledby="modalVisualizarAceptacionLabel" aria-hidden="true">
+<div class="modal fade" id="modalVisualizarAceptacion" tabindex="-1" aria-labelledby="modalVisualizarAceptacionLabel"
+  aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg modal-aceptacion">
     <div class="modal-content">
 
@@ -2013,10 +1446,10 @@
             <small>Porcentaje de gasto</small>
             <strong>
               {{
-                calcularPorcentajeGastosxRamo(
-                  ramoAceptacionSeleccionado?.gastos,
-                  ramoAceptacionSeleccionado?.comisionAnual
-                ) | number:'1.2-2'
+              calcularPorcentajeGastosxRamo(
+              ramoAceptacionSeleccionado?.gastos,
+              ramoAceptacionSeleccionado?.comisionAnual
+              ) | number:'1.2-2'
               }}%
             </strong>
           </div>
@@ -2029,18 +1462,15 @@
         </div>
 
         <!-- SIN ARCHIVOS -->
-        <div class="alert alert-info mb-0"
-          *ngIf="!cargandoArchivosAceptacion && archivosAceptacionRamo.length === 0">
+        <div class="alert alert-info mb-0" *ngIf="!cargandoArchivosAceptacion && archivosAceptacionRamo.length === 0">
           <i class="fas fa-info-circle me-1"></i>
           No existen archivos de aceptación cargados para este ramo.
         </div>
 
         <!-- LISTADO DE ARCHIVOS -->
-        <div class="lista-aceptacion"
-          *ngIf="!cargandoArchivosAceptacion && archivosAceptacionRamo.length > 0">
+        <div class="lista-aceptacion" *ngIf="!cargandoArchivosAceptacion && archivosAceptacionRamo.length > 0">
 
-          <div class="archivo-aceptacion-item"
-            *ngFor="let archivo of archivosAceptacionRamo">
+          <div class="archivo-aceptacion-item" *ngFor="let archivo of archivosAceptacionRamo">
 
             <div class="archivo-aceptacion-info">
               <div class="archivo-aceptacion-icono">
@@ -2060,16 +1490,12 @@
             </div>
 
             <div class="archivo-aceptacion-acciones">
-              <button type="button"
-                class="btn btn-outline-primary btn-sm"
-                (click)="visualizarArchivoAceptacion(archivo)"
-                title="Visualizar archivo">
+              <button type="button" class="btn btn-outline-primary btn-sm"
+                (click)="visualizarArchivoAceptacion(archivo)" title="Visualizar archivo">
                 <i class="fas fa-eye"></i>
               </button>
 
-              <button type="button"
-                class="btn btn-outline-success btn-sm"
-                (click)="descargarArchivoAceptacion(archivo)"
+              <button type="button" class="btn btn-outline-success btn-sm" (click)="descargarArchivoAceptacion(archivo)"
                 title="Descargar archivo">
                 <i class="fas fa-download"></i>
               </button>

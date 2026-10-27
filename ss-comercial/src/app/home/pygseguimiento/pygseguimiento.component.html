@@ -1,79 +1,97 @@
 <div class="content-wrapper presupuesto-page">
-
     <section class="content pt-4">
         <div class="container-fluid">
-
-            <!-- CONTENIDO -->
             <div class="row">
                 <div class="col-12">
-
                     <div class="card presupuesto-card">
-
-                        <!-- CABECERA -->
                         <div class="card-header presupuesto-card-header">
                             <div class="d-flex justify-content-between align-items-center">
-
                                 <div class="d-flex align-items-center">
                                     <div class="section-icon">
                                         <i class="fas fa-users"></i>
                                     </div>
-
                                     <div>
-                                        <h3 class="card-title presupuesto-title">
-                                            Presupuesto y Gastos de Clientes
-                                        </h3>
-
-                                        <small class="text-muted">
-                                            Consulta y administración de información
-                                        </small>
+                                        <h3 class="card-title presupuesto-title">Pérdidas y Ganancias</h3>
+                                        <small class="text-muted">Consulta y administración de información</small>
                                     </div>
                                 </div>
-
                                 <div>
                                     <i class="fas fa-chart-line header-decoration"></i>
                                 </div>
-
                             </div>
-
-                            <button
-                                #btnActualizaCustodio
-                                type="button"
-                                hidden
-                                data-toggle="modal">
-                            </button>
-
+                            <button #btnActualizaCustodio type="button" hidden data-toggle="modal"></button>
                         </div>
-
-                        <!-- CUERPO -->
                         <div class="card-body">
-
-                            <div class="table-title-container">
-                                <div>
-                                    <span class="table-title">
-                                        <i class="fas fa-list mr-2"></i>
-                                        Detalle de clientes
-                                    </span>
+                            <div class="pyg-vistas" role="group" aria-label="Tipo de seguimiento">
+                                <button type="button" class="pyg-vista-btn" [class.active]="vistaActiva === 'clientes'" [attr.aria-pressed]="vistaActiva === 'clientes'" (click)="mostrarVista('clientes')">
+                                    <i class="fas fa-users mr-2"></i> Clientes
+                                </button>
+                                <button type="button" class="pyg-vista-btn" [class.active]="vistaActiva === 'registros'" [attr.aria-pressed]="vistaActiva === 'registros'" (click)="mostrarVista('registros')">
+                                    <i class="fas fa-layer-group mr-2"></i> Estado Registros
+                                </button>
+                            </div>
+                            <div [hidden]="vistaActiva !== 'clientes'">
+                                <div class="table-responsive presupuesto-table-container">
+                                    <table #dataTableRegistros class="table table-hover table-bordered presupuesto-table" style="width:100%;"></table>
                                 </div>
                             </div>
-
-                            <div class="table-responsive presupuesto-table-container">
-
-                                <table
-                                    #dataTableRegistros
-                                    class="table table-hover table-bordered presupuesto-table"
-                                    style="width: 100%;">
-                                </table>
-
+                            <div [hidden]="vistaActiva !== 'registros'">
+                                <div class="table-responsive presupuesto-table-container">
+                                    <table #dataTableDetalle class="table table-hover table-bordered presupuesto-table" style="width:100%;"></table>
+                                </div>
                             </div>
-
                         </div>
-
                     </div>
-
                 </div>
             </div>
-
         </div>
     </section>
-
+</div>
+<!-- Historial de movimientos por registro PYG -->
+<div *ngIf="historialVisible" class="pyg-historial-backdrop" (click)="cerrarHistorialRegistro()">
+  <section class="pyg-historial-modal" role="dialog" aria-modal="true" aria-labelledby="tituloHistorialPYG" (click)="$event.stopPropagation()">
+    <header class="pyg-historial-header">
+      <div>
+        <div class="pyg-historial-kicker">AUDITORÍA PYG</div>
+        <h4 id="tituloHistorialPYG">Historial del registro #{{ historialRegistro?.id }}</h4>
+        <p>{{ historialRegistro?.cliente }} · {{ historialRegistro?.nombreRegistro }}</p>
+      </div>
+      <button type="button" class="pyg-historial-cerrar" (click)="cerrarHistorialRegistro()" aria-label="Cerrar historial">&times;</button>
+    </header>
+    <div class="pyg-historial-body">
+      <div *ngIf="historialCargando" class="pyg-historial-mensaje"><i class="fas fa-spinner fa-spin"></i> Consultando movimientos...</div>
+      <div *ngIf="!historialCargando && historialError" class="pyg-historial-error">{{ historialError }}</div>
+      <div *ngIf="!historialCargando && !historialError && !movimientosHistorial.length" class="pyg-historial-mensaje">No existen movimientos registrados.</div>
+      <ol *ngIf="!historialCargando && !historialError && movimientosHistorial.length" class="pyg-historial-timeline">
+        <li *ngFor="let mov of movimientosHistorial" class="pyg-historial-evento">
+          <div class="pyg-historial-meta">
+            <span class="pyg-historial-tipo" [ngClass]="'pyg-historial-tipo-' + mov.tipo">{{ mov.accion }}</span>
+            <time>{{ mov.fechaRegistro | date:'dd/MM/yyyy HH:mm' }}</time>
+          </div>
+          <div class="pyg-historial-usuario"><i class="fas fa-user-circle"></i> {{ mov.nombreUsuario || 'Usuario no identificado' }}</div>
+          <p *ngIf="mov.comentario" class="pyg-historial-observacion"><strong>Observación:</strong> {{ mov.comentario }}</p>
+          <div *ngIf="mov.detalleDisponible && mov.cambios?.length" class="pyg-historial-cambios">
+            <div class="pyg-historial-cambios-titulo"><i class="fas fa-code-branch"></i> Cambios realizados ({{ mov.cambios.length }})</div>
+            <div *ngFor="let cambio of mov.cambios" class="pyg-historial-cambio">
+              <span class="pyg-historial-cambio-tipo" [ngClass]="'pyg-historial-cambio-' + cambio.tipo">
+                {{ cambio.tipo === 'agregado' ? 'Agregado' : cambio.tipo === 'eliminado' ? 'Eliminado' : 'Modificado' }}
+              </span>
+              <div class="pyg-historial-cambio-contenido">
+                <strong>{{ cambio.entidad }}</strong>
+                <div>{{ cambio.descripcion }}</div>
+                <div *ngIf="cambio.tipo === 'modificado'" class="pyg-historial-valores">
+                  <span class="pyg-historial-antes">Antes: {{ cambio.anterior || 'Vacío' }}</span>
+                  <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                  <span class="pyg-historial-despues">Ahora: {{ cambio.nuevo || 'Vacío' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p *ngIf="mov.detalleDisponible && !mov.cambios?.length" class="pyg-historial-sin-cambios">El archivo de auditoría no registra diferencias en los campos comparados.</p>
+          <p *ngIf="!mov.detalleDisponible && (mov.tipo === 'creacion' || mov.tipo === 'actualizacion')" class="pyg-historial-sin-cambios">Detalle de cambios no disponible para este movimiento.</p>
+        </li>
+      </ol>
+    </div>
+    <footer class="pyg-historial-footer"><button type="button" class="btn btn-outline-secondary btn-sm" (click)="cerrarHistorialRegistro()">Cerrar</button></footer>
+  </section>
 </div>

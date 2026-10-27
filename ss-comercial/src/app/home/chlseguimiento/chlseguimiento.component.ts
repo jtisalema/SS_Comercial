@@ -51,7 +51,6 @@ export class ChlseguimientoComponent {
     this.loadingService.showLoading();
     this.checklistService.obtenerIngresosCheckList().subscribe((res: any) => {
       this.lstIngresos = res.data;
-      console.log('this.lstIngresos ',this.lstIngresos );
       //Filtro personalizado
       $.fn.dataTable.ext.search.push(
         (settings: any, data: any, dataIndex: any) => {

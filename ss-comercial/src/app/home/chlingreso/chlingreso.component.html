@@ -6,21 +6,23 @@
             <div class="row">
                 <div class="col-md-12">
                     <div class="card card-primary card-outline">
-                        <div class="card-header d-flex align-items-center">
+<div class="card-header">
 
-                            <h3 class="card-title mb-0" style="font-weight: bold;">
-                                <i class="fas fa-user-alt me-2"></i>
-                                CheckList Ingreso
-                            </h3>
+    <h3 class="card-title" style="font-weight: bold;">
+        <i class="fas fa-user-alt mr-2"></i>
+        CheckList Ingreso
+    </h3>
 
-                            <select id="emision1" class="form-control" style="width: 180px; margin-left: 12px;" hidden
-                                disabled>
-                                <option value="1" selected>Nuevo</option>
-                                <option value="2">Renovación</option>
-                                <option value="3">Movimiento</option>
-                            </select>
+    <div class="card-tools float-right">
+        <button type="button"
+                class="btn btn-success" title="regresar al listado"
+                onclick="window.location.href='/home/checkList/seguimiento'">
+            <i class="fas fa-arrow-left mr-1"></i>
+            Regresar
+        </button>
+    </div>
 
-                        </div>
+</div>
                         <div class="card-body">
                             <form [formGroup]="ingresoForm">
                                 <div class="row mb-3">
