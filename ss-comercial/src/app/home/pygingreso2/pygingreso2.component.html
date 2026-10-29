@@ -840,14 +840,20 @@
                               (click)="ing.mostrarFacturas = !ing.mostrarFacturas"
                               style="cursor:pointer;display:flex;align-items:center;" *ngIf="!modoDetalleRegistro && ing.proyeccion?.length">
                               <i class="fas fa-file-invoice-dollar"></i>
-                              <span class="ms-2">Facturas Producción — {{ ing.nombreRamo }}</span>
-                              <i class="fas ms-auto"
+                              <span class="ms-2 pyg-produccion-titulo-texto">Facturas Producción — {{ ing.nombreRamo }}<ng-container *ngIf="ing.poliza"> - {{ ing.poliza }}</ng-container></span>
+                              <button type="button" class="pyg-btn-exportar-produccion"
+                                title="Exportar facturas de producción a Excel"
+                                aria-label="Exportar facturas de producción a Excel"
+                                (click)="$event.stopPropagation(); exportarFacturasProduccionRamo(ing)">
+                                <i class="fas fa-file-excel" aria-hidden="true"></i>
+                              </button>
+                              <i class="fas ms-2 pyg-produccion-flecha"
                                 [ngClass]="ing.mostrarFacturas === false ? 'fa-chevron-down' : 'fa-chevron-up'"></i>
                             </div>
-<div class="table-responsive pyg-scroll-solo-x"
+<div class="table-responsive pyg-scroll-solo-x pyg-produccion-ancho-card"
   *ngIf="!modoDetalleRegistro && ing.proyeccion?.length && ing.mostrarFacturas === true">
 
-  <table class="table table-bordered table-sm tabla-gastos-facturas ">
+  <table class="table table-bordered table-sm tabla-gastos-facturas pyg-produccion-tabla">
                                 <thead>
                                   <tr>
                                     <th class="text-center" >#</th>
@@ -877,8 +883,21 @@
                                       }}</td>
                                     <td class="text-center fw-semibold">{{ proy.valcombroker |
                                       currency:'USD':'symbol':'1.2-2' }}</td>
-                                    <td class="text-center fw-semibold">{{ proy.priNet ? (proy.valcombroker /
-                                      proy.priNet | percent:'1.2-2') : '0%' }}</td>
+                                    <td class="text-center fw-semibold">
+                                      <div class="pyg-produccion-porcentaje-estado">
+                                        <span>{{ proy.priNet ? (proy.valcombroker /
+                                          proy.priNet | percent:'1.2-2') : '0%' }}</span>
+                                        <ng-container *ngIf="obtenerTendenciaProduccion(proy, ing) as tendencia">
+                                          <span class="pyg-produccion-estado"
+                                            [ngClass]="'pyg-produccion-estado--' + tendencia"
+                                            [attr.title]="obtenerDetalleTendenciaProduccion(proy, ing)">
+                                            <i class="fas" aria-hidden="true"
+                                              [ngClass]="tendencia === 'aumenta' ? 'fa-arrow-up' : tendencia === 'disminuye' ? 'fa-arrow-down' : 'fa-equals'"></i>
+                                            {{ tendencia === 'aumenta' ? 'Aumenta' : tendencia === 'disminuye' ? 'Disminuye' : 'Se mantiene' }}
+                                          </span>
+                                        </ng-container>
+                                      </div>
+                                    </td>
                                   </tr>
                                 </tbody>
                                 <tfoot>
@@ -1173,9 +1192,34 @@
 
         <div class="modal-body bg-light">
 
+          <!-- Buscar coincidencias sin afectar las tarjetas ya seleccionadas. -->
+          <div class="pyg-buscador-ramos-sugeridos">
+            <div class="pyg-buscador-ramos-campo">
+              <i class="fas fa-search" aria-hidden="true"></i>
+              <input type="search" class="form-control" aria-label="Buscar ramos sugeridos"
+                placeholder="Buscar por ramo, aseguradora, póliza o vigencia..."
+                [(ngModel)]="busquedaRamosSugeridos" [ngModelOptions]="{standalone: true}"
+                autocomplete="off">
+              <button type="button" *ngIf="busquedaRamosSugeridos"
+                class="pyg-buscador-ramos-limpiar" title="Limpiar búsqueda"
+                aria-label="Limpiar búsqueda" (click)="busquedaRamosSugeridos = ''">
+                <i class="fas fa-times" aria-hidden="true"></i>
+              </button>
+            </div>
+            <small class="text-muted">
+              Mostrando {{ ramosSugeridosFiltrados.length }} de {{ lstRamosSugeridos.length }} registros
+            </small>
+          </div>
+
+          <div *ngIf="busquedaRamosSugeridos.trim() && ramosSugeridosFiltrados.length === 0"
+            class="pyg-buscador-ramos-vacio" role="status">
+            <i class="fas fa-search me-2"></i>
+            No se encontraron ramos sugeridos que coincidan con la búsqueda.
+          </div>
+
           <div class="row gx-4 gy-4">
 
-            <div class="col-md-6 col-lg-4" *ngFor="let ramo of lstRamosSugeridos">
+            <div class="col-md-6 col-lg-4" *ngFor="let ramo of ramosSugeridosFiltrados">
 
               <div class="card ramo-card" [class.ramo-selected]="ramo.seleccionado"
                 (click)="ramo.seleccionado = !ramo.seleccionado">

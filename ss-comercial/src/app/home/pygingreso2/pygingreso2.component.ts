@@ -1527,7 +1527,57 @@ export class PygingresoComponent2 implements OnDestroy {
   clienteSeleccionado: any;
   lstRamosSugeridos: any = [];
 
+  // Búsqueda local dentro del modal de ramos sugeridos.
+  // No modifica el arreglo original ni la selección de las tarjetas.
+  busquedaRamosSugeridos: string = '';
+
+  private normalizarBusquedaRamos(valor: any): string {
+    return String(valor == null ? '' : valor)
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+  }
+
+  private fechaBusquedaRamos(valor: any): string {
+    const fecha = String(valor == null ? '' : valor).substring(0, 10);
+    const coincidencia = /^(\d{4})-(\d{2})-(\d{2})$/.exec(fecha);
+    return coincidencia
+      ? coincidencia[3] + '/' + coincidencia[2] + '/' + coincidencia[1]
+      : fecha;
+  }
+
+  get ramosSugeridosFiltrados(): any[] {
+    const terminos = this.normalizarBusquedaRamos(this.busquedaRamosSugeridos)
+      .split(/\s+/)
+      .filter((termino: string) => termino.length > 0);
+
+    if (!terminos.length) {
+      return this.lstRamosSugeridos;
+    }
+
+    return this.lstRamosSugeridos.filter((ramo: any) => {
+      const contenido = this.normalizarBusquedaRamos([
+        ramo.nombreRamo,
+        ramo.nombreAseguradora,
+        ramo.poliza,
+        ramo.cdRamo,
+        ramo.periodo,
+        ramo.fcDesde,
+        ramo.fcHasta,
+        this.fechaBusquedaRamos(ramo.fcDesde),
+        this.fechaBusquedaRamos(ramo.fcHasta),
+        ramo.primaMensual,
+        ramo.primaAnual
+      ].join(' '));
+
+      // Permite buscar varias palabras, incluso de distintos campos.
+      return terminos.every((termino: string) => contenido.includes(termino));
+    });
+  }
+
   onClienteChange(cliente: any) {
+    this.busquedaRamosSugeridos = '';
     this.lstRamosSugeridos = [];
     this.clienteSeleccionado = cliente;//apellidos , nombnres , id
     this.cargarRamosBase(1);
@@ -1540,6 +1590,7 @@ export class PygingresoComponent2 implements OnDestroy {
 
       this.pygService.obtenerPolizasSugeridas(this.clienteSeleccionado.id)
         .subscribe((res: any) => {
+          console.log('res',res);
           if (!res?.resultado || res.resultado.length === 0) {
             this.lstRamosSugeridos = [];
             this.loadingService.hideLoading();
@@ -1548,33 +1599,40 @@ export class PygingresoComponent2 implements OnDestroy {
 
           const hoy = new Date();
 
-          const fechaLimite = new Date();
-          fechaLimite.setFullYear(hoy.getFullYear() - 1);
+const anioLimite = hoy.getFullYear() - 1;
 
-          let polizas = Object.values(
-            res.resultado
-              .filter((item: any) =>
-                item.fcDesde &&
-                new Date(item.fcDesde) >= fechaLimite
-              )
-              .reduce((acc: any, item: any) => {
+console.log('Año límite:', anioLimite);
 
-                // Identificar cada combinación de póliza y ramo.
-                const clave = `${item.poliza}|${item.nmRamo}`;
+// Obtener únicamente el año de una fecha en formato YYYY-MM-DD
+const obtenerAnio = (fecha: any): number => {
+  return fecha ? Number(String(fecha).substring(0, 4)) : 0;
+};
 
-                // Si existen duplicados del mismo ramo y póliza,
-                // conservar el de fecha de inicio más reciente.
-                if (
-                  !acc[clave] ||
-                  new Date(item.fcDesde) > new Date(acc[clave].fcDesde)
-                ) {
-                  acc[clave] = item;
-                }
+let polizas = Object.values(
+  res.resultado
+    .filter((item: any) =>
+      obtenerAnio(item.fcDesde) >= anioLimite ||
+      obtenerAnio(item.fcHasta) >= anioLimite
+    )
+    .reduce((acc: any, item: any) => {
 
-                return acc;
+      // Identificar cada combinación de póliza y ramo.
+      const clave = `${item.poliza}|${item.nmRamo}`;
 
-              }, {})
-          );
+      // Si existen duplicados, conservar el de
+      // fecha de finalización más reciente.
+      if (
+        !acc[clave] ||
+        new Date(item.fcHasta) > new Date(acc[clave].fcHasta)
+      ) {
+        acc[clave] = item;
+      }
+
+      return acc;
+
+    }, {})
+);
+
 
 
           this.lstRamosSugeridos = [];
@@ -1796,7 +1854,9 @@ export class PygingresoComponent2 implements OnDestroy {
               });
 
           });
-
+          if(polizas.length<1){
+            this.loadingService.hideLoading();
+          }
         }, (error: any) => {
           this.loadingService.hideLoading();
         });
@@ -2347,6 +2407,44 @@ export class PygingresoComponent2 implements OnDestroy {
     }, 1000);
   }
 
+  /**
+   * Compara la producción de cada mes con los valores mensuales del ramo.
+   * El ingreso del PYG depende de la comisión: se toma como referencia
+   * principal la comisión mensual registrada; si no existe, la prima mensual.
+   * No se comparan los meses entre sí ni se alteran los valores facturados.
+   */
+  obtenerTendenciaProduccion(proy: any, ing: any): 'aumenta' | 'disminuye' | 'mantiene' {
+    const comisionBase = this.convertirANumero(ing?.comision);
+    const primaBase = this.convertirANumero(ing?.primaMensual);
+    const compararComision = comisionBase !== 0;
+    const valorBase = compararComision ? comisionBase : primaBase;
+    const valorMes = compararComision
+      ? this.convertirANumero(proy?.valcombroker)
+      : this.convertirANumero(proy?.priNet);
+
+    // Comparación en centavos para evitar falsas variaciones por decimales.
+    const variacionCentavos = Math.round(valorMes * 100) - Math.round(valorBase * 100);
+    if (variacionCentavos > 0) return 'aumenta';
+    if (variacionCentavos < 0) return 'disminuye';
+    return 'mantiene';
+  }
+
+  /** Muestra ambos valores registrados y facturados al pasar sobre el icono. */
+  obtenerDetalleTendenciaProduccion(proy: any, ing: any): string {
+    const moneda = (valor: any): string => '$' + this.convertirANumero(valor).toLocaleString('es-EC', {
+      minimumFractionDigits: 2, maximumFractionDigits: 2
+    });
+    const referencia = this.convertirANumero(ing?.comision) !== 0
+      ? 'comisión mensual' : 'prima neta mensual';
+    return [
+      `Prima neta mensual del ramo: ${moneda(ing?.primaMensual)}`,
+      `Prima neta facturada del mes: ${moneda(proy?.priNet)}`,
+      `Comisión mensual del ramo: ${moneda(ing?.comision)}`,
+      `Comisión facturada del mes: ${moneda(proy?.valcombroker)}`,
+      `El indicador compara la ${referencia} registrada con la facturada.`
+    ].join('\n');
+  }
+
   consultarFacturasProyeccion(
     idCliente: any,
     poliza: any,
@@ -2364,15 +2462,17 @@ export class PygingresoComponent2 implements OnDestroy {
           const resultado = Array.isArray(res?.resultado)
             ? res.resultado
             : [];
-
+          
           const facturasFiltradas = resultado.filter(
             (item: any) =>
-              item && !tiposExcluir.includes(item.tipo)
+              item && !tiposExcluir.includes(item.tipo) && item.priNet!=0
           );
-
+          console.log('facturasFiltradas',facturasFiltradas);
           // Agrupar por año y mes
           const agrupadas = facturasFiltradas.reduce(
             (acc: any, item: any) => {
+
+
               if (!item.fcDesde) {
                 return acc;
               }
@@ -2400,7 +2500,12 @@ export class PygingresoComponent2 implements OnDestroy {
                   facturas: []
                 };
               }
-
+                            if(item.poliza == '3785-A'){
+              console.log('item',item);
+              console.log('item',item.priNet);
+                   console.log('acc[clave].priNet',acc[clave].priNet);
+              }
+         
               acc[clave].priNet += Number(item.priNet) || 0;
               acc[clave].valcombroker += Number(item.valComBroker) || 0;
               acc[clave].registros.push(item);
@@ -2412,7 +2517,6 @@ export class PygingresoComponent2 implements OnDestroy {
               ) {
                 acc[clave].facturas.push(item.numFactura);
               }
-
               return acc;
             },
             {}
@@ -2992,6 +3096,130 @@ export class PygingresoComponent2 implements OnDestroy {
     };
   }
 
+  /**
+   * Descarga los movimientos originales del servicio de producción para
+   * este ramo/póliza. No exporta el resumen mensual ni los totales del PYG.
+   * Cada periodo de ing.proyeccion conserva los elementos JSON sin modificar
+   * en su propiedad `registros` (consultarFacturasProyeccion).
+   */
+  exportarFacturasProduccionRamo(ing: any): void {
+    const proyeccion: any[] = Array.isArray(ing?.proyeccion) ? ing.proyeccion : [];
+
+    // Recuperar cada fila JSON individual, sin sumar, agrupar ni recalcular.
+    const movimientosOriginales: any[] = [];
+    proyeccion.forEach((periodo: any) => {
+      if (Array.isArray(periodo?.registros)) {
+        periodo.registros.forEach((registro: any) => {
+          if (registro !== null && typeof registro === 'object' && !Array.isArray(registro)) {
+            movimientosOriginales.push(registro);
+          }
+        });
+      }
+    });
+
+    if (!movimientosOriginales.length) {
+      this.toastrService.warning('No existen movimientos originales de producción para exportar.', 'Exportación');
+      return;
+    }
+
+    try {
+      const ramo = String(ing?.nombreRamo || 'RAMO').trim();
+      const poliza = String(ing?.poliza || '').trim();
+
+      // Mantener los nombres EXACTOS de las propiedades del JSON.
+      // Añadir incluso las columnas presentes solo en algunas filas.
+      const columnas: string[] = [];
+      const columnasVistas = new Set<string>();
+      movimientosOriginales.forEach((movimiento: any) => {
+        Object.keys(movimiento).forEach((campo: string) => {
+          if (!columnasVistas.has(campo)) {
+            columnasVistas.add(campo);
+            columnas.push(campo);
+          }
+        });
+      });
+
+      // Identificadores como texto para evitar pérdida de ceros a la izquierda
+      // o alteraciones en los números largos al abrirlos en Excel.
+      const identificadores = new Set([
+        'rucced', 'cdcliente', 'cdramo', 'numfactura', 'numprefactura',
+        'numoperacion', 'refcaremi', 'poliza', 'factref', 'numerodocumento'
+      ]);
+
+      const filas: any[][] = [columnas];
+      movimientosOriginales.forEach((movimiento: any) => {
+        filas.push(columnas.map((campo: string) => {
+          const valor = movimiento[campo];
+          if (valor === null || valor === undefined) return '';
+          if (identificadores.has(campo.toLowerCase())) return String(valor);
+          if (typeof valor === 'object') return JSON.stringify(valor);
+          return valor; // Conservar valores y tipos originales del JSON.
+        }));
+      });
+
+      const ws: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet(filas);
+      const ultimaColumna = XLSX.utils.encode_col(columnas.length - 1);
+      const ultimaFila = filas.length;
+      ws['!autofilter'] = { ref: `A1:${ultimaColumna}${ultimaFila}` };
+      ws['!rows'] = [{ hpt: 28 }];
+      ws['!cols'] = columnas.map((campo: string, indice: number) => {
+        let largo = campo.length;
+        movimientosOriginales.slice(0, 100).forEach((registro: any) => {
+          const texto = registro[campo] == null ? '' : String(registro[campo]);
+          largo = Math.max(largo, texto.length);
+        });
+        return { wch: Math.max(12, Math.min(42, largo + 2)) };
+      });
+
+      const borde = {
+        top: { style: 'thin', color: { rgb: 'D6E0EB' } },
+        bottom: { style: 'thin', color: { rgb: 'D6E0EB' } },
+        left: { style: 'thin', color: { rgb: 'D6E0EB' } },
+        right: { style: 'thin', color: { rgb: 'D6E0EB' } }
+      };
+
+      filas.forEach((fila: any[], indiceFila: number) => {
+        columnas.forEach((campo: string, indiceColumna: number) => {
+          const celdaRef = XLSX.utils.encode_cell({ r: indiceFila, c: indiceColumna });
+          if (!ws[celdaRef]) ws[celdaRef] = { t: 's', v: '' };
+          const celda = ws[celdaRef];
+          if (indiceFila > 0 && identificadores.has(campo.toLowerCase())) {
+            celda.t = 's';
+            celda.v = celda.v == null ? '' : String(celda.v);
+            celda.z = '@';
+          }
+          celda.s = {
+            font: {
+              name: 'Calibri', sz: 10, bold: indiceFila === 0,
+              color: { rgb: indiceFila === 0 ? 'FFFFFF' : '26384B' }
+            },
+            fill: {
+              patternType: 'solid',
+              fgColor: { rgb: indiceFila === 0 ? '1F5D9B' : indiceFila % 2 === 0 ? 'F3F7FB' : 'FFFFFF' }
+            },
+            alignment: {
+              vertical: 'center',
+              horizontal: indiceFila === 0 ? 'center' : 'left',
+              wrapText: indiceFila === 0
+            },
+            border: borde
+          };
+        });
+      });
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Datos Producción');
+      const nombreArchivo = `Datos_Brutos_Produccion_${ramo}${poliza ? '_' + poliza : ''}`
+        .replace(/[\\/:*?"<>|\x00-\x1F]/g, '_')
+        .replace(/\s+/g, '_')
+        .substring(0, 130);
+      XLSX.writeFile(wb, `${nombreArchivo}.xlsx`, { compression: true, bookType: 'xlsx' });
+    } catch (error) {
+      console.error('Error al exportar los movimientos originales de producción:', error);
+      this.toastrService.error('No fue posible exportar los datos originales del ramo.', 'Exportación');
+    }
+  }
+
   exportarDetalles(): void {
     const programas = this.programasVisualizados;
     if (!programas.length) {
@@ -3006,22 +3234,48 @@ export class PygingresoComponent2 implements OnDestroy {
     const entero = '0';
     const colores = ['E6F0FA', 'EDF8EA', 'FFF4DF', 'F2ECFA', 'FCEBF0'];
     const coloresGrupo = [{ fondo: 'DCEBFA', texto: '15467B' }, { fondo: 'E0F2E8', texto: '176843' }, { fondo: 'FFF0D7', texto: '8B5405' }, { fondo: 'EEE6FA', texto: '603B87' }, { fondo: 'FCE3EC', texto: '9B3256' }];
+    // Una paleta por ramo: la misma identificación cromática en el detalle
+    // individual de producción y en el consolidado del grupo.
+    const coloresProduccion = [
+      { titulo: 'BFD9F3', encabezado: 'DBEAF9', fondo: 'EFF6FD', texto: '174A7D' },
+      { titulo: 'C6E8D2', encabezado: 'E0F2E6', fondo: 'F0FAF3', texto: '176343' },
+      { titulo: 'FFE0B3', encabezado: 'FFF0D7', fondo: 'FFF8EC', texto: '89530D' },
+      { titulo: 'DDD0F4', encabezado: 'EEE6FB', fondo: 'F6F1FD', texto: '603B87' },
+      { titulo: 'F9C8D8', encabezado: 'FCE4EC', fondo: 'FFF3F7', texto: '8F3456' },
+      { titulo: 'BFE9E6', encabezado: 'DDF5F2', fondo: 'F0FBF9', texto: '176B69' },
+      { titulo: 'F7E4A5', encabezado: 'FCF2D1', fondo: 'FFFAEB', texto: '765A07' },
+      { titulo: 'CCDAE9', encabezado: 'E5EDF5', fondo: 'F3F7FA', texto: '34516C' },
+      { titulo: 'D4E1B4', encabezado: 'E9F1D9', fondo: 'F6FAEE', texto: '536C24' },
+      { titulo: 'F4CEBB', encabezado: 'FBE7DE', fondo: 'FEF5F0', texto: '8B4730' },
+      { titulo: 'C6DAF8', encabezado: 'DFEAFD', fondo: 'F2F7FE', texto: '2D4C92' },
+      { titulo: 'E7C6DF', encabezado: 'F5E4F1', fondo: 'FCF3FA', texto: '793F6E' }
+    ];
     const escribir = (fila: number, valores: any[], estilos?: any[], inicio: number = 0, formatos?: { [columna: number]: string }) => {
       XLSX.utils.sheet_add_aoa(wsDetalle, [valores], { origin: { r: fila, c: inicio } });
       valores.forEach((valor: any, columna: number) => {
         const celda = wsDetalle[XLSX.utils.encode_cell({ r: fila, c: inicio + columna })];
-        if (!celda) return;
+        // Las celdas vacías también reciben el borde para cerrar las tablas.
+        const celdaEstilo = celda || (estilos && estilos[columna]
+          ? (wsDetalle[XLSX.utils.encode_cell({ r: fila, c: inicio + columna })] = { t: 's', v: '' })
+          : null);
+        if (!celdaEstilo) return;
         if (typeof valor === 'number' && !Number.isNaN(valor)) {
-          celda.z = formatos?.[columna] || moneda;
+          celdaEstilo.z = formatos?.[columna] || moneda;
         }
-        if (estilos && estilos[columna]) celda.s = estilos[columna];
+        if (estilos && estilos[columna]) celdaEstilo.s = estilos[columna];
       });
     };
     const estilo = (fondo: string, negrita: boolean = false, color: string = '1F2937'): any => ({
       font: { bold: negrita, color: { rgb: color }, sz: 10 },
       fill: { patternType: 'solid', fgColor: { rgb: fondo } },
       alignment: { vertical: 'center', wrapText: true },
-      border: { bottom: { style: 'thin', color: { rgb: 'DCE6F1' } } }
+      // Bordes en los cuatro lados, no únicamente en la parte inferior.
+      border: {
+        top: { style: 'thin', color: { rgb: 'B7C7D9' } },
+        bottom: { style: 'thin', color: { rgb: 'B7C7D9' } },
+        left: { style: 'thin', color: { rgb: 'B7C7D9' } },
+        right: { style: 'thin', color: { rgb: 'B7C7D9' } }
+      }
     });
     const encabezado = (fondo: string, texto: string, longitud: number = 10) => Array.from({ length: longitud }, () => estilo(fondo, true, texto));
     let fila = 0;
@@ -3124,7 +3378,175 @@ export class PygingresoComponent2 implements OnDestroy {
         ['UTILIDAD', '', '', this.sumarCampoPrograma(programa, 'comisionAnual') - this.totalGastosPrograma(programa)],
         Array.from({ length: 4 }, () => this.estiloNormal())
       );
-      fila += 3;
+      fila += 2;
+
+      // FACTURAS DE PRODUCCIÓN: se exportan desde los mismos datos que muestra
+      // cada ramo en pantalla (ing.proyeccion), sin afectar gastos ni resumen PYG.
+      ramos.forEach((ramo: any, indiceRamo: number) => {
+        // Para registros individuales se conserva también un color diferente
+        // por cada registro que se exporte.
+        const indiceColor = ramos.length > 1 ? indiceRamo : indicePrograma;
+        const colorRamo = coloresProduccion[indiceColor % coloresProduccion.length];
+        const facturasProduccion: any[] = Array.isArray(ramo?.proyeccion)
+          ? ramo.proyeccion
+          : [];
+        if (!facturasProduccion.length) return;
+
+        escribir(
+          fila,
+          [`FACTURAS PRODUCCIÓN — ${ramo.nombreRamo || 'RAMO'}`],
+          [estilo(colorRamo.titulo, true, colorRamo.texto)]
+        );
+        this.agregarMerge(wsDetalle, fila + 1, 0, fila + 1, 6);
+        this.aplicarEstiloRangoMerge(wsDetalle, fila + 1, 0, fila + 1, 6, estilo(colorRamo.titulo, true, colorRamo.texto));
+        fila++;
+
+        escribir(
+          fila,
+          ['#', 'Facturas', 'Desde', 'Hasta', 'Prima Neta', 'Comisión Broker', 'Porcentaje'],
+          encabezado(colorRamo.encabezado, colorRamo.texto, 7),
+          0,
+          { 0: entero }
+        );
+        fila++;
+
+        facturasProduccion.forEach((proy: any, indice: number) => {
+          const primaNeta = this.convertirANumero(proy?.priNet);
+          const comisionBroker = this.convertirANumero(proy?.valcombroker);
+          const listaFacturas = Array.isArray(proy?.facturas)
+            ? proy.facturas.filter((factura: any) => factura != null && String(factura).trim() !== '')
+            : [];
+
+          escribir(
+            fila,
+            [
+              indice + 1,
+              listaFacturas.length ? listaFacturas.join('\n') : '-',
+              this.formatearFechaExcel(proy?.fcdesde),
+              this.formatearFechaExcel(proy?.fchasta),
+              primaNeta,
+              comisionBroker,
+              primaNeta ? comisionBroker / primaNeta : 0
+            ],
+            Array.from({ length: 7 }, () => estilo(colorRamo.fondo)),
+            0,
+            { 0: entero, 4: moneda, 5: moneda, 6: '0.00%' }
+          );
+
+          // Mostrar completos los números de factura cuando hay varias.
+          if (listaFacturas.length > 1) {
+            if (!wsDetalle['!rows']) wsDetalle['!rows'] = [];
+            wsDetalle['!rows'][fila] = { hpt: Math.min(120, listaFacturas.length * 15) };
+          }
+          fila++;
+        });
+
+        const primaFacturada = this.convertirANumero(ramo?.totalPrima);
+        const comisionFacturada = this.convertirANumero(ramo?.totalComision);
+        const primaProyectada = this.convertirANumero(ramo?.proyeccionPrima);
+        const comisionProyectada = this.convertirANumero(ramo?.proyeccionComision);
+        const totalPrimaProduccion = primaFacturada + primaProyectada;
+        const totalComisionProduccion = comisionFacturada + comisionProyectada;
+
+        const resumenProduccion = [
+          {
+            titulo: `Facturado\n${ramo?.mesesFacturados ?? facturasProduccion.length} meses`,
+            prima: primaFacturada, comision: comisionFacturada, fondo: colorRamo.fondo, color: colorRamo.texto
+          },
+          {
+            titulo: `Proyección\n${ramo?.mesesRestantes ?? 0} meses`,
+            prima: primaProyectada, comision: comisionProyectada, fondo: colorRamo.encabezado, color: colorRamo.texto
+          },
+          {
+            titulo: 'Total',
+            prima: totalPrimaProduccion, comision: totalComisionProduccion, fondo: colorRamo.titulo, color: colorRamo.texto
+          }
+        ];
+
+        resumenProduccion.forEach((resumen: any) => {
+          escribir(
+            fila,
+            [
+              '', '', '', resumen.titulo, resumen.prima, resumen.comision,
+              resumen.prima ? resumen.comision / resumen.prima : 0
+            ],
+            Array.from({ length: 7 }, () => estilo(resumen.fondo, true, resumen.color)),
+            0,
+            { 4: moneda, 5: moneda, 6: '0.00%' }
+          );
+          this.agregarMerge(wsDetalle, fila + 1, 0, fila + 1, 2);
+          fila++;
+        });
+
+        fila += 2;
+      });
+
+      // CONSOLIDADO SOLO DE GRUPOS: un ramo por fila, con el mismo color
+      // que sus facturas individuales. Las cifras son las mismas que figuran
+      // como "Total" en cada tabla (facturado + proyección).
+      // No se duplican aquí las filas de meses facturados o proyectados.
+      if (ramos.length > 1 && ramos.some((ramo: any) =>
+        Array.isArray(ramo?.proyeccion) && ramo.proyeccion.length > 0)) {
+
+        escribir(
+          fila,
+          [`TOTAL FACTURAS PRODUCCIÓN DEL GRUPO — ${nombre}`],
+          [estilo('DCE8F5', true, '174A78')]
+        );
+        this.agregarMerge(wsDetalle, fila + 1, 0, fila + 1, 6);
+        this.aplicarEstiloRangoMerge(wsDetalle, fila + 1, 0, fila + 1, 6, estilo('DCE8F5', true, '174A78'));
+        fila++;
+
+        escribir(
+          fila,
+          ['Ramo', '', '', '', 'Prima Neta Total', 'Comisión Broker Total', 'Porcentaje'],
+          encabezado('E4EDF7', '174A78', 7)
+        );
+        this.agregarMerge(wsDetalle, fila + 1, 0, fila + 1, 3);
+        this.aplicarEstiloRangoMerge(wsDetalle, fila + 1, 0, fila + 1, 3, estilo('E4EDF7', true, '174A78'));
+        fila++;
+
+        let sumaPrimaGrupo = 0;
+        let sumaComisionGrupo = 0;
+
+        ramos.forEach((ramo: any, indiceRamo: number) => {
+          const colorRamo = coloresProduccion[indiceRamo % coloresProduccion.length];
+          const primaRamo = this.convertirANumero(ramo?.totalPrima)
+            + this.convertirANumero(ramo?.proyeccionPrima);
+          const comisionRamo = this.convertirANumero(ramo?.totalComision)
+            + this.convertirANumero(ramo?.proyeccionComision);
+
+          sumaPrimaGrupo += primaRamo;
+          sumaComisionGrupo += comisionRamo;
+
+          escribir(
+            fila,
+            [ramo?.nombreRamo || 'RAMO', '', '', '', primaRamo, comisionRamo,
+              primaRamo ? comisionRamo / primaRamo : 0],
+            Array.from({ length: 7 }, () => estilo(colorRamo.fondo, true, colorRamo.texto)),
+            0,
+            { 4: moneda, 5: moneda, 6: '0.00%' }
+          );
+          this.agregarMerge(wsDetalle, fila + 1, 0, fila + 1, 3);
+          this.aplicarEstiloRangoMerge(wsDetalle, fila + 1, 0, fila + 1, 3,
+            estilo(colorRamo.fondo, true, colorRamo.texto));
+          fila++;
+        });
+
+        escribir(
+          fila,
+          ['TOTAL GENERAL DEL GRUPO', '', '', '', sumaPrimaGrupo, sumaComisionGrupo,
+            sumaPrimaGrupo ? sumaComisionGrupo / sumaPrimaGrupo : 0],
+          Array.from({ length: 7 }, () => estilo('D4E6F6', true, '123E67')),
+          0,
+          { 4: moneda, 5: moneda, 6: '0.00%' }
+        );
+        this.agregarMerge(wsDetalle, fila + 1, 0, fila + 1, 3);
+        this.aplicarEstiloRangoMerge(wsDetalle, fila + 1, 0, fila + 1, 3,
+          estilo('D4E6F6', true, '123E67'));
+        fila += 2;
+      }
+      fila += 1;
     });
     wsDetalle['!cols'] = [{ wch: 30 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 19 }, { wch: 34 }, { wch: 18 }, { wch: 19 }, { wch: 20 }, { wch: 20 }, { wch: 4 }];
     XLSX.utils.sheet_add_aoa(wsResumen, [['RESUMEN PYG']], { origin: 'A1' });
