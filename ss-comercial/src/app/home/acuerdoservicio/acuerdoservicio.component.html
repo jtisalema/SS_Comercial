@@ -1,1208 +1,405 @@
-<div class="content-wrapper"
-    style="background-image: url('assets/images/fondos/plataforma_fondo2.png');background-repeat: no-repeat;height: 100%;background-size: cover;">
-    <br>
-    <section class="content">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="card card-primary card-outline">
-                        <div class="card-header d-flex align-items-center">
-
-                            <h3 class="card-title mb-0" style="font-weight: bold;">
-                                <i class="fas fa-user-alt me-2"></i>
-                                Ingresar Acuerdo de Servicio
-                            </h3>
-
-                        </div>
-                        <div class="card-body">
-                            <form [formGroup]="ingresoForm">
-                                <div class="card mb-4 p-3 position-relative">
-                                    <h6 class="card-title titulo-sobre-borde">Información del Cliente</h6>
-                                    <div class="row mb-3">
-                                        <!-- Responsable -->
-                                        <div class="col-md-3">
-                                            <label class="form-label">Responsable</label>
-                                            <div class="input-group">
-                                                <span class="input-group-text bg-light">
-                                                    <i class="fas fa-briefcase text-info"></i>
-                                                </span>
-
-                                                <select class="form-control" formControlName="idResponsable"
-                                                    [ngClass]="{'is-invalid': contactoForm.get('idResponsable')?.touched && contactoForm.get('idResponsable')?.invalid}">
-
-                                                    <option value="" disabled>Seleccione ...</option>
-
-                                                    <option *ngFor="let c of lstResponsables" [value]="c.id">
-                                                        {{ c.nombre }}
-                                                    </option>
-
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <!-- NOMBRE CLIENTE -->
-                                        <div class="col-md-6">
-                                            <label for="identificacion" class="form-label">
-                                                Cliente
-                                            </label>
-
-                                            <ng-select [items]="clientes" bindLabel="cliente" bindValue="cliente"
-                                                [typeahead]="clientesInput$" [loading]="loadingClientes"
-                                                [minTermLength]="3" placeholder="Ingrese el nombre del cliente"
-                                                formControlName="cliente" (change)="onClienteChange($event)"
-                                                [class.is-invalid]="ingresoForm.get('cliente')?.touched && ingresoForm.get('cliente')?.invalid">
-
-                                                <ng-template ng-option-tmp let-item="item">
-                                                    {{item.cliente}}
-                                                </ng-template>
-
-                                            </ng-select>
-
-                                            <small class="text-danger"
-                                                *ngIf="ingresoForm.get('cliente')?.touched && ingresoForm.get('cliente')?.hasError('required')">
-                                                Debe seleccionar un cliente
-                                            </small>
-                                        </div>
-                                        <!-- RUC -->
-                                        <div class="col-md-3">
-                                            <label class="form-label">RUC</label>
-                                            <div class="input-group">
-                                                <span class="input-group-text bg-light">
-                                                    <i class="fas fa-id-card text-info"></i>
-                                                </span>
-                                                <input type="text" class="form-control" formControlName="ruc"
-                                                    placeholder="Ingrese el RUC" maxlength="13"
-                                                    [class.is-invalid]="ingresoForm.get('ruc')?.touched && ingresoForm.get('ruc')?.invalid">
-                                            </div>
-
-                                            <small class="text-danger"
-                                                *ngIf="ingresoForm.get('ruc')?.touched && ingresoForm.get('ruc')?.errors">
-
-                                                <span *ngIf="ingresoForm.get('ruc')?.hasError('required')">
-                                                    El RUC es obligatorio
-                                                </span>
-
-                                                <span *ngIf="ingresoForm.get('ruc')?.hasError('pattern')">
-                                                    El RUC debe tener 13 dígitos numéricos
-                                                </span>
-
-                                            </small>
-                                        </div>
-
-
-                                        <!-- DIRECCIÓN -->
-                                        <div class="col-md-3">
-                                            <label class="form-label">Dirección</label>
-                                            <div class="input-group">
-                                                <span class="input-group-text bg-light">
-                                                    <i class="fas fa-map-marker-alt text-danger"></i>
-                                                </span>
-                                                <input type="text" class="form-control" formControlName="direccion"
-                                                    placeholder="Ingrese la dirección"
-                                                    [class.is-invalid]="ingresoForm.get('direccion')?.touched && ingresoForm.get('direccion')?.invalid">
-                                            </div>
-
-                                            <small class="text-danger"
-                                                *ngIf="ingresoForm.get('direccion')?.touched && ingresoForm.get('direccion')?.hasError('required')">
-                                                La dirección es obligatoria
-                                            </small>
-                                        </div>
-
-                                        <!-- CIUDAD -->
-                                        <div class="col-md-3">
-                                            <label class="form-label">Ciudad</label>
-                                            <div class="input-group">
-                                                <span class="input-group-text bg-light">
-                                                    <i class="fas fa-city text-secondary"></i>
-                                                </span>
-                                                <input type="text" class="form-control" formControlName="ciudad"
-                                                    placeholder="Ingrese la ciudad"
-                                                    [class.is-invalid]="ingresoForm.get('ciudad')?.touched && ingresoForm.get('ciudad')?.invalid">
-                                            </div>
-
-                                            <small class="text-danger"
-                                                *ngIf="ingresoForm.get('ciudad')?.touched && ingresoForm.get('ciudad')?.hasError('required')">
-                                                La ciudad es obligatoria
-                                            </small>
-                                        </div>
-
-
-
-                                        <!-- INICIO VIGENCIA -->
-                                        <div class="col-md-3">
-                                            <label class="form-label">Inicio Vigencia</label>
-                                            <div class="input-group">
-                                                <span class="input-group-text bg-light">
-                                                    <i class="fas fa-calendar-alt text-success"></i>
-                                                </span>
-                                                <input type="date" class="form-control" formControlName="inicioVigencia"
-                                                    [class.is-invalid]="ingresoForm.get('inicioVigencia')?.touched && ingresoForm.get('inicioVigencia')?.invalid">
-                                            </div>
-
-                                            <small class="text-danger"
-                                                *ngIf="ingresoForm.get('inicioVigencia')?.touched && ingresoForm.get('inicioVigencia')?.hasError('required')">
-                                                La fecha de inicio es obligatoria
-                                            </small>
-                                        </div>
-
-                                        <!-- FIN VIGENCIA -->
-                                        <div class="col-md-3">
-                                            <label class="form-label">Fin Vigencia</label>
-                                            <div class="input-group">
-                                                <span class="input-group-text bg-light">
-                                                    <i class="fas fa-calendar-check text-success"></i>
-                                                </span>
-                                                <input type="date" class="form-control" formControlName="finVigencia"
-                                                    [class.is-invalid]="ingresoForm.get('finVigencia')?.touched && ingresoForm.get('finVigencia')?.invalid">
-                                            </div>
-
-                                            <small class="text-danger"
-                                                *ngIf="ingresoForm.get('finVigencia')?.touched && ingresoForm.get('finVigencia')?.errors">
-
-                                                <span *ngIf="ingresoForm.get('finVigencia')?.hasError('required')">
-                                                    La fecha de fin es obligatoria
-                                                </span>
-                                                <span *ngIf="ingresoForm.hasError('fechaInvalida')">
-                                                    La fecha fin debe ser mayor a la fecha inicio
-                                                </span>
-                                            </small>
-                                        </div>
-
-                                        <!-- TELÉFONO -->
-                                        <div class="col-md-3">
-                                            <label class="form-label">Teléfono</label>
-                                            <div class="input-group">
-                                                <span class="input-group-text bg-light">
-                                                    <i class="fas fa-phone text-success"></i>
-                                                </span>
-                                                <input type="text" class="form-control" formControlName="telefono"
-                                                    placeholder="Ingrese el teléfono" maxlength="10"
-                                                    [class.is-invalid]="ingresoForm.get('telefono')?.touched && ingresoForm.get('telefono')?.invalid">
-                                            </div>
-
-                                            <small class="text-danger"
-                                                *ngIf="ingresoForm.get('telefono')?.touched && ingresoForm.get('telefono')?.errors">
-
-                                                <span *ngIf="ingresoForm.get('telefono')?.hasError('required')">
-                                                    El teléfono es obligatorio
-                                                </span>
-                                                <span *ngIf="ingresoForm.get('telefono')?.hasError('pattern')">
-                                                    Solo números (10 dígitos)
-                                                </span>
-                                            </small>
-                                        </div>
-
-                                        <!-- CONTACTO -->
-                                        <div class="col-md-3">
-                                            <label class="form-label">Nombre Contacto Principal</label>
-                                            <div class="input-group">
-                                                <span class="input-group-text bg-light">
-                                                    <i class="fas fa-user-tie text-primary"></i>
-                                                </span>
-                                                <input type="text" class="form-control" formControlName="contacto"
-                                                    placeholder="Persona de contacto"
-                                                    [class.is-invalid]="ingresoForm.get('contacto')?.touched && ingresoForm.get('contacto')?.invalid">
-                                            </div>
-
-                                            <small class="text-danger"
-                                                *ngIf="ingresoForm.get('contacto')?.touched && ingresoForm.get('contacto')?.errors">
-
-                                                <span *ngIf="ingresoForm.get('contacto')?.hasError('required')">
-                                                    El contacto es obligatorio
-                                                </span>
-                                                <span *ngIf="ingresoForm.get('contacto')?.hasError('minlength')">
-                                                    Mínimo 3 caracteres
-                                                </span>
-                                            </small>
-                                        </div>
-                                        <!-- ASEGURADORA -->
-                                        <div class="col-md-3">
-                                            <label for="aseguradora" class="form-label">
-                                                Aseguradora
-                                            </label>
-                                            <div class="input-group">
-                                                <div class="input-group-prepend">
-                                                    <span class="input-group-text bg-light">
-                                                        <i class="fas fa-building text-info"></i>
-                                                    </span>
-                                                </div>
-                                                <ng-select [items]="lstAseguradoras" formControlName="aseguradora"
-                                                    bindLabel="alias" bindValue="id" [clearable]="true"
-                                                    placeholder="Seleccione la aseguradora" [searchable]="true"
-                                                    style="flex: 1 1 auto;">
-                                                </ng-select>
-                                            </div>
-
-                                            <small class="text-danger"
-                                                *ngIf="ingresoForm.get('aseguradora')?.touched && ingresoForm.get('aseguradora')?.invalid">
-                                                La aseguradora es obligatoria
-                                            </small>
-                                        </div>
-                                    </div>
-                                </div>
-                                <form [formGroup]="contactoForm">
-                                    <div class="card mb-4 p-3 position-relative">
-                                        <!-- HEADER (CLICK) -->
-                                        <h6 class="card-title titulo-sobre-borde-medio collapsed"
-                                            style="cursor: pointer;" data-bs-toggle="collapse"
-                                            data-bs-target="#collapseContactos" aria-expanded="false">
-
-                                            Detalle Contactos
-
-                                            <i class="fas ms-2 icono-flecha"></i>
-
-                                        </h6>
-                                        <br>
-                                        <div id="collapseContactos" class="collapse">
-
-                                            <div class="row">
-
-                                                <!-- IZQUIERDA (FORMULARIO) -->
-                                                <div class="col-md-4">
-
-                                                    <!-- CARGO -->
-                                                    <div class="mb-3">
-                                                        <div class="input-group">
-                                                            <span class="input-group-text bg-light">
-                                                                <i class="fas fa-briefcase text-info"></i>
-                                                            </span>
-
-                                                            <select class="form-control" formControlName="idCargo"
-                                                                [ngClass]="{'is-invalid': contactoForm.get('idCargo')?.touched && contactoForm.get('idCargo')?.invalid}">
-
-                                                                <option value="" disabled>Seleccione el cargo</option>
-
-                                                                <option *ngFor="let c of lstCargos" [value]="c.id">
-                                                                    {{ c.nombre }}
-                                                                </option>
-
-                                                            </select>
-                                                        </div>
-
-                                                        <div class="invalid-feedback d-block"
-                                                            *ngIf="contactoForm.get('idCargo')?.touched && contactoForm.get('idCargo')?.errors?.['required']">
-                                                            El cargo es obligatorio
-                                                        </div>
-                                                    </div>
-
-                                                    <!-- NOMBRE -->
-                                                    <div class="mb-3">
-                                                        <div class="input-group">
-                                                            <span class="input-group-text bg-light">
-                                                                <i class="fas fa-user text-primary"></i>
-                                                            </span>
-
-                                                            <input type="text" class="form-control"
-                                                                placeholder="Ingrese el nombre" formControlName="nombre"
-                                                                [ngClass]="{'is-invalid': contactoForm.get('nombre')?.touched && contactoForm.get('nombre')?.invalid}">
-                                                        </div>
-
-                                                        <div class="invalid-feedback d-block"
-                                                            *ngIf="contactoForm.get('nombre')?.touched && contactoForm.get('nombre')?.errors?.['required']">
-                                                            El nombre es obligatorio
-                                                        </div>
-                                                    </div>
-
-                                                    <!-- CORREO -->
-                                                    <div class="mb-3">
-                                                        <div class="input-group">
-                                                            <span class="input-group-text bg-light">
-                                                                <i class="fas fa-envelope text-warning"></i>
-                                                            </span>
-
-                                                            <input type="email" class="form-control"
-                                                                placeholder="Ingrese el correo" formControlName="correo"
-                                                                [ngClass]="{'is-invalid': contactoForm.get('correo')?.touched && contactoForm.get('correo')?.invalid}">
-                                                        </div>
-
-                                                        <div class="invalid-feedback d-block"
-                                                            *ngIf="contactoForm.get('correo')?.touched && contactoForm.get('correo')?.errors">
-
-                                                            <div
-                                                                *ngIf="contactoForm.get('correo')?.errors?.['required']">
-                                                                El correo es obligatorio
-                                                            </div>
-
-                                                            <div *ngIf="contactoForm.get('correo')?.errors?.['email']">
-                                                                Formato de correo inválido
-                                                            </div>
-
-                                                        </div>
-                                                    </div>
-
-                                                    <!-- CELULAR -->
-                                                    <div class="mb-3">
-                                                        <div class="input-group">
-                                                            <span class="input-group-text bg-light">
-                                                                <i class="fas fa-mobile-alt text-success"></i>
-                                                            </span>
-
-                                                            <input type="text" class="form-control"
-                                                                placeholder="Ingrese el celular"
-                                                                formControlName="celular"
-                                                                [ngClass]="{'is-invalid': contactoForm.get('celular')?.touched && contactoForm.get('celular')?.invalid}">
-                                                        </div>
-
-                                                        <div class="invalid-feedback d-block"
-                                                            *ngIf="contactoForm.get('celular')?.touched && contactoForm.get('celular')?.errors">
-
-                                                            <div
-                                                                *ngIf="contactoForm.get('celular')?.errors?.['required']">
-                                                                El celular es obligatorio
-                                                            </div>
-
-                                                            <div
-                                                                *ngIf="contactoForm.get('celular')?.errors?.['pattern']">
-                                                                Debe tener 10 dígitos numéricos
-                                                            </div>
-
-                                                        </div>
-                                                    </div>
-
-                                                    <!-- BOTONES -->
-                                                    <div class="d-flex gap-2 justify-content-end">
-
-                                                        <button type="button" class="btn btn-primary"
-                                                            *ngIf="!esEdicionContacto" (click)="agregarContacto()">
-                                                            + Ingresar
-                                                        </button>
-
-                                                        <div *ngIf="esEdicionContacto">
-
-                                                            <button type="button" class="btn btn-success"
-                                                                (click)="actualizarContacto()">
-                                                                Actualizar
-                                                            </button>&nbsp;
-
-                                                            <button type="button" class="btn btn-danger"
-                                                                (click)="cancelarContacto()">
-                                                                Cancelar
-                                                            </button>
-
-                                                        </div>
-
-                                                    </div>
-
-                                                </div>
-                                                <!-- DERECHA (TABLA) -->
-                                                <div class="col-md-8">
-
-                                                    <div class="table-responsive">
-
-                                                        <div class="table-responsive">
-
-                                                            <table
-                                                                class="table table-hover table-striped align-middle tabla-contactos"
-                                                                style="font-size:10px;text-align:center;">
-
-                                                                <thead class="table-primary text-center">
-                                                                    <tr>
-                                                                        <th>Cargo</th>
-                                                                        <th>Nombre</th>
-                                                                        <th>Correo</th>
-                                                                        <th>Celular</th>
-                                                                        <th style="width: 120px;">Acción</th>
-                                                                    </tr>
-                                                                </thead>
-
-                                                                <tbody class="text-center">
-
-                                                                    <tr *ngIf="lstContactos.length === 0">
-                                                                        <td colspan="5" class="text-muted py-4">
-                                                                            <i class="fas fa-user-slash me-2"></i>
-                                                                            No hay contactos agregados
-                                                                        </td>
-                                                                    </tr>
-
-                                                                    <tr *ngFor="let con of lstContactos; let i = index">
-
-                                                                        <!-- Cargo -->
-                                                                        <td>
-                                                                            <span class="text-start">
-                                                                                {{ con.nombreCargo }}
-                                                                            </span>
-                                                                        </td>
-
-                                                                        <!-- Nombre -->
-                                                                        <td class="fw-semibold text-start">
-                                                                            {{ con.nombre }}
-                                                                        </td>
-
-                                                                        <!-- Correo -->
-                                                                        <td class="text-start">
-                                                                            {{ con.correo }}
-                                                                        </td>
-
-                                                                        <!-- Celular -->
-                                                                        <td>
-                                                                            <span class="text-start">
-                                                                                {{ con.celular }}
-                                                                            </span>
-                                                                        </td>
-
-                                                                        <!-- Acciones -->
-                                                                        <td>
-                                                                            <div
-                                                                                class="d-flex justify-content-center gap-2">
-
-                                                                                <button
-                                                                                    class="btn btn-sm btn-outline-primary"
-                                                                                    title="Editar Contacto"
-                                                                                    (click)="editarContacto(i)">
-                                                                                    <i class="fas fa-edit"></i>
-                                                                                </button>
-
-                                                                                <button
-                                                                                    class="btn btn-sm btn-outline-danger"
-                                                                                    title="Eliminar Contacto"
-                                                                                    (click)="eliminarContacto(i)">
-                                                                                    <i class="fas fa-trash-alt"></i>
-                                                                                </button>
-
-                                                                            </div>
-                                                                        </td>
-
-                                                                    </tr>
-
-                                                                </tbody>
-
-                                                            </table>
-
-                                                        </div>
-
-                                                    </div>
-
-                                                </div>
-
-                                            </div>
-                                        </div>
-                                    </div>
-                                </form>
-                                <!--SLAS-->
-                                <form [formGroup]="slasForm">
-                                    <div class="card mb-4 p-3 position-relative">
-                                        <!-- HEADER (CLICK) -->
-                                        <h6 class="card-title titulo-sobre-borde-medio collapsed"
-                                            style="cursor: pointer;" data-bs-toggle="collapse"
-                                            data-bs-target="#collapseSLAS" aria-expanded="false">
-
-                                            Detalle SLAS
-
-                                            <i class="fas ms-2 icono-flecha"></i>
-
-                                        </h6>
-                                        <br>
-                                        <div id="collapseSLAS" class="collapse">
-
-                                            <div class="row">
-
-                                                <!-- IZQUIERDA (FORMULARIO) -->
-                                                <div class="col-md-4">
-
-
-                                                    <!-- Actividad -->
-                                                    <div class="mb-3">
-                                                        <div class="input-group">
-                                                            <span class="input-group-text bg-light">
-                                                                <i class="fas fa-exclamation-circle text-warning"></i>
-                                                            </span>
-
-                                                            <input type="text" class="form-control"
-                                                                placeholder="Ingrese el nombre de la actividad"
-                                                                formControlName="actividad"
-                                                                [ngClass]="{'is-invalid': slasForm.get('actividad')?.touched && slasForm.get('actividad')?.invalid}">
-                                                        </div>
-
-                                                        <div class="invalid-feedback d-block"
-                                                            *ngIf="slasForm.get('actividad')?.touched && slasForm.get('actividad')?.errors?.['required']">
-                                                            La actividad es obligatoria
-                                                        </div>
-                                                    </div>
-                                                    <!-- SLA -->
-                                                    <div class="mb-3">
-                                                        <div class="input-group">
-                                                            <span class="input-group-text bg-light">
-                                                                <i class="fas fa-tasks text-primary"></i>
-                                                            </span>
-
-                                                            <textarea type="text-area" class="form-control" rows="3"
-                                                                style="resize: none;height: 150px;font-size: 12px;"
-                                                                placeholder="Ingrese el nombre del sla"
-                                                                formControlName="sla"
-                                                                [ngClass]="{'is-invalid': slasForm.get('sla')?.touched && slasForm.get('sla')?.invalid}"></textarea>
-                                                        </div>
-
-                                                        <div class="invalid-feedback d-block"
-                                                            *ngIf="slasForm.get('sla')?.touched && slasForm.get('sla')?.errors?.['required']">
-                                                            El mnombre del sla es obligatorio
-                                                        </div>
-                                                    </div>
-                                                    <!-- Consideraciones -->
-                                                    <div class="mb-3">
-                                                        <div class="input-group">
-                                                            <span class="input-group-text bg-light">
-                                                                <i class="fas fa-file-alt text-success"></i>
-                                                            </span>
-
-                                                            <textarea type="text-area" class="form-control" rows="3"
-                                                                style="resize: none;height: 150px;font-size: 12px;"
-                                                                placeholder="Ingrese las consideraciones"
-                                                                formControlName="consideraciones"
-                                                                [ngClass]="{'is-invalid': slasForm.get('consideraciones')?.touched && slasForm.get('consideraciones')?.invalid}"></textarea>
-                                                        </div>
-
-                                                        <div class="invalid-feedback d-block"
-                                                            *ngIf="slasForm.get('consideraciones')?.touched && slasForm.get('consideraciones')?.errors?.['required']">
-                                                            Las consideraciones son obligatorias
-                                                        </div>
-                                                    </div>
-
-                                                    <!-- BOTONES -->
-                                                    <div class="d-flex gap-2 justify-content-end">
-
-                                                        <button type="button" class="btn btn-primary"
-                                                            *ngIf="!esEdicionSLA" (click)="agregarSLA()">
-                                                            + Ingresar
-                                                        </button>
-
-                                                        <div *ngIf="esEdicionSLA">
-
-                                                            <button type="button" class="btn btn-success"
-                                                                (click)="actualizarSLA()">
-                                                                Actualizar
-                                                            </button>&nbsp;
-
-                                                            <button type="button" class="btn btn-danger"
-                                                                (click)="cancelarSLA()">
-                                                                Cancelar
-                                                            </button>
-
-                                                        </div>
-
-                                                    </div>
-
-                                                </div>
-                                                <!-- DERECHA (TABLA) -->
-                                                <div class="col-md-8">
-
-                                                    <div class="table-responsive">
-
-                                                        <div class="table-responsive">
-
-                                                            <table
-                                                                class="table table-hover table-striped align-middle tabla-contactos"
-                                                                style="font-size:10px;text-align:center;">
-
-                                                                <thead class="table-primary text-center">
-                                                                    <tr>
-                                                                        <th>Actividad</th>
-                                                                        <th>SLA</th>
-                                                                        <th>Consideraciones</th>
-                                                                        <th style="width: 120px;">Acción</th>
-                                                                    </tr>
-                                                                </thead>
-
-                                                                <tbody class="text-center">
-
-                                                                    <tr *ngIf="lstContactos.length === 0">
-                                                                        <td colspan="5" class="text-muted py-4">
-                                                                            <i class="fas fa-user-slash me-2"></i>
-                                                                            No hay SLAS agregados
-                                                                        </td>
-                                                                    </tr>
-
-                                                                    <tr *ngFor="let con of lstSLAS; let i = index">
-
-                                                                        <!-- actividad -->
-                                                                        <td>
-                                                                            <span class="text-start">
-                                                                                {{ con.actividad }}
-                                                                            </span>
-                                                                        </td>
-
-                                                                        <!-- sla -->
-                                                                        <td class="fw-semibold text-start">
-                                                                            {{ con.sla }}
-                                                                        </td>
-
-                                                                        <!-- consideraciones -->
-                                                                        <td class="text-start">
-                                                                            {{ con.consideraciones }}
-                                                                        </td>
-
-                                                                        <!-- Acciones -->
-                                                                        <td>
-                                                                            <div
-                                                                                class="d-flex justify-content-center gap-2">
-
-                                                                                <button
-                                                                                    class="btn btn-sm btn-outline-primary"
-                                                                                    title="Editar Contacto"
-                                                                                    (click)="editarSLA(i)">
-                                                                                    <i class="fas fa-edit"></i>
-                                                                                </button>
-
-                                                                                <button
-                                                                                    class="btn btn-sm btn-outline-danger"
-                                                                                    title="Eliminar Contacto"
-                                                                                    (click)="eliminarSLA(i)">
-                                                                                    <i class="fas fa-trash-alt"></i>
-                                                                                </button>
-
-                                                                            </div>
-                                                                        </td>
-
-                                                                    </tr>
-
-                                                                </tbody>
-
-                                                            </table>
-
-                                                        </div>
-
-                                                    </div>
-
-                                                </div>
-
-                                            </div>
-                                        </div>
-                                    </div>
-                                </form>
-                                <!--Beneficios-->
-                                <form [formGroup]="beneficiosForm">
-                                    <div class="card mb-4 p-3 position-relative">
-                                        <!-- HEADER (CLICK) -->
-                                        <h6 class="card-title titulo-sobre-borde-medio collapsed"
-                                            style="cursor: pointer;" data-bs-toggle="collapse"
-                                            data-bs-target="#collapseBeneficios" aria-expanded="false">
-
-                                            Detalle Beneficios
-
-                                            <i class="fas ms-2 icono-flecha"></i>
-
-                                        </h6>
-                                        <br>
-                                        <div id="collapseBeneficios" class="collapse">
-                                            <div class="row">
-
-                                                <!-- IZQUIERDA (FORMULARIO) -->
-                                                <div class="col-md-4">
-
-                                                    <!-- nombreBeneficio -->
-                                                    <div class="mb-3">
-                                                        <div class="input-group">
-                                                            <span class="input-group-text bg-light">
-                                                                <i class="fas fa-gift text-primary"></i>
-                                                            </span>
-
-                                                            <input type="text" class="form-control"
-                                                                placeholder="Ingrese el nombre del beneficio"
-                                                                formControlName="nombreBeneficio"
-                                                                [class.is-invalid]="beneficiosForm.get('nombreBeneficio')?.touched && beneficiosForm.get('nombreBeneficio')?.invalid">
-                                                        </div>
-
-                                                        <small class="text-danger"
-                                                            *ngIf="beneficiosForm.get('nombreBeneficio')?.touched && beneficiosForm.get('nombreBeneficio')?.errors">
-
-                                                            <span
-                                                                *ngIf="beneficiosForm.get('nombreBeneficio')?.hasError('required')">
-                                                                El nombre es obligatorio
-                                                            </span>
-                                                            <span
-                                                                *ngIf="beneficiosForm.get('nombreBeneficio')?.hasError('minlength')">
-                                                                Mínimo 3 caracteres
-                                                            </span>
-                                                        </small>
-                                                    </div>
-                                                    <!-- cantidad -->
-                                                    <div class="mb-3">
-                                                        <div class="input-group">
-                                                            <span class="input-group-text bg-light">
-                                                                <i class="fas fa-sort-numeric-up text-primary"></i>
-                                                            </span>
-
-                                                            <input type="number" class="form-control"
-                                                                placeholder="Ingrese la cantidad"
-                                                                formControlName="cantidadBeneficio" min="1"
-                                                                [class.is-invalid]="beneficiosForm.get('cantidadBeneficio')?.touched && beneficiosForm.get('cantidadBeneficio')?.invalid">
-                                                        </div>
-
-                                                        <small class="text-danger"
-                                                            *ngIf="beneficiosForm.get('cantidadBeneficio')?.touched && beneficiosForm.get('cantidadBeneficio')?.errors">
-
-                                                            <span
-                                                                *ngIf="beneficiosForm.get('cantidadBeneficio')?.hasError('required')">
-                                                                La cantidad es obligatoria
-                                                            </span>
-                                                            <span
-                                                                *ngIf="beneficiosForm.get('cantidadBeneficio')?.hasError('min')">
-                                                                Debe ser mayor a 0
-                                                            </span>
-                                                            <span
-                                                                *ngIf="beneficiosForm.get('cantidadBeneficio')?.hasError('pattern')">
-                                                                Solo números enteros
-                                                            </span>
-                                                        </small>
-                                                    </div>
-                                                    <!-- detalleBeneficio -->
-                                                    <div class="mb-3">
-                                                        <div class="input-group">
-                                                            <span class="input-group-text bg-light">
-                                                                <i class="fas fa-align-left text-primary"></i>
-                                                            </span>
-
-                                                            <textarea class="form-control" rows="3"
-                                                                style="resize: none;height: 150px;font-size: 12px;"
-                                                                placeholder="Ingrese el detalle del beneficio"
-                                                                formControlName="detalleBeneficio"
-                                                                [class.is-invalid]="beneficiosForm.get('detalleBeneficio')?.touched && beneficiosForm.get('detalleBeneficio')?.invalid">
-    </textarea>
-                                                        </div>
-
-                                                        <small class="text-danger"
-                                                            *ngIf="beneficiosForm.get('detalleBeneficio')?.touched && beneficiosForm.get('detalleBeneficio')?.errors">
-
-                                                            <span
-                                                                *ngIf="beneficiosForm.get('detalleBeneficio')?.hasError('required')">
-                                                                El detalle es obligatorio
-                                                            </span>
-                                                        </small>
-                                                    </div>
-
-                                                    <!-- valorBeneficio -->
-                                                    <div class="mb-3">
-                                                        <div class="input-group">
-                                                            <span class="input-group-text bg-light">
-                                                                <i class="fas fa-dollar-sign text-primary"></i>
-                                                            </span>
-
-                                                            <input type="number" class="form-control"
-                                                                placeholder="Ingrese el valor del beneficio"
-                                                                formControlName="valorBeneficio"
-                                                                [class.is-invalid]="beneficiosForm.get('valorBeneficio')?.touched && beneficiosForm.get('valorBeneficio')?.invalid">
-                                                        </div>
-
-                                                        <small class="text-danger"
-                                                            *ngIf="beneficiosForm.get('valorBeneficio')?.touched && beneficiosForm.get('valorBeneficio')?.errors">
-
-                                                            <span
-                                                                *ngIf="beneficiosForm.get('valorBeneficio')?.hasError('required')">
-                                                                El valor es obligatorio
-                                                            </span>
-                                                            <span
-                                                                *ngIf="beneficiosForm.get('valorBeneficio')?.hasError('min')">
-                                                                Debe ser mayor a 0
-                                                            </span>
-                                                        </small>
-                                                    </div>
-                                                    <!-- fecha maxima de cumplimiento del beneficio -->
-                                                    <div class="mb-3">
-                                                        <label class="form-label">Fecha maxima de cumplimiento del
-                                                            beneficio</label>
-                                                        <div class="input-group">
-                                                            <span class="input-group-text bg-light">
-                                                                <i class="fas fa-calendar-alt text-primary"></i>
-                                                            </span>
-
-                                                            <input type="date" class="form-control"
-                                                                placeholder="Ingrese el valor del beneficio"
-                                                                formControlName="fechaCumplimiento"
-                                                                [class.is-invalid]="beneficiosForm.get('fechaCumplimiento')?.touched && beneficiosForm.get('fechaCumplimiento')?.invalid">
-                                                        </div>
-
-                                                        <small class="text-danger"
-                                                            *ngIf="beneficiosForm.get('fechaCumplimiento')?.touched && beneficiosForm.get('fechaCumplimiento')?.errors">
-
-                                                            <span
-                                                                *ngIf="beneficiosForm.get('fechaCumplimiento')?.hasError('required')">
-                                                                Debe ingresar una fecha
-                                                            </span>
-                                                        </small>
-                                                    </div>
-                                                    <!-- BOTONES -->
-                                                    <div class="d-flex gap-2 justify-content-end">
-
-                                                        <button type="button" class="btn btn-primary"
-                                                            (click)="agregarBeneficio()" *ngIf="!esEdicionBeneficio">
-                                                            + Ingresar
-                                                        </button>
-
-                                                        <div *ngIf="esEdicionBeneficio">
-                                                            <button type="button" class="btn btn-success"
-                                                                (click)="actualizarBeneficio()">
-                                                                Actualizar
-                                                            </button>
-
-                                                            <button type="button" class="btn btn-danger"
-                                                                (click)="cancelarBeneficio()">
-                                                                Cancelar
-                                                            </button>
-                                                        </div>
-
-                                                    </div>
-
-                                                </div>
-
-                                                <!-- DERECHA (TABLA) -->
-                                                <div class="col-md-8">
-
-                                                    <div class="table-responsive">
-
-                                                        <div class="table-responsive">
-
-                                                            <table
-                                                                class="table table-hover table-striped align-middle tabla-beneficios"
-                                                                style="font-size:10px;text-align:center;">
-
-                                                                <thead class="table-primary text-center">
-                                                                    <tr>
-                                                                        <th>Nombre Beneficio</th>
-                                                                        <th>Detalle</th>
-                                                                        <th>Cantidad</th>
-                                                                        <th>Valor</th>
-                                                                        <th>Fecha Max.</th>
-                                                                        <th style="width: 120px;">Acción</th>
-                                                                    </tr>
-                                                                </thead>
-
-                                                                <tbody class="text-center">
-
-                                                                    <tr *ngIf="lstBeneficios.length === 0">
-                                                                        <td colspan="5" class="text-muted py-4">
-                                                                            <i class="fas fa-inbox me-2"></i>
-                                                                            No hay beneficios agregados
-                                                                        </td>
-                                                                    </tr>
-
-                                                                    <tr
-                                                                        *ngFor="let ben of lstBeneficios; let i = index">
-
-                                                                        <td class="fw-semibold text-start">
-                                                                            {{ ben.nombreBeneficio }}
-                                                                        </td>
-
-                                                                        <td class="text-start text-truncate"
-                                                                            style="max-width: 200px;">
-                                                                            {{ ben.detalleBeneficio }}
-                                                                        </td>
-
-                                                                        <td>
-                                                                            <span class="text-start">
-                                                                                {{ ben.cantidadBeneficio }}
-                                                                            </span>
-                                                                        </td>
-
-                                                                        <td class="text-success fw-bold">
-                                                                            {{ ben.valorBeneficio |
-                                                                            currency:'USD':'symbol':'1.2-2' }}
-                                                                        </td>
-                                                                        <td class="text-danger fw-bold">
-                                                                            {{ ben.fechaCumplimiento }}
-                                                                        </td>
-
-                                                                        <td>
-                                                                            <div
-                                                                                class="d-flex justify-content-center gap-2">
-
-                                                                                <button
-                                                                                    class="btn btn-sm btn-outline-primary"
-                                                                                    (click)="editarBeneficio(i)"
-                                                                                    title="Editar">
-                                                                                    <i class="fas fa-edit"></i>
-                                                                                </button>
-
-                                                                                <button
-                                                                                    class="btn btn-sm btn-outline-danger"
-                                                                                    (click)="eliminarBeneficio(i)"
-                                                                                    title="Eliminar">
-                                                                                    <i class="fas fa-trash-alt"></i>
-                                                                                </button>
-
-                                                                            </div>
-                                                                        </td>
-
-                                                                    </tr>
-
-                                                                </tbody>
-
-                                                            </table>
-
-                                                        </div>
-
-                                                    </div>
-
-                                                </div>
-
-                                            </div>
-                                        </div>
-
-                                    </div>
-                                </form>
-
-                                <!--Valores Agregados-->
-                                <form [formGroup]="agregadosForm">
-                                    <div class="card mb-4 p-3 position-relative">
-                                        <!-- HEADER (CLICK) -->
-                                        <h6 class="card-title titulo-sobre-borde-medio collapsed"
-                                            style="cursor: pointer;" data-bs-toggle="collapse"
-                                            data-bs-target="#collapseValores" aria-expanded="false">
-
-                                            Valores Agregados
-
-                                            <i class="fas ms-2 icono-flecha"></i>
-
-                                        </h6>
-                                        <br>
-                                        <div id="collapseValores" class="collapse">
-                                            <div class="row">
-
-                                                <!-- IZQUIERDA (FORMULARIO) -->
-                                                <div class="col-md-4">
-
-                                                    <!-- nombreValor -->
-                                                    <div class="mb-3">
-                                                        <div class="input-group">
-                                                            <span class="input-group-text bg-light">
-                                                                <i class="fas fa-gift text-primary"></i>
-                                                            </span>
-
-                                                            <input type="text" class="form-control"
-                                                                placeholder="Ingrese el nombre del valor agregado"
-                                                                formControlName="nombreValor"
-                                                                [class.is-invalid]="agregadosForm.get('nombreValor')?.touched && agregadosForm.get('nombreValor')?.invalid">
-                                                        </div>
-
-                                                        <small class="text-danger"
-                                                            *ngIf="agregadosForm.get('nombreValor')?.touched && agregadosForm.get('nombreValor')?.errors">
-
-                                                            <span
-                                                                *ngIf="agregadosForm.get('nombreValor')?.hasError('required')">
-                                                                El nombre es obligatorio
-                                                            </span>
-                                                            <span
-                                                                *ngIf="agregadosForm.get('nombreValor')?.hasError('minlength')">
-                                                                Mínimo 3 caracteres
-                                                            </span>
-                                                        </small>
-                                                    </div>
-                                                    <!-- cantidad -->
-                                                    <div class="mb-3">
-                                                        <div class="input-group">
-                                                            <span class="input-group-text bg-light">
-                                                                <i class="fas fa-sort-numeric-up text-primary"></i>
-                                                            </span>
-
-                                                            <input type="number" class="form-control"
-                                                                placeholder="Ingrese la cantidad"
-                                                                formControlName="cantidadValor" min="1"
-                                                                [class.is-invalid]="agregadosForm.get('cantidadValor')?.touched && agregadosForm.get('cantidadValor')?.invalid">
-                                                        </div>
-
-                                                        <small class="text-danger"
-                                                            *ngIf="agregadosForm.get('cantidadValor')?.touched && agregadosForm.get('cantidadValor')?.errors">
-
-                                                            <span
-                                                                *ngIf="agregadosForm.get('cantidadValor')?.hasError('required')">
-                                                                La cantidad es obligatoria
-                                                            </span>
-                                                            <span
-                                                                *ngIf="agregadosForm.get('cantidadValor')?.hasError('min')">
-                                                                Debe ser mayor a 0
-                                                            </span>
-                                                            <span
-                                                                *ngIf="agregadosForm.get('cantidadValor')?.hasError('pattern')">
-                                                                Solo números enteros
-                                                            </span>
-                                                        </small>
-                                                    </div>
-                                                    <!-- detalleValor -->
-                                                    <div class="mb-3">
-                                                        <div class="input-group">
-                                                            <span class="input-group-text bg-light">
-                                                                <i class="fas fa-align-left text-primary"></i>
-                                                            </span>
-
-                                                            <textarea class="form-control" rows="3"
-                                                                style="resize: none;height: 150px;font-size: 12px;"
-                                                                placeholder="Ingrese el detalle del valor agregado"
-                                                                formControlName="detalleValor"
-                                                                [class.is-invalid]="agregadosForm.get('detalleValor')?.touched && agregadosForm.get('detalleValor')?.invalid">
-    </textarea>
-                                                        </div>
-
-                                                        <small class="text-danger"
-                                                            *ngIf="agregadosForm.get('detalleValor')?.touched && agregadosForm.get('detalleValor')?.errors">
-
-                                                            <span
-                                                                *ngIf="agregadosForm.get('detalleValor')?.hasError('required')">
-                                                                El detalle es obligatorio
-                                                            </span>
-                                                        </small>
-                                                    </div>
-
-                                                    <!-- fecha maxima de cumplimiento del valor agregado -->
-                                                    <div class="mb-3">
-                                                        <label class="form-label">Fecha maxima de cumplimiento del
-                                                            valor agregado</label>
-                                                        <div class="input-group">
-                                                            <span class="input-group-text bg-light">
-                                                                <i class="fas fa-calendar-alt text-primary"></i>
-                                                            </span>
-
-                                                            <input type="date" class="form-control"
-                                                                placeholder="Ingrese la fecha de cumplimiento del valor agregado"
-                                                                formControlName="fechaCumplimiento"
-                                                                [class.is-invalid]="agregadosForm.get('fechaCumplimiento')?.touched && agregadosForm.get('fechaCumplimiento')?.invalid">
-                                                        </div>
-
-                                                        <small class="text-danger"
-                                                            *ngIf="agregadosForm.get('fechaCumplimiento')?.touched && agregadosForm.get('fechaCumplimiento')?.errors">
-
-                                                            <span
-                                                                *ngIf="agregadosForm.get('fechaCumplimiento')?.hasError('required')">
-                                                                Debe ingresar una fecha
-                                                            </span>
-                                                        </small>
-                                                    </div>
-                                                    <!-- BOTONES -->
-                                                    <div class="d-flex gap-2 justify-content-end">
-
-                                                        <button type="button" class="btn btn-primary"
-                                                            (click)="agregarValor()" *ngIf="!esEdicionValor">
-                                                            + Ingresar
-                                                        </button>
-
-                                                        <div *ngIf="esEdicionValor">
-                                                            <button type="button" class="btn btn-success"
-                                                                (click)="actualizarValor()">
-                                                                Actualizar
-                                                            </button>
-
-                                                            <button type="button" class="btn btn-danger"
-                                                                (click)="cancelarValor()">
-                                                                Cancelar
-                                                            </button>
-                                                        </div>
-
-                                                    </div>
-
-                                                </div>
-
-                                                <!-- DERECHA (TABLA) -->
-                                                <div class="col-md-8">
-
-                                                    <div class="table-responsive">
-
-                                                        <div class="table-responsive">
-
-                                                            <table
-                                                                class="table table-hover table-striped align-middle tabla-beneficios"
-                                                                style="font-size:10px;text-align:center;">
-
-                                                                <thead class="table-primary text-center">
-                                                                    <tr>
-                                                                        <th>Valor Agregado</th>
-                                                                        <th>Detalle</th>
-                                                                        <th>Cantidad</th>
-                                                                        <th>Fecha Max.</th>
-                                                                        <th style="width: 120px;">Acción</th>
-                                                                    </tr>
-                                                                </thead>
-
-                                                                <tbody class="text-center">
-
-                                                                    <tr *ngIf="lstValoresAgregados.length === 0">
-                                                                        <td colspan="5" class="text-muted py-4">
-                                                                            <i class="fas fa-inbox me-2"></i>
-                                                                            No hay valores agregados
-                                                                        </td>
-                                                                    </tr>
-
-                                                                    <tr
-                                                                        *ngFor="let ben of lstValoresAgregados; let i = index">
-
-                                                                        <td class="fw-semibold text-start">
-                                                                            {{ ben.nombreValor }}
-                                                                        </td>
-
-                                                                        <td class="text-start text-truncate"
-                                                                            style="max-width: 200px;">
-                                                                            {{ ben.detalleValor }}
-                                                                        </td>
-
-                                                                        <td>
-                                                                            <span class="text-start">
-                                                                                {{ ben.cantidadValor }}
-                                                                            </span>
-                                                                        </td>
-
-                                                                        <td class="text-danger fw-bold">
-                                                                            {{ ben.fechaCumplimiento }}
-                                                                        </td>
-
-                                                                        <td>
-                                                                            <div
-                                                                                class="d-flex justify-content-center gap-2">
-
-                                                                                <button
-                                                                                    class="btn btn-sm btn-outline-primary"
-                                                                                    (click)="editarValor(i)"
-                                                                                    title="Editar">
-                                                                                    <i class="fas fa-edit"></i>
-                                                                                </button>
-
-                                                                                <button
-                                                                                    class="btn btn-sm btn-outline-danger"
-                                                                                    (click)="eliminarValor(i)"
-                                                                                    title="Eliminar">
-                                                                                    <i class="fas fa-trash-alt"></i>
-                                                                                </button>
-
-                                                                            </div>
-                                                                        </td>
-
-                                                                    </tr>
-
-                                                                </tbody>
-
-                                                            </table>
-
-                                                        </div>
-
-                                                    </div>
-
-                                                </div>
-
-                                            </div>
-                                        </div>
-
-                                    </div>
-                                </form>
-                            </form>
-                            <div class="col d-flex justify-content-end gap-3">
-
-                                <button type="button"
-                                    class="btn btn-warning d-flex align-items-center gap-2 px-3 shadow-sm"
-                                    (click)="generarAcuerdo()">
-
-                                    <i class="fas fa-file-signature"></i>
-                                    <span>Generar</span>
-                                </button>
-
-                                <button type="button"
-                                    class="btn btn-success d-flex align-items-center gap-2 px-3 shadow-sm"
-                                    (click)="completarAcuerdo()" *ngIf="ingresoForm.value.idEstado == 1">
-
-                                    <i class="fas fa-check-circle"></i>
-                                    <span>Completar</span>
-                                </button>
-
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
+<!-- Angular | Acuerdo de Servicio - Seguros Suárez -->
+<div class="content-wrapper acuerdo-page">
+  <section class="content acuerdo-content">
+    <div class="container-fluid acuerdo-container">
+      <header class="acuerdo-heading">
+        <div class="acuerdo-heading__mark"><i class="fas fa-file-signature" aria-hidden="true"></i></div>
+        <div><h1>Acuerdo de servicio</h1><p>Administración de compromisos y condiciones de atención</p></div>
+      </header>
+      <!-- Información principal -->
+      <section class="acuerdo-panel acuerdo-panel--client" aria-labelledby="titleCliente">
+        <div class="acuerdo-panel__heading">
+          <div class="acuerdo-panel__identity">
+            <span class="acuerdo-panel__icon"><i class="fas fa-building" aria-hidden="true"></i></span>
+            <div>
+              
+              <h2 id="titleCliente">Información del cliente</h2>
+            </div>
+          </div>
+        </div>
+
+        <div class="acuerdo-panel__body" [formGroup]="ingresoForm">
+          <div class="row">
+            <div class="col-xl-3 col-md-6 acuerdo-field">
+              <label for="idResponsable" class="form-label">Responsable Seguros Suárez <span class="required">*</span></label>
+              <select id="idResponsable" class="form-control" formControlName="idResponsable"(change)="onResponsableChange()"
+                [class.is-invalid]="ingresoForm.get('idResponsable')?.touched && ingresoForm.get('idResponsable')?.invalid">
+                <option value="" disabled>Seleccione el responsable</option>
+                <option *ngFor="let c of lstResponsables" [value]="c.id">{{ c.nombre }}</option>
+              </select>
+              <small class="invalid-feedback d-block" *ngIf="ingresoForm.get('idResponsable')?.touched && ingresoForm.get('idResponsable')?.invalid">Seleccione un responsable.</small>
             </div>
 
+            <div class="col-xl-3 col-md-6 acuerdo-field">
+              <label class="form-label" for="clienteAcuerdo">Cliente <span class="required">*</span></label>
+              <ng-select id="clienteAcuerdo" class="acuerdo-select" appendTo="body" dropdownPosition="auto" [items]="clientes" bindLabel="cliente" bindValue="cliente"
+                [typeahead]="clientesInput$" [loading]="loadingClientes" [minTermLength]="3"
+                placeholder="Buscar cliente (mínimo 3 letras)" formControlName="cliente"
+                (change)="onClienteChange($event)"
+                [class.is-invalid]="ingresoForm.get('cliente')?.touched && ingresoForm.get('cliente')?.invalid">
+                <ng-template ng-option-tmp let-item="item">{{ item.cliente }}</ng-template>
+              </ng-select>
+              <small class="invalid-feedback d-block" *ngIf="ingresoForm.get('cliente')?.touched && ingresoForm.get('cliente')?.invalid">Debe seleccionar un cliente.</small>
+            </div>
+
+            <div class="col-xl-3 col-md-6 acuerdo-field">
+              <label for="ramoAcuerdo" class="form-label">Area <span class="required">*</span></label>
+              <select id="ramoAcuerdo" class="form-control" formControlName="ramo" (change)="onRamoChange()"
+                [class.is-invalid]="ingresoForm.get('ramo')?.touched && ingresoForm.get('ramo')?.invalid">
+                <option [value]="1">Masivos</option>
+                <option [value]="2">Generales</option>
+                <option [value]="3">VAM</option>
+              </select>
+            </div>
+
+            <div class="col-xl-3 col-md-6 acuerdo-field">
+              <label for="rucAcuerdo" class="form-label">RUC <span class="required">*</span></label>
+              <input id="rucAcuerdo" type="text" inputmode="numeric" maxlength="13" class="form-control"
+                formControlName="ruc" placeholder="13 dígitos"
+                [class.is-invalid]="ingresoForm.get('ruc')?.touched && ingresoForm.get('ruc')?.invalid">
+              <small class="invalid-feedback d-block" *ngIf="ingresoForm.get('ruc')?.touched && ingresoForm.get('ruc')?.invalid">
+                {{ ingresoForm.get('ruc')?.hasError('required') ? 'El RUC es obligatorio.' : 'Ingrese 13 dígitos numéricos.' }}
+              </small>
+            </div>
+
+            <div class="col-xl-3 col-md-6 acuerdo-field">
+              <label for="direccionAcuerdo" class="form-label">Dirección <span class="required">*</span></label>
+              <input id="direccionAcuerdo" type="text" class="form-control" formControlName="direccion"
+                placeholder="Dirección principal" [class.is-invalid]="ingresoForm.get('direccion')?.touched && ingresoForm.get('direccion')?.invalid">
+              <small class="invalid-feedback d-block" *ngIf="ingresoForm.get('direccion')?.touched && ingresoForm.get('direccion')?.invalid">La dirección es obligatoria.</small>
+            </div>
+
+            <div class="col-xl-3 col-md-6 acuerdo-field">
+              <label for="ciudadAcuerdo" class="form-label">Ciudad <span class="required">*</span></label>
+              <input id="ciudadAcuerdo" type="text" class="form-control" formControlName="ciudad"
+                placeholder="Ciudad" [class.is-invalid]="ingresoForm.get('ciudad')?.touched && ingresoForm.get('ciudad')?.invalid">
+              <small class="invalid-feedback d-block" *ngIf="ingresoForm.get('ciudad')?.touched && ingresoForm.get('ciudad')?.invalid">La ciudad es obligatoria.</small>
+            </div>
+
+            <div class="col-xl-3 col-md-6 acuerdo-field">
+              <label for="inicioAcuerdo" class="form-label">Inicio de vigencia <span class="required">*</span></label>
+              <input id="inicioAcuerdo" type="date" class="form-control" formControlName="inicioVigencia"
+                [class.is-invalid]="ingresoForm.get('inicioVigencia')?.touched && ingresoForm.get('inicioVigencia')?.invalid">
+              <small class="invalid-feedback d-block" *ngIf="ingresoForm.get('inicioVigencia')?.touched && ingresoForm.get('inicioVigencia')?.invalid">Seleccione una fecha de inicio.</small>
+            </div>
+
+            <div class="col-xl-3 col-md-6 acuerdo-field">
+              <label for="finAcuerdo" class="form-label">Fin de vigencia <span class="required">*</span></label>
+              <input id="finAcuerdo" type="date" class="form-control" formControlName="finVigencia"
+                [class.is-invalid]="(ingresoForm.get('finVigencia')?.touched && ingresoForm.get('finVigencia')?.invalid) || (ingresoForm.hasError('fechaInvalida') && ingresoForm.get('finVigencia')?.touched)">
+              <small class="invalid-feedback d-block" *ngIf="ingresoForm.get('finVigencia')?.touched && ingresoForm.get('finVigencia')?.hasError('required')">Seleccione una fecha de fin.</small>
+              <small class="invalid-feedback d-block" *ngIf="ingresoForm.hasError('fechaInvalida') && ingresoForm.get('finVigencia')?.touched">La fecha final debe ser posterior al inicio.</small>
+            </div>
+
+            <div class="col-xl-3 col-md-6 acuerdo-field">
+              <label for="telefonoAcuerdo" class="form-label">Teléfono del cliente <span class="required">*</span></label>
+              <input id="telefonoAcuerdo" type="text" inputmode="tel" maxlength="10" class="form-control"
+                formControlName="telefono" placeholder="Teléfono del cliente"
+                [class.is-invalid]="ingresoForm.get('telefono')?.touched && ingresoForm.get('telefono')?.invalid">
+              <small class="invalid-feedback d-block" *ngIf="ingresoForm.get('telefono')?.touched && ingresoForm.get('telefono')?.invalid">El teléfono del cliente es obligatorio.</small>
+            </div>
+
+            <div class="col-xl-3 col-md-6 acuerdo-field">
+              <label for="correoClienteAcuerdo" class="form-label">Correo del cliente</label>
+              <input id="correoClienteAcuerdo" type="email" inputmode="email" autocomplete="email" class="form-control"
+                formControlName="correoCliente" placeholder="cliente@empresa.com"
+                [class.is-invalid]="ingresoForm.get('correoCliente')?.touched && ingresoForm.get('correoCliente')?.invalid">
+              <small class="invalid-feedback d-block" *ngIf="ingresoForm.get('correoCliente')?.touched && ingresoForm.get('correoCliente')?.hasError('email')">
+                Ingrese un correo electrónico válido.
+              </small>
+            </div>
+
+            <div class="col-xl-3 col-md-6 acuerdo-field">
+              <label for="contactoPrincipal" class="form-label">Contacto principal del cliente <span class="required">*</span></label>
+              <input id="contactoPrincipal" type="text" class="form-control" formControlName="contacto"
+                placeholder="Nombre del contacto principal del cliente" [class.is-invalid]="ingresoForm.get('contacto')?.touched && ingresoForm.get('contacto')?.invalid">
+              <small class="invalid-feedback d-block" *ngIf="ingresoForm.get('contacto')?.touched && ingresoForm.get('contacto')?.invalid">El contacto principal del cliente es obligatorio.</small>
+            </div>
+
+            <div class="col-xl-3 col-md-6 acuerdo-field">
+              <label class="form-label" for="aseguradoraAcuerdo">Aseguradora</label>
+              <ng-select id="aseguradoraAcuerdo" class="acuerdo-select" appendTo="body" dropdownPosition="auto" [items]="lstAseguradoras"
+                formControlName="aseguradora" bindLabel="alias" bindValue="id" [clearable]="true"
+                [searchable]="true" placeholder="Seleccione aseguradora"
+                [class.is-invalid]="ingresoForm.get('aseguradora')?.touched && ingresoForm.get('aseguradora')?.invalid">
+              </ng-select>
+            </div>
+          </div>
         </div>
-    </section>
+      </section>
+
+      <section class="acuerdo-panel acuerdo-panel--blue" aria-labelledby="titleContactos">
+        <div class="acuerdo-panel__heading acuerdo-panel__heading--toggle">
+          <button type="button" class="acuerdo-toggle collapsed" data-bs-toggle="collapse" data-bs-target="#collapseContactos" aria-controls="collapseContactos" aria-expanded="false">
+            <span class="acuerdo-panel__identity">
+              <span class="acuerdo-panel__icon"><i class="fas fa-address-book" aria-hidden="true"></i></span>
+              <span class="acuerdo-title" id="titleContactos">Contactos</span>
+            </span>
+            <i class="fas fa-chevron-down acuerdo-chevron" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div id="collapseContactos" class="collapse">
+          <div class="acuerdo-panel__body">
+            <div class="acuerdo-tablebar">
+              <h3>Contactos registrados</h3>
+              <button type="button" class="btn acuerdo-btn-primary" (click)="abrirModalContacto()"><i class="fas fa-plus" aria-hidden="true"></i> Agregar contacto</button>
+            </div>
+            <div class="table-responsive acuerdo-table-scroll">
+              <table class="table acuerdo-table">
+                <thead><tr><th>Cargo</th><th>Nombre</th><th>Correo electrónico</th><th>Celular</th><th class="acuerdo-action-column">Acciones</th></tr></thead>
+                <tbody>
+                  <tr *ngIf="lstContactos.length === 0"><td colspan="5" class="acuerdo-empty">No hay contactos registrados.</td></tr>
+                  <tr *ngFor="let con of lstContactos; let i = index">
+                    <td>{{ con.nombreCargo || '—' }}</td><td class="acuerdo-emphasis">{{ con.nombre }}</td><td>{{ con.correo }}</td><td>{{ con.celular }}</td>
+                    <td><div class="acuerdo-table-actions">
+                      <button type="button" class="btn acuerdo-icon-btn" (click)="editarContacto(i)" title="Editar contacto" [attr.aria-label]="'Editar contacto ' + con.nombre"><i class="fas fa-pen"></i></button>
+                      <button type="button" class="btn acuerdo-icon-btn acuerdo-icon-btn--danger" (click)="eliminarContacto(i)" title="Eliminar contacto" [attr.aria-label]="'Eliminar contacto ' + con.nombre"><i class="fas fa-trash-alt"></i></button>
+                    </div></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="acuerdo-panel acuerdo-panel--teal" aria-labelledby="titleSLAS">
+        <div class="acuerdo-panel__heading acuerdo-panel__heading--toggle">
+          <button type="button" class="acuerdo-toggle " data-bs-toggle="collapse" data-bs-target="#collapseSLAS" aria-controls="collapseSLAS" aria-expanded="true">
+            <span class="acuerdo-panel__identity">
+              <span class="acuerdo-panel__icon"><i class="fas fa-shield-alt" aria-hidden="true"></i></span>
+              <span class="acuerdo-title" id="titleSLAS">SLA Siniestros</span>
+            </span>
+            <i class="fas fa-chevron-down acuerdo-chevron" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div id="collapseSLAS" class="collapse show">
+          <div class="acuerdo-panel__body">
+            <div class="acuerdo-tablebar">
+              <h3>Matriz de niveles de servicio</h3>
+              <button type="button" class="btn acuerdo-btn-primary" (click)="abrirModalSLA('siniestros')"><i class="fas fa-plus" aria-hidden="true"></i> Agregar SLA</button>
+            </div>
+            <div class="table-responsive acuerdo-table-scroll">
+              <table class="table acuerdo-table acuerdo-table--sla">
+                <thead><tr><th>Actividad</th><th>SLA Broker</th><th>SLA Aseguradora</th><th>Consideraciones</th><th class="acuerdo-action-column">Acciones</th></tr></thead>
+                <tbody>
+                  <tr *ngIf="lstSLAS.length === 0"><td colspan="5" class="acuerdo-empty">No hay SLA registrados en esta sección.</td></tr>
+                  <tr *ngFor="let item of lstSLAS; let i = index">
+                    <td class="acuerdo-emphasis">{{ item.actividad }}</td>
+                    <td><span class="sla-label sla-label--broker">{{ item.sla || '—' }}</span></td>
+                    <td><span class="sla-label sla-label--insurer">{{ item.sla_aseguradora || '—' }}</span></td>
+                    <td class="acuerdo-consideraciones">{{ item.consideraciones }}</td>
+                    <td><div class="acuerdo-table-actions">
+                      <button type="button" class="btn acuerdo-icon-btn" (click)="editarSLA(i, 'siniestros')" title="Editar SLA" [attr.aria-label]="'Editar SLA ' + item.actividad"><i class="fas fa-pen"></i></button>
+                      <button type="button" class="btn acuerdo-icon-btn acuerdo-icon-btn--danger" (click)="eliminarSLA(i, 'siniestros')" title="Eliminar SLA" [attr.aria-label]="'Eliminar SLA ' + item.actividad"><i class="fas fa-trash-alt"></i></button>
+                    </div></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="acuerdo-panel acuerdo-panel--blue" aria-labelledby="titleSLASOperaciones">
+        <div class="acuerdo-panel__heading acuerdo-panel__heading--toggle">
+          <button type="button" class="acuerdo-toggle collapsed" data-bs-toggle="collapse" data-bs-target="#collapseSLASOperaciones" aria-controls="collapseSLASOperaciones" aria-expanded="false">
+            <span class="acuerdo-panel__identity">
+              <span class="acuerdo-panel__icon"><i class="fas fa-cogs" aria-hidden="true"></i></span>
+              <span class="acuerdo-title" id="titleSLASOperaciones">SLA Operaciones</span>
+            </span>
+            <i class="fas fa-chevron-down acuerdo-chevron" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div id="collapseSLASOperaciones" class="collapse">
+          <div class="acuerdo-panel__body">
+            <div class="acuerdo-tablebar">
+              <h3>Matriz de niveles de servicio</h3>
+              <button type="button" class="btn acuerdo-btn-primary" (click)="abrirModalSLA('operaciones')"><i class="fas fa-plus" aria-hidden="true"></i> Agregar SLA</button>
+            </div>
+            <div class="table-responsive acuerdo-table-scroll">
+              <table class="table acuerdo-table acuerdo-table--sla">
+                <thead><tr><th>Actividad</th><th>SLA Broker</th><th>SLA Aseguradora</th><th>Consideraciones</th><th class="acuerdo-action-column">Acciones</th></tr></thead>
+                <tbody>
+                  <tr *ngIf="lstSLASOperaciones.length === 0"><td colspan="5" class="acuerdo-empty">No hay SLA registrados en esta sección.</td></tr>
+                  <tr *ngFor="let item of lstSLASOperaciones; let i = index">
+                    <td class="acuerdo-emphasis">{{ item.actividad }}</td>
+                    <td><span class="sla-label sla-label--broker">{{ item.sla || '—' }}</span></td>
+                    <td><span class="sla-label sla-label--insurer">{{ item.sla_aseguradora || '—' }}</span></td>
+                    <td class="acuerdo-consideraciones">{{ item.consideraciones }}</td>
+                    <td><div class="acuerdo-table-actions">
+                      <button type="button" class="btn acuerdo-icon-btn" (click)="editarSLA(i, 'operaciones')" title="Editar SLA" [attr.aria-label]="'Editar SLA ' + item.actividad"><i class="fas fa-pen"></i></button>
+                      <button type="button" class="btn acuerdo-icon-btn acuerdo-icon-btn--danger" (click)="eliminarSLA(i, 'operaciones')" title="Eliminar SLA" [attr.aria-label]="'Eliminar SLA ' + item.actividad"><i class="fas fa-trash-alt"></i></button>
+                    </div></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="acuerdo-panel acuerdo-panel--teal" aria-labelledby="titleBeneficios">
+        <div class="acuerdo-panel__heading acuerdo-panel__heading--toggle">
+          <button type="button" class="acuerdo-toggle collapsed" data-bs-toggle="collapse" data-bs-target="#collapseBeneficios" aria-controls="collapseBeneficios" aria-expanded="false">
+            <span class="acuerdo-panel__identity">
+              <span class="acuerdo-panel__icon"><i class="fas fa-gift" aria-hidden="true"></i></span>
+              <span class="acuerdo-title" id="titleBeneficios">Beneficios</span>
+            </span>
+            <i class="fas fa-chevron-down acuerdo-chevron" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div id="collapseBeneficios" class="collapse">
+          <div class="acuerdo-panel__body">
+            <div class="acuerdo-tablebar">
+              <h3>Beneficios registrados</h3>
+              <button type="button" class="btn acuerdo-btn-primary" (click)="abrirModalBeneficio()"><i class="fas fa-plus"></i> Agregar beneficio</button>
+            </div>
+            <div class="table-responsive acuerdo-table-scroll">
+              <table class="table acuerdo-table">
+                <thead><tr><th>Beneficio</th><th>Detalle</th><th>Cantidad</th><th>Valor</th><th>Fecha máxima</th><th class="acuerdo-action-column">Acciones</th></tr></thead>
+                <tbody>
+                  <tr *ngIf="lstBeneficios.length === 0"><td colspan="6" class="acuerdo-empty">No hay beneficios registrados.</td></tr>
+                  <tr *ngFor="let ben of lstBeneficios; let i = index">
+                    <td class="acuerdo-emphasis">{{ ben.nombreBeneficio }}</td><td class="acuerdo-consideraciones">{{ ben.detalleBeneficio }}</td><td>{{ ben.cantidadBeneficio }}</td>
+                    <td class="acuerdo-amount">{{ ben.valorBeneficio | currency:'USD':'symbol':'1.2-2' }}</td><td>{{ ben.fechaCumplimiento }}</td>
+                    <td><div class="acuerdo-table-actions">
+                      <button type="button" class="btn acuerdo-icon-btn" (click)="editarBeneficio(i)" title="Editar beneficio" aria-label="Editar beneficio"><i class="fas fa-pen"></i></button>
+                      <button type="button" class="btn acuerdo-icon-btn acuerdo-icon-btn--danger" (click)="eliminarBeneficio(i)" title="Eliminar beneficio" aria-label="Eliminar beneficio"><i class="fas fa-trash-alt"></i></button>
+                    </div></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="acuerdo-panel acuerdo-panel--blue" aria-labelledby="titleValores">
+        <div class="acuerdo-panel__heading acuerdo-panel__heading--toggle">
+          <button type="button" class="acuerdo-toggle collapsed" data-bs-toggle="collapse" data-bs-target="#collapseValores" aria-controls="collapseValores" aria-expanded="false">
+            <span class="acuerdo-panel__identity">
+              <span class="acuerdo-panel__icon"><i class="fas fa-star" aria-hidden="true"></i></span>
+              <span class="acuerdo-title" id="titleValores">Valores agregados</span>
+            </span>
+            <i class="fas fa-chevron-down acuerdo-chevron" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div id="collapseValores" class="collapse">
+          <div class="acuerdo-panel__body">
+            <div class="acuerdo-tablebar">
+              <h3>Valores agregados registrados</h3>
+              <button type="button" class="btn acuerdo-btn-primary" (click)="abrirModalValor()"><i class="fas fa-plus"></i> Agregar valor</button>
+            </div>
+            <div class="table-responsive acuerdo-table-scroll">
+              <table class="table acuerdo-table">
+                <thead><tr><th>Valor agregado</th><th>Detalle</th><th>Cantidad</th><th class="acuerdo-action-column">Acciones</th></tr></thead>
+                <tbody>
+                  <tr *ngIf="lstValoresAgregados.length === 0"><td colspan="4" class="acuerdo-empty">No hay valores agregados registrados.</td></tr>
+                  <tr *ngFor="let valor of lstValoresAgregados; let i = index">
+                    <td class="acuerdo-emphasis">{{ valor.nombreValor }}</td><td class="acuerdo-consideraciones">{{ valor.detalleValor }}</td><td>{{ valor.cantidadValor }}</td>
+                    <td><div class="acuerdo-table-actions">
+                      <button type="button" class="btn acuerdo-icon-btn" (click)="editarValor(i)" title="Editar valor agregado" aria-label="Editar valor agregado"><i class="fas fa-pen"></i></button>
+                      <button type="button" class="btn acuerdo-icon-btn acuerdo-icon-btn--danger" (click)="eliminarValor(i)" title="Eliminar valor agregado" aria-label="Eliminar valor agregado"><i class="fas fa-trash-alt"></i></button>
+                    </div></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+      <footer class="acuerdo-footer">
+        <div class="acuerdo-footer__buttons">
+          <button type="button" class="btn acuerdo-btn-generate" (click)="generarAcuerdo()"><i class="fas fa-file-signature"></i> Generar acuerdo</button>
+          <button type="button" class="btn acuerdo-btn-complete" (click)="completarAcuerdo()" *ngIf="ingresoForm.value.idEstado == 1"><i class="fas fa-check-circle"></i> Completar acuerdo</button>
+        </div>
+      </footer>
+    </div>
+  </section>
+</div>
+
+<!-- Un modal reutilizable. Se cierra con X, Cancelar, clic fuera o tecla Escape. -->
+<div class="acuerdo-modal-backdrop" *ngIf="modalActivo" (click)="cerrarModal()">
+  <div class="acuerdo-modal" role="dialog" aria-modal="true" aria-labelledby="acuerdoModalTitle" (click)="$event.stopPropagation()">
+    <div class="acuerdo-modal__header">
+      <h2 id="acuerdoModalTitle">
+        <ng-container [ngSwitch]="modalActivo">
+          <ng-container *ngSwitchCase="'contacto'">{{ esEdicionContacto ? 'Editar contacto' : 'Agregar contacto' }}</ng-container>
+          <ng-container *ngSwitchCase="'sla'">{{ esEdicionSLA ? 'Editar' : 'Agregar' }} SLA {{ tipoSLAActivo === 'operaciones' ? 'Operaciones' : 'Siniestros' }}</ng-container>
+          <ng-container *ngSwitchCase="'beneficio'">{{ esEdicionBeneficio ? 'Editar beneficio' : 'Agregar beneficio' }}</ng-container>
+          <ng-container *ngSwitchCase="'valor'">{{ esEdicionValor ? 'Editar valor agregado' : 'Agregar valor agregado' }}</ng-container>
+        </ng-container>
+      </h2>
+      <button type="button" class="acuerdo-modal__close" (click)="cerrarModal()" aria-label="Cerrar ventana"><i class="fas fa-times"></i></button>
+    </div>
+
+    <div class="acuerdo-modal__body" *ngIf="modalActivo === 'contacto'" [formGroup]="contactoForm">
+      <div class="row">
+        <div class="col-md-6 acuerdo-field">
+          <label for="modalContactoCargo" class="form-label">Cargo <span class="required">*</span></label>
+          <select id="modalContactoCargo" class="form-control" formControlName="idCargo" [class.is-invalid]="contactoForm.get('idCargo')?.touched && contactoForm.get('idCargo')?.invalid">
+            <option value="" disabled>Seleccione el cargo</option>
+            <option *ngFor="let c of lstCargos" [value]="c.id">{{ c.nombre }}</option>
+          </select>
+          <small class="invalid-feedback d-block" *ngIf="contactoForm.get('idCargo')?.touched && contactoForm.get('idCargo')?.invalid">El cargo es obligatorio.</small>
+        </div>
+        <div class="col-md-6 acuerdo-field"><label for="modalContactoNombre" class="form-label">Nombre <span class="required">*</span></label>
+          <input id="modalContactoNombre" class="form-control" type="text" formControlName="nombre" [class.is-invalid]="contactoForm.get('nombre')?.touched && contactoForm.get('nombre')?.invalid" placeholder="Nombre completo">
+          <small class="invalid-feedback d-block" *ngIf="contactoForm.get('nombre')?.touched && contactoForm.get('nombre')?.invalid">Ingrese el nombre.</small>
+        </div>
+        <div class="col-md-6 acuerdo-field"><label for="modalContactoCorreo" class="form-label">Correo electrónico <span class="required">*</span></label>
+          <input id="modalContactoCorreo" class="form-control" type="email" formControlName="correo" [class.is-invalid]="contactoForm.get('correo')?.touched && contactoForm.get('correo')?.invalid" placeholder="nombre@empresa.com">
+          <small class="invalid-feedback d-block" *ngIf="contactoForm.get('correo')?.touched && contactoForm.get('correo')?.invalid">Ingrese un correo válido.</small>
+        </div>
+        <div class="col-md-6 acuerdo-field"><label for="modalContactoCelular" class="form-label">Celular <span class="required">*</span></label>
+          <input id="modalContactoCelular" class="form-control" type="tel" formControlName="celular" maxlength="10" [class.is-invalid]="contactoForm.get('celular')?.touched && contactoForm.get('celular')?.invalid" placeholder="Número de celular">
+          <small class="invalid-feedback d-block" *ngIf="contactoForm.get('celular')?.touched && contactoForm.get('celular')?.invalid">Ingrese un número válido.</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="acuerdo-modal__body" *ngIf="modalActivo === 'sla'" [formGroup]="slasForm">
+      <div class="row">
+        <div class="col-12 acuerdo-field"><label for="modalSlaActividad" class="form-label">Actividad <span class="required">*</span></label>
+          <input id="modalSlaActividad" type="text" class="form-control" formControlName="actividad" placeholder="Nombre de la actividad" [class.is-invalid]="slasForm.get('actividad')?.touched && slasForm.get('actividad')?.invalid">
+          <small class="invalid-feedback d-block" *ngIf="slasForm.get('actividad')?.touched && slasForm.get('actividad')?.invalid">La actividad es obligatoria.</small>
+        </div>
+        <div class="col-md-6 acuerdo-field"><label for="modalSlaBroker" class="form-label">SLA Broker <span class="required">*</span></label>
+          <textarea id="modalSlaBroker" rows="3" class="form-control" formControlName="sla" placeholder="≤ 1 día hábil o —" [class.is-invalid]="slasForm.get('sla')?.touched && slasForm.get('sla')?.invalid"></textarea>
+          <small class="invalid-feedback d-block" *ngIf="slasForm.get('sla')?.touched && slasForm.get('sla')?.invalid">Ingrese plazo o —.</small>
+        </div>
+        <div class="col-md-6 acuerdo-field"><label for="modalSlaAseguradora" class="form-label">SLA Aseguradora <span class="required">*</span></label>
+          <textarea id="modalSlaAseguradora" rows="3" class="form-control" formControlName="sla_aseguradora" placeholder="≤ 3 días hábiles o —" [class.is-invalid]="slasForm.get('sla_aseguradora')?.touched && slasForm.get('sla_aseguradora')?.invalid"></textarea>
+          <small class="invalid-feedback d-block" *ngIf="slasForm.get('sla_aseguradora')?.touched && slasForm.get('sla_aseguradora')?.invalid">Ingrese plazo o —.</small>
+        </div>
+        <div class="col-12 acuerdo-field"><label for="modalSlaConsideraciones" class="form-label">Consideraciones <span class="required">*</span></label>
+          <textarea id="modalSlaConsideraciones" rows="3" class="form-control" formControlName="consideraciones" placeholder="Condiciones del compromiso" [class.is-invalid]="slasForm.get('consideraciones')?.touched && slasForm.get('consideraciones')?.invalid"></textarea>
+          <small class="invalid-feedback d-block" *ngIf="slasForm.get('consideraciones')?.touched && slasForm.get('consideraciones')?.invalid">Las consideraciones son obligatorias.</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="acuerdo-modal__body" *ngIf="modalActivo === 'beneficio'" [formGroup]="beneficiosForm">
+      <div class="row">
+        <div class="col-12 acuerdo-field"><label for="modalBeneficioNombre" class="form-label">Beneficio <span class="required">*</span></label><input id="modalBeneficioNombre" class="form-control" formControlName="nombreBeneficio" [class.is-invalid]="beneficiosForm.get('nombreBeneficio')?.touched && beneficiosForm.get('nombreBeneficio')?.invalid"><small class="invalid-feedback d-block" *ngIf="beneficiosForm.get('nombreBeneficio')?.touched && beneficiosForm.get('nombreBeneficio')?.invalid">El nombre es obligatorio.</small></div>
+        <div class="col-md-6 acuerdo-field"><label for="modalBeneficioCantidad" class="form-label">Cantidad <span class="required">*</span></label><input id="modalBeneficioCantidad" class="form-control" type="number" min="1" formControlName="cantidadBeneficio" [class.is-invalid]="beneficiosForm.get('cantidadBeneficio')?.touched && beneficiosForm.get('cantidadBeneficio')?.invalid"><small class="invalid-feedback d-block" *ngIf="beneficiosForm.get('cantidadBeneficio')?.touched && beneficiosForm.get('cantidadBeneficio')?.invalid">Ingrese una cantidad válida.</small></div>
+        <div class="col-md-6 acuerdo-field"><label for="modalBeneficioValor" class="form-label">Valor (USD) <span class="required">*</span></label><input id="modalBeneficioValor" class="form-control" type="number" min="0" step="0.01" formControlName="valorBeneficio" [class.is-invalid]="beneficiosForm.get('valorBeneficio')?.touched && beneficiosForm.get('valorBeneficio')?.invalid"><small class="invalid-feedback d-block" *ngIf="beneficiosForm.get('valorBeneficio')?.touched && beneficiosForm.get('valorBeneficio')?.invalid">Ingrese un valor válido.</small></div>
+        <div class="col-12 acuerdo-field"><label for="modalBeneficioDetalle" class="form-label">Detalle <span class="required">*</span></label><textarea id="modalBeneficioDetalle" class="form-control" rows="3" formControlName="detalleBeneficio" [class.is-invalid]="beneficiosForm.get('detalleBeneficio')?.touched && beneficiosForm.get('detalleBeneficio')?.invalid"></textarea><small class="invalid-feedback d-block" *ngIf="beneficiosForm.get('detalleBeneficio')?.touched && beneficiosForm.get('detalleBeneficio')?.invalid">El detalle es obligatorio.</small></div>
+        <div class="col-12 acuerdo-field"><label for="modalBeneficioFecha" class="form-label">Fecha máxima de cumplimiento <span class="required">*</span></label><input id="modalBeneficioFecha" class="form-control" type="date" formControlName="fechaCumplimiento" [class.is-invalid]="beneficiosForm.get('fechaCumplimiento')?.touched && beneficiosForm.get('fechaCumplimiento')?.invalid"><small class="invalid-feedback d-block" *ngIf="beneficiosForm.get('fechaCumplimiento')?.touched && beneficiosForm.get('fechaCumplimiento')?.invalid">Seleccione una fecha.</small></div>
+      </div>
+    </div>
+
+    <div class="acuerdo-modal__body" *ngIf="modalActivo === 'valor'" [formGroup]="agregadosForm">
+      <div class="row">
+        <div class="col-md-8 acuerdo-field"><label for="modalValorNombre" class="form-label">Valor agregado <span class="required">*</span></label><input id="modalValorNombre" class="form-control" formControlName="nombreValor" [class.is-invalid]="agregadosForm.get('nombreValor')?.touched && agregadosForm.get('nombreValor')?.invalid"><small class="invalid-feedback d-block" *ngIf="agregadosForm.get('nombreValor')?.touched && agregadosForm.get('nombreValor')?.invalid">El nombre es obligatorio.</small></div>
+        <div class="col-md-4 acuerdo-field"><label for="modalValorCantidad" class="form-label">Cantidad <span class="required">*</span></label><input id="modalValorCantidad" class="form-control" type="number" min="1" formControlName="cantidadValor" [class.is-invalid]="agregadosForm.get('cantidadValor')?.touched && agregadosForm.get('cantidadValor')?.invalid"><small class="invalid-feedback d-block" *ngIf="agregadosForm.get('cantidadValor')?.touched && agregadosForm.get('cantidadValor')?.invalid">Ingrese una cantidad válida.</small></div>
+        <div class="col-12 acuerdo-field"><label for="modalValorDetalle" class="form-label">Detalle <span class="required">*</span></label><textarea id="modalValorDetalle" class="form-control" rows="3" formControlName="detalleValor" [class.is-invalid]="agregadosForm.get('detalleValor')?.touched && agregadosForm.get('detalleValor')?.invalid"></textarea><small class="invalid-feedback d-block" *ngIf="agregadosForm.get('detalleValor')?.touched && agregadosForm.get('detalleValor')?.invalid">El detalle es obligatorio.</small></div>
+      </div>
+    </div>
+
+    <div class="acuerdo-modal__footer">
+      <button type="button" class="btn acuerdo-btn-cancel" (click)="cerrarModal()">Cancelar</button>
+      <ng-container *ngIf="modalActivo === 'contacto'"><button type="button" class="btn acuerdo-btn-primary" (click)="esEdicionContacto ? actualizarContacto() : agregarContacto()"><i class="fas fa-save"></i> {{ esEdicionContacto ? 'Guardar cambios' : 'Agregar contacto' }}</button></ng-container>
+      <ng-container *ngIf="modalActivo === 'sla'"><button type="button" class="btn acuerdo-btn-primary" (click)="esEdicionSLA ? actualizarSLA() : agregarSLA()"><i class="fas fa-save"></i> {{ esEdicionSLA ? 'Guardar cambios' : 'Agregar SLA' }}</button></ng-container>
+      <ng-container *ngIf="modalActivo === 'beneficio'"><button type="button" class="btn acuerdo-btn-primary" (click)="esEdicionBeneficio ? actualizarBeneficio() : agregarBeneficio()"><i class="fas fa-save"></i> {{ esEdicionBeneficio ? 'Guardar cambios' : 'Agregar beneficio' }}</button></ng-container>
+      <ng-container *ngIf="modalActivo === 'valor'"><button type="button" class="btn acuerdo-btn-primary" (click)="esEdicionValor ? actualizarValor() : agregarValor()"><i class="fas fa-save"></i> {{ esEdicionValor ? 'Guardar cambios' : 'Agregar valor' }}</button></ng-container>
+    </div>
+  </div>
 </div>

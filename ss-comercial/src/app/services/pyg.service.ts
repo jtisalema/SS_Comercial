@@ -102,6 +102,10 @@ export class PygService {
     const URL_API = environment.apiUrl + "obtenerRegistrosPYG";
     return this.httpClient.get(URL_API).pipe(catchError(this.handleError));
   }
+    public ramosMensualesPYG() {
+    const URL_API = environment.apiUrl + "ramosMensualesPYG";
+    return this.httpClient.get(URL_API).pipe(catchError(this.handleError));
+  }
   public obtenerRegistrosPYGDetalle() {
     const URL_API = environment.apiUrl + "obtenerRegistrosPYGDetalle";
     return this.httpClient.get(URL_API).pipe(catchError(this.handleError));

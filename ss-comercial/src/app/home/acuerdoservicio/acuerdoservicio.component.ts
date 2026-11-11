@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Component, HostListener } from '@angular/core';
+import { AbstractControl, FormBuilder, FormGroup, ValidationErrors, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { debounceTime, Subject, switchMap, tap } from 'rxjs';
 import { AppComponent } from 'src/app/app.component';
@@ -32,6 +32,9 @@ export class AcuerdoservicioComponent {
   lstValoresAgregados: any[] = [];
   lstAseguradoras:any[]=[];
   lstSLAS: any[] = [];
+  lstSLASOperaciones: any[] = [];
+  tipoSLAActivo: 'siniestros' | 'operaciones' = 'siniestros';
+  modalActivo: 'contacto' | 'sla' | 'beneficio' | 'valor' | null = null;
   ingresoForm!: FormGroup;
   contactoForm!: FormGroup;
   slasForm!: FormGroup;
@@ -76,7 +79,8 @@ export class AcuerdoservicioComponent {
     this.ingresoForm = this.fb.group({
       idIngreso: [''],
       idEstado: [''],
-      idResponsable: [2],
+      idResponsable: [2, Validators.required],
+      ramo: [1, Validators.required],
       cliente: [null, Validators.required],
       ruc: ['', [
         Validators.required,
@@ -85,6 +89,7 @@ export class AcuerdoservicioComponent {
       direccion: ['', Validators.required],
       ciudad: ['', Validators.required],
       telefono: ['', Validators.required],
+      correoCliente: ['', Validators.email],
       contacto: ['', Validators.required],
       aseguradora: [null],
       inicioVigencia: [new Date().toISOString().substring(0, 10), Validators.required],
@@ -94,12 +99,14 @@ export class AcuerdoservicioComponent {
           .substring(0, 10),
         Validators.required
       ]
-    });
+    }, { validators: this.validarRangoFechas });
     this.slasForm = this.fb.group({
       id: [''],
       actividad: ['', Validators.required],
-      sla: ['', Validators.required],
-      consideraciones: ['', [Validators.required, Validators.email]]
+      // El guion largo es un valor válido: en varios procesos no aplica un SLA.
+      sla: ['—', Validators.required],
+      sla_aseguradora: ['—', Validators.required],
+      consideraciones: ['', Validators.required]
     });
 
     this.contactoForm = this.fb.group({
@@ -111,23 +118,24 @@ export class AcuerdoservicioComponent {
     });
     this.agregadosForm = this.fb.group({
       nombreValor: ['', Validators.required],
-      cantidadValor: ['', Validators.required],
-      detalleValor: ['', Validators.required],
-      fechaCumplimiento: ['', Validators.required]
+      cantidadValor: ['', [Validators.required, Validators.min(1)]],
+      detalleValor: ['', Validators.required]
     });
     this.beneficiosForm = this.fb.group({
       nombreBeneficio: ['', Validators.required],
-      cantidadBeneficio: ['', Validators.required],
+      cantidadBeneficio: ['', [Validators.required, Validators.min(1)]],
       detalleBeneficio: ['', Validators.required],
-      valorBeneficio: ['', Validators.required],
+      valorBeneficio: ['', [Validators.required, Validators.min(0)]],
       fechaCumplimiento: ['', Validators.required]
     });
-    this.acuerdoservicioService.obtenerContactosIniciales().subscribe((res: any) => {
-      this.lstContactos = res.data;
-      this.lstBeneficios = res.beneficios;
-      this.lstSLAS = res.slas;
-      this.lstResponsables = res.responsables;
-
+    const ramo = this.ingresoForm.get('ramo')?.value;
+    this.acuerdoservicioService.obtenerContactosInicialesRamo(ramo).subscribe((res: any) => {
+      if (!this.idIngreso) {
+        this.lstContactos = Array.isArray(res?.data) ? [...res.data] : [];
+        this.lstBeneficios = Array.isArray(res?.beneficios) ? [...res.beneficios] : [];
+        this.cargarSLASPorRamo();
+      }
+      this.lstResponsables = Array.isArray(res?.responsables) ? res.responsables : [];
     }, (error: any) => {
       this.loadingService.hideLoading();
       this.toastrService.error('ERROR', 'No se pudo obtener los contactos!');
@@ -152,148 +160,212 @@ export class AcuerdoservicioComponent {
       this.toastrService.error('ERROR', 'No se pudo obtener la información de Aseguradoras!');
     });
   }
-  agregarContacto() {
-    if (this.contactoForm.valid) {
-      let nombreCargo = this.lstCargos.find((x: any) => x.id == this.contactoForm.value.idCargo)?.nombre;
-      let contacto = {
-        idCargo: this.contactoForm.value.idCargo,
-        nombreCargo: nombreCargo,
-        nombre: this.contactoForm.value.nombre,
-        correo: this.contactoForm.value.correo,
-        celular: this.contactoForm.value.celular
-      }
-      this.lstContactos.push(contacto);
-      this.contactoForm.patchValue({
-        idCargo: '',
-        nombreCargo: '',
-        nombre: null,
-        correo: null,
-        celular: null
-      });
-    } else {
+  @HostListener('document:keydown.escape')
+  onEscape(): void { if (this.modalActivo) this.cerrarModal(); }
+
+  cerrarModal(): void {
+    this.modalActivo = null;
+    this.esEdicionContacto = false;
+    this.esEdicionSLA = false;
+    this.esEdicionBeneficio = false;
+    this.esEdicionValor = false;
+    this.indexContacto = null;
+    this.indexSLA = null;
+    this.indexBeneficio = null;
+    this.indexAgregado = null;
+    this.contactoForm.reset({idCargo: '', nombreCargo: '', nombre: '', correo: '', celular: ''});
+    this.limpiarFormularioSLA();
+    this.beneficiosForm.reset();
+    this.agregadosForm.reset();
+  }
+
+  abrirModalContacto(): void {
+    this.cerrarModal();
+    this.modalActivo = 'contacto';
+  }
+
+  agregarContacto(): void {
+    if (this.contactoForm.invalid) {
       this.contactoForm.markAllAsTouched();
-
-      Object.keys(this.contactoForm.controls).forEach(key => {
-        const control = this.contactoForm.get(key);
-
-        if (control?.invalid) {
-          console.log(`Campo inválido: ${key}`, control.errors);
-        }
-      });
-      this.appComponent.validateAllFormFields(this.contactoForm);
-      this.toastrService.error(
-        'Error al agregar el contacto',
-        'No se llenaron todos los campos necesarios.'
-      );
+      this.toastrService.error('ERROR', 'Complete los datos obligatorios del contacto.');
+      return;
     }
+    const registro = this.contactoForm.value;
+    this.lstContactos.push({
+      ...registro,
+      nombreCargo: this.lstCargos.find((c: any) => String(c.id) === String(registro.idCargo))?.nombre ?? ''
+    });
+    this.cerrarModal();
+    this.toastrService.success('Correcto', 'Contacto agregado correctamente.');
   }
-  agregarSLA() {
-    if (this.slasForm.valid) {
-      this.lstContactos.push(this.slasForm.value);
-      this.slasForm.patchValue({
-        id: '',
-        actividad: null,
-        sla: null,
-        consideraciones: null
-      });
-    } else {
+
+  // Ambos arreglos contienen actividades completas, incluyendo sla_aseguradora
+  // como propiedad de cada actividad, no como lista separada.
+  // El backend puede devolver todos los SLA guardados en una sola lista.
+  // El campo "tipo" identifica a qué tabla pertenece cada registro.
+  private esSLAOperaciones(tipo: any): boolean {
+    return String(tipo ?? '').trim().toLowerCase() === 'operaciones';
+  }
+
+  private normalizarSLAS(registros: any[], tipo?: 'Siniestros' | 'Operaciones'): any[] {
+    return registros.map((item: any) => {
+      const broker = String(item?.sla ?? '').trim();
+      const aseguradora = String(item?.sla_aseguradora ?? '').trim();
+      return {
+        ...item,
+        // Al guardar nuevas actividades, conserva el tipo que permite recuperarlas.
+        tipo: tipo ?? (this.esSLAOperaciones(item?.tipo) ? 'Operaciones' : 'Siniestros'),
+        actividad: item?.actividad ?? '',
+        sla: broker || '—',
+        sla_aseguradora: aseguradora || '—',
+        consideraciones: item?.consideraciones ?? ''
+      };
+    });
+  }
+
+  private cargarSLASPorRamo(preservarSiniestros = false, preservarOperaciones = false): void {
+    const ramo = this.ingresoForm.get('ramo')?.value;
+    if (!ramo) return;
+        this.acuerdoservicioService.obtenerContactosInicialesRamo(ramo).subscribe((res: any) => {
+      if (!this.idIngreso) {
+        this.lstContactos = Array.isArray(res?.data) ? [...res.data] : [];
+        this.lstBeneficios = Array.isArray(res?.beneficios) ? [...res.beneficios] : [];
+      }
+      this.lstResponsables = Array.isArray(res?.responsables) ? res.responsables : [];
+    }, (error: any) => {
+      this.loadingService.hideLoading();
+      this.toastrService.error('ERROR', 'No se pudo obtener los contactos!');
+    });
+
+    this.acuerdoservicioService.getSLASRamo(ramo).subscribe({
+      next: (res: any) => {
+        // No aplicar una respuesta antigua si el usuario ya cambió de ramo.
+        if (String(this.ingresoForm.get('ramo')?.value) !== String(ramo)) return;
+        if (!preservarSiniestros) {
+          this.lstSLAS = this.normalizarSLAS(Array.isArray(res?.data1) ? res.data1 : [], 'Siniestros');
+        }
+        if (!preservarOperaciones) {
+          this.lstSLASOperaciones = this.normalizarSLAS(Array.isArray(res?.data2) ? res.data2 : [], 'Operaciones');
+        }
+      },
+      error: () => this.toastrService.error('ERROR', 'No se pudieron cargar los SLA del ramo.')
+    });
+  }
+
+  private limpiarFormularioSLA(): void {
+    this.slasForm.reset({
+      id: '', actividad: '', sla: '—', sla_aseguradora: '—', consideraciones: ''
+    });
+    this.esEdicionSLA = false;
+    this.indexSLA = null;
+  }
+
+  private prepararSLAFormulario(): any {
+    const sla = this.slasForm.value;
+    return {
+      ...sla,
+      tipo: this.tipoSLAActivo === 'operaciones' ? 'Operaciones' : 'Siniestros',
+      actividad: String(sla.actividad ?? '').trim(),
+      sla: String(sla.sla ?? '').trim() || '—',
+      sla_aseguradora: String(sla.sla_aseguradora ?? '').trim() || '—',
+      consideraciones: String(sla.consideraciones ?? '').trim()
+    };
+  }
+
+  private listaSLAActiva(): any[] {
+    return this.tipoSLAActivo === 'operaciones' ? this.lstSLASOperaciones : this.lstSLAS;
+  }
+
+  abrirModalSLA(tipo: 'siniestros' | 'operaciones'): void {
+    this.cerrarModal();
+    this.tipoSLAActivo = tipo;
+    this.modalActivo = 'sla';
+  }
+
+  agregarSLA(): void {
+    const nuevo = this.prepararSLAFormulario();
+    if (this.slasForm.invalid || !nuevo.actividad || !nuevo.consideraciones) {
       this.slasForm.markAllAsTouched();
-      Object.keys(this.slasForm.controls).forEach(key => {
-        const control = this.slasForm.get(key);
-
-        if (control?.invalid) {
-          console.log(`Campo inválido: ${key}`, control.errors);
-        }
-      });
-      this.appComponent.validateAllFormFields(this.slasForm);
-      this.toastrService.error(
-        'Error al agregar el SLA',
-        'No se llenaron todos los campos necesarios.'
-      );
+      this.toastrService.error('ERROR', 'Complete actividad, SLA y consideraciones.');
+      return;
     }
+    this.listaSLAActiva().push(nuevo);
+    this.cerrarModal();
+    this.toastrService.success('Correcto', 'SLA agregado correctamente.');
   }
-  indexSLA: any;
-  editarSLA(index: number) {
+
+  indexSLA: number | null = null;
+
+  editarSLA(index: number, tipo: 'siniestros' | 'operaciones' = 'siniestros'): void {
+    this.abrirModalSLA(tipo);
+    const item = this.listaSLAActiva()[index];
+    if (!item) { this.cerrarModal(); return; }
     this.indexSLA = index;
     this.esEdicionSLA = true;
-    let editSLA = this.lstSLAS[index];
-    let sla ={
-      id: editSLA.id,
-      actividad: editSLA.actividad,
-      sla: editSLA.sla,
-      consideraciones: editSLA.consideraciones
-    }
-    this.slasForm.setValue(sla);
-  }
-  eliminarSLA(index: number) {
-    this.lstSLAS.splice(index, 1);
-  }
-  actualizarSLA() {
-    this.esEdicionSLA = false;
-    this.lstSLAS[this.indexSLA] = this.slasForm.value;
     this.slasForm.patchValue({
-      id: '',
-      actividad: null,
-      sla: null,
-      consideraciones: null
-    });
-    this.toastrService.success(
-      'Correcto!',
-      'SLA actualizado correctamente.'
-    );
-  }
-  cancelarSLA() {
-    this.esEdicionSLA = false;
-    this.slasForm.patchValue({
-      id: '',
-      actividad: null,
-      sla: null,
-      consideraciones: null
+      id: item.id ?? '', actividad: item.actividad ?? '',
+      sla: item.sla ?? '—', sla_aseguradora: item.sla_aseguradora ?? '—',
+      consideraciones: item.consideraciones ?? ''
     });
   }
 
-  indexContacto: any;
-  editarContacto(index: number) {
+  eliminarSLA(index: number, tipo: 'siniestros' | 'operaciones' = 'siniestros'): void {
+    const lista = tipo === 'operaciones' ? this.lstSLASOperaciones : this.lstSLAS;
+    lista.splice(index, 1);
+    if (this.modalActivo === 'sla' && this.tipoSLAActivo === tipo) this.cerrarModal();
+  }
+
+  actualizarSLA(): void {
+    const item = this.prepararSLAFormulario();
+    const lista = this.listaSLAActiva();
+    if (this.indexSLA === null || !lista[this.indexSLA] || this.slasForm.invalid || !item.actividad || !item.consideraciones) {
+      this.slasForm.markAllAsTouched();
+      this.toastrService.error('ERROR', 'Revise los datos antes de actualizar.');
+      return;
+    }
+    lista[this.indexSLA] = { ...lista[this.indexSLA], ...item };
+    this.cerrarModal();
+    this.toastrService.success('Correcto', 'SLA actualizado correctamente.');
+  }
+
+  cancelarSLA(): void { this.cerrarModal(); }
+
+  indexContacto: number | null = null;
+
+  editarContacto(index: number): void {
+    const contacto = this.lstContactos[index];
+    if (!contacto) return;
+    this.abrirModalContacto();
     this.indexContacto = index;
     this.esEdicionContacto = true;
-    let editcontacto = this.lstContactos[index];
-    let contacto = {
-        idCargo: editcontacto.idCargo,
-        nombreCargo: editcontacto.nombreCargo,
-        nombre: editcontacto.nombre,
-        correo: editcontacto.correo,
-        celular: editcontacto.celular
-    }
-    this.contactoForm.setValue(contacto);
+    this.contactoForm.patchValue({
+      idCargo: contacto.idCargo ?? contacto.cargo ?? '',
+      nombreCargo: contacto.nombreCargo ?? '', nombre: contacto.nombre ?? '',
+      correo: contacto.correo ?? '', celular: contacto.celular ?? ''
+    });
   }
-  eliminarContacto(index: number) {
+
+  eliminarContacto(index: number): void {
     this.lstContactos.splice(index, 1);
+    if (this.modalActivo === 'contacto') this.cerrarModal();
   }
-  actualizarContacto() {
-    this.esEdicionContacto = false;
-    this.lstContactos[this.indexContacto] = this.contactoForm.value;
-    this.contactoForm.patchValue({
-      idCargo: '',
-      nombreCargo: '',
-      nombre: null,
-      correo: null,
-      celular: null
-    });
-    this.toastrService.success(
-      'Correcto!',
-      'Contacto actualizado correctamente.'
-    );
+
+  actualizarContacto(): void {
+    if (this.indexContacto === null || !this.lstContactos[this.indexContacto] || this.contactoForm.invalid) {
+      this.contactoForm.markAllAsTouched();
+      this.toastrService.error('ERROR', 'Revise los datos del contacto.');
+      return;
+    }
+    const registro = this.contactoForm.value;
+    this.lstContactos[this.indexContacto] = {
+      ...this.lstContactos[this.indexContacto], ...registro,
+      nombreCargo: this.lstCargos.find((c: any) => String(c.id) === String(registro.idCargo))?.nombre ?? ''
+    };
+    this.cerrarModal();
+    this.toastrService.success('Correcto', 'Contacto actualizado correctamente.');
   }
-  cancelarContacto() {
-    this.esEdicionContacto = false;
-    this.contactoForm.patchValue({
-      idCargo: '',
-      nombreCargo: '',
-      nombre: null,
-      correo: null,
-      celular: null
-    });
-  }
+
+  cancelarContacto(): void { this.cerrarModal(); }
 
   acuerdoGenerado: boolean = false;
 
@@ -320,8 +392,12 @@ export class AcuerdoservicioComponent {
         );
         return;
       }
+      const responsable = this.lstResponsables.find((item: any) => item.id == this.ingresoForm.value.idResponsable);
+      if (!responsable) {
+        this.toastrService.error('ERROR', 'Seleccione un responsable válido.');
+        return;
+      }
       this.loadingService.showLoading();
-      let responsable = this.lstResponsables.find((item: any) => item.id == this.ingresoForm.value.idResponsable);
       let formAcuerdos = {
         responsable: responsable,
         idResponsable: responsable.id,
@@ -331,14 +407,17 @@ export class AcuerdoservicioComponent {
         direccion: this.ingresoForm.value.direccion,
         ciudad: this.ingresoForm.value.ciudad,
         telefono: this.ingresoForm.value.telefono,
+        correoCliente: this.ingresoForm.value.correoCliente,
         contacto: this.ingresoForm.value.contacto,
         lstContactos: this.lstContactos,
         lstBeneficios: this.lstBeneficios,
-        lstSLAS: this.lstSLAS,
-        lstValoresAgregados: this.lstValoresAgregados,
+        lstSLAS: this.normalizarSLAS(this.lstSLAS, 'Siniestros'),
+        lstSLASOperaciones: this.normalizarSLAS(this.lstSLASOperaciones, 'Operaciones'),
+        lstValoresAgregados: this.lstValoresAgregados.map((valor: any) => this.sinFechaValor(valor)),
+        ramo: this.ingresoForm.value.ramo,
         inicioVigencia: this.ingresoForm.value.inicioVigencia,
         finVigencia: this.ingresoForm.value.finVigencia,
-        idUsuario: this.userCurrent.id,
+        idUsuario: this.userCurrent?.id,
         aseguradora:this.ingresoForm.value.aseguradora
       }
       let formD = new FormData();
@@ -379,57 +458,51 @@ export class AcuerdoservicioComponent {
       );
     }
   }
-  agregarBeneficio() {
-    if (this.beneficiosForm.valid) {
-      let beneficio = {
-        nombreBeneficio: this.beneficiosForm.value.nombreBeneficio,
-        detalleBeneficio: this.beneficiosForm.value.detalleBeneficio,
-        valorBeneficio: this.beneficiosForm.value.valorBeneficio,
-        cantidadBeneficio: this.beneficiosForm.value.cantidadBeneficio,
-        fechaCumplimiento: this.beneficiosForm.value.cantidadBeneficio,
-      }
-      this.lstBeneficios.push(beneficio);
-      this.beneficiosForm.reset();
-    } else {
+  abrirModalBeneficio(): void {
+    this.cerrarModal();
+    this.modalActivo = 'beneficio';
+  }
+
+  agregarBeneficio(): void {
+    if (this.beneficiosForm.invalid) {
       this.beneficiosForm.markAllAsTouched();
-
-      Object.keys(this.beneficiosForm.controls).forEach(key => {
-        const control = this.beneficiosForm.get(key);
-
-        if (control?.invalid) {
-          console.log(`Campo inválido: ${key}`, control.errors);
-        }
-      });
-      this.appComponent.validateAllFormFields(this.beneficiosForm);
-      this.toastrService.error(
-        'Error al agregar el beneficio',
-        'No se llenaron todos los campos necesarios.'
-      );
+      this.toastrService.error('ERROR', 'Complete los datos del beneficio.');
+      return;
     }
+    this.lstBeneficios.push({ ...this.beneficiosForm.value });
+    this.cerrarModal();
+    this.toastrService.success('Correcto', 'Beneficio agregado correctamente.');
   }
-  actualizarBeneficio() {
-    this.esEdicionBeneficio = false;
-    this.lstBeneficios[this.indexBeneficio] = this.beneficiosForm.value;
-    this.beneficiosForm.reset();
-    this.toastrService.success(
-      'Correcto!',
-      'Beneficio actualizado correctamente.'
-    );
-  }
-  cancelarBeneficio() {
-    this.esEdicionBeneficio = false;
-    this.beneficiosForm.reset();
-  }
-  indexBeneficio: any;
-  editarBeneficio(index: any) {
+
+  indexBeneficio: number | null = null;
+
+  editarBeneficio(index: number): void {
+    const item = this.lstBeneficios[index];
+    if (!item) return;
+    this.abrirModalBeneficio();
     this.indexBeneficio = index;
     this.esEdicionBeneficio = true;
-    let editBeneficio = this.lstBeneficios[index];
-    this.beneficiosForm.setValue(editBeneficio);
+    this.beneficiosForm.patchValue(item);
   }
-  eliminarBeneficio(index: any) {
+
+  actualizarBeneficio(): void {
+    if (this.indexBeneficio === null || !this.lstBeneficios[this.indexBeneficio] || this.beneficiosForm.invalid) {
+      this.beneficiosForm.markAllAsTouched();
+      this.toastrService.error('ERROR', 'Revise los datos del beneficio.');
+      return;
+    }
+    this.lstBeneficios[this.indexBeneficio] = { ...this.lstBeneficios[this.indexBeneficio], ...this.beneficiosForm.value };
+    this.cerrarModal();
+    this.toastrService.success('Correcto', 'Beneficio actualizado correctamente.');
+  }
+
+  cancelarBeneficio(): void { this.cerrarModal(); }
+
+  eliminarBeneficio(index: number): void {
     this.lstBeneficios.splice(index, 1);
+    if (this.modalActivo === 'beneficio') this.cerrarModal();
   }
+
   clienteSeleccionado: any;
   onClienteChange(cliente: any) {
     this.clienteSeleccionado = cliente;
@@ -437,7 +510,12 @@ export class AcuerdoservicioComponent {
       ruc: this.clienteSeleccionado?.identificacion ?? '',
       direccion: this.clienteSeleccionado?.direccion ?? '',
       ciudad: this.clienteSeleccionado?.ciudad ?? '',
-      telefono: this.formatearTelefono(this.clienteSeleccionado?.telefonoMovil)
+      telefono: this.formatearTelefono(this.clienteSeleccionado?.telefonoMovil),
+      correoCliente: this.clienteSeleccionado?.correoElectronico
+        ?? this.clienteSeleccionado?.correo
+        ?? this.clienteSeleccionado?.email
+        ?? this.clienteSeleccionado?.emailCliente
+        ?? ''
     });
   }
   formatearTelefono(telefono: string | null | undefined): string {
@@ -477,7 +555,7 @@ export class AcuerdoservicioComponent {
         text-align: center;
         background: #f8f9fa;
     ">
-        <i class="fas fa-cloud-upload-alt" style="font-size:28px; color:#0d6efd; margin-bottom:8px;"></i>
+        <i class="fas fa-cloud-upload-alt" style="font-size:28px; color:#344961; margin-bottom:8px;"></i>
         <input type="file" id="fileInput"
             style="font-size:12px;"
             accept=".pdf,.doc,.docx">
@@ -487,7 +565,7 @@ export class AcuerdoservicioComponent {
       showCancelButton: true,
       confirmButtonText: 'Aceptar',
       cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#0d6efd',
+      confirmButtonColor: '#2159c8',
       cancelButtonColor: '#6c757d',
       background: '#ffffff',
       backdrop: 'rgba(0,0,0,0.4)',
@@ -565,89 +643,148 @@ export class AcuerdoservicioComponent {
     Swal.hideLoading();
     Swal.close();
   }
-  async cargarDatosAcuerdo() {
+  async cargarDatosAcuerdo(): Promise<void> {
     this.loadingService.showLoading();
-    let res = await this.acuerdoservicioService.obtenerDatosAcuerdobyId(this.idIngreso);
-    if(res.data){
-      let datos = res.data;
-    this.ingresoForm.patchValue({
-      idIngreso: datos.id,
-      idEstado: datos.idEstado,
-      idResponsable: datos.idResponsable,
-      cliente: datos.cliente,
-      ruc: datos.ruc,
-      direccion: datos.direccion,
-      ciudad: datos.ciudad,
-      telefono: datos.telefono,
-      contacto: datos.contactoPrincipal,
-      inicioVigencia: datos.inicioVigencia,
-      finVigencia: datos.finVigencia,
-      aseguradora: datos.idAseguradora
-    });
-    this.lstContactos = datos.contactos;
-    this.lstSLAS = datos.slas;
-
-    this.lstContactos.forEach((element:any) => {
-      let nombreCargo = this.lstCargos.find((x: any) => x.id == element.cargo)?.nombre;
-      element.nombreCargo = nombreCargo;
-      element.idCargo = element.cargo;
-    });
-    this.lstBeneficios = datos.beneficios;
-    this.lstValoresAgregados = datos.valoresAgregados;
-    }else{
-      this.toastrService.error('ERROR', 'No se pudo obtener la información del acuerdo!');
-    }
-
-  }
-  //valores agregados
-    agregarValor() {
-    if (this.agregadosForm.valid) {
-      let valorAgregado = {
-        nombreValor: this.agregadosForm.value.nombreValor,
-        detalleValor: this.agregadosForm.value.detalleValor,
-        cantidadValor: this.agregadosForm.value.cantidadValor,
-        fechaCumplimiento: this.agregadosForm.value.fechaCumplimiento,
+    try {
+      const res: any = await this.acuerdoservicioService.obtenerDatosAcuerdobyId(this.idIngreso);
+      if (!res?.data) {
+        this.toastrService.error('ERROR', 'No se pudo obtener la información del acuerdo.');
+        return;
       }
-      this.lstValoresAgregados.push(valorAgregado);
-      this.agregadosForm.reset();
-    } else {
-      this.agregadosForm.markAllAsTouched();
-
-      Object.keys(this.agregadosForm.controls).forEach(key => {
-        const control = this.agregadosForm.get(key);
-
-        if (control?.invalid) {
-          console.log(`Campo inválido: ${key}`, control.errors);
-        }
+      const datos = res.data;
+      this.ingresoForm.patchValue({
+        idIngreso: datos.id,
+        idEstado: datos.idEstado,
+        idResponsable: datos.idResponsable,
+        ramo: datos.ramo ?? datos.idRamo ?? this.ingresoForm.value.ramo,
+        cliente: datos.cliente,
+        ruc: datos.ruc,
+        direccion: datos.direccion,
+        ciudad: datos.ciudad,
+        telefono: datos.telefono,
+        correoCliente: datos.correoCliente ?? datos.emailCliente ?? datos.correo ?? '',
+        contacto: datos.contactoPrincipal,
+        inicioVigencia: datos.inicioVigencia,
+        finVigencia: datos.finVigencia,
+        aseguradora: datos.idAseguradora
       });
-      this.appComponent.validateAllFormFields(this.agregadosForm);
-      this.toastrService.error(
-        'Error al agregar el valor agregado',
-        'No se llenaron todos los campos necesarios.'
-      );
+      this.lstContactos = Array.isArray(datos.contactos) ? datos.contactos : [];
+      this.lstContactos.forEach((element: any) => {
+        element.idCargo = element.idCargo ?? element.cargo;
+        element.nombreCargo = element.nombreCargo ??
+          this.lstCargos.find((x: any) => x.id == element.idCargo)?.nombre;
+      });
+      this.lstBeneficios = Array.isArray(datos.beneficios) ? datos.beneficios : [];
+      this.lstValoresAgregados = Array.isArray(datos.valoresAgregados)
+        ? datos.valoresAgregados.map((valor: any) => this.sinFechaValor(valor)) : [];
+      // En edición/completar, el backend puede devolver una sola lista de SLA
+      // con su campo "tipo" ("Operaciones" o "Siniestros"). Separarla antes
+      // de mostrar las dos tablas impide que Operaciones aparezca en Siniestros.
+      const slasGuardados = datos.lstSLAS ?? datos.slas ?? datos.SLAS;
+      const operacionesGuardadas = datos.lstSLASOperaciones ?? datos.slasOperaciones ?? datos.slas_operaciones;
+      const tieneListaGuardada = Array.isArray(slasGuardados);
+      const tieneOperacionesSeparadas = Array.isArray(operacionesGuardadas);
+
+      if (tieneListaGuardada) {
+        const todosLosSLAS = this.normalizarSLAS(slasGuardados);
+        this.lstSLAS = todosLosSLAS.filter((sla: any) => !this.esSLAOperaciones(sla.tipo));
+        this.lstSLASOperaciones = todosLosSLAS.filter((sla: any) => this.esSLAOperaciones(sla.tipo));
+      }
+
+      // Compatibilidad con respuestas que envían Operaciones por separado.
+      // En ese caso, la lista explícita prevalece y no se duplica.
+      if (tieneOperacionesSeparadas) {
+        this.lstSLASOperaciones = this.normalizarSLAS(operacionesGuardadas, 'Operaciones');
+      }
+
+      // Solo consultar SLA predeterminados cuando NO se recibió una lista
+      // de SLA guardados. Una lista vacía también es un dato válido.
+      if (!tieneListaGuardada) {
+        this.cargarSLASPorRamo(false, tieneOperacionesSeparadas);
+      }
+    } catch (error) {
+      this.toastrService.error('ERROR', 'No se pudo cargar el acuerdo de servicio.');
+    } finally {
+      this.loadingService.hideLoading();
     }
   }
-  actualizarValor() {
-    this.esEdicionValor = false;
-    this.lstValoresAgregados[this.indexAgregado] = this.agregadosForm.value;
-    this.agregadosForm.reset();
-    this.toastrService.success(
-      'Correcto!',
-      'Valor Agregado actualizado correctamente.'
-    );
+
+  abrirModalValor(): void {
+    this.cerrarModal();
+    this.modalActivo = 'valor';
   }
-  cancelarValor() {
-    this.esEdicionValor = false;
-    this.agregadosForm.reset();
+
+  agregarValor(): void {
+    if (this.agregadosForm.invalid) {
+      this.agregadosForm.markAllAsTouched();
+      this.toastrService.error('ERROR', 'Complete los datos del valor agregado.');
+      return;
+    }
+    this.lstValoresAgregados.push({ ...this.agregadosForm.value });
+    this.cerrarModal();
+    this.toastrService.success('Correcto', 'Valor agregado registrado.');
   }
-  indexAgregado: any;
-  editarValor(index: any) {
+
+  indexAgregado: number | null = null;
+
+  editarValor(index: number): void {
+    const item = this.lstValoresAgregados[index];
+    if (!item) return;
+    this.abrirModalValor();
     this.indexAgregado = index;
     this.esEdicionValor = true;
-    let editValor = this.lstValoresAgregados[index];
-    this.agregadosForm.setValue(editValor);
+    this.agregadosForm.patchValue(item);
   }
-  eliminarValor(index: any) {
+
+  actualizarValor(): void {
+    if (this.indexAgregado === null || !this.lstValoresAgregados[this.indexAgregado] || this.agregadosForm.invalid) {
+      this.agregadosForm.markAllAsTouched();
+      this.toastrService.error('ERROR', 'Revise los datos del valor agregado.');
+      return;
+    }
+    this.lstValoresAgregados[this.indexAgregado] = this.sinFechaValor({
+      ...this.lstValoresAgregados[this.indexAgregado], ...this.agregadosForm.value
+    });
+    this.cerrarModal();
+    this.toastrService.success('Correcto', 'Valor agregado actualizado.');
+  }
+
+  cancelarValor(): void { this.cerrarModal(); }
+
+  eliminarValor(index: number): void {
     this.lstValoresAgregados.splice(index, 1);
+    if (this.modalActivo === 'valor') this.cerrarModal();
+  }
+
+  // Para valores agregados, la fecha ya no forma parte del registro.
+  private sinFechaValor(valor: any): any {
+    const { fechaCumplimiento, ...datosValor } = valor ?? {};
+    return datosValor;
+  }
+
+  onRamoChange(): void {
+    this.cerrarModal();
+    this.lstSLAS = [];
+    this.lstSLASOperaciones = [];
+    this.cargarSLASPorRamo();
+  }
+  onResponsableChange(){
+
+    if(this.ingresoForm.value.idResponsable==3){
+      this.ingresoForm.patchValue({
+        ramo:2
+      });
+    }
+        if(this.ingresoForm.value.idResponsable==3){
+      this.ingresoForm.patchValue({
+        ramo:3
+      });
+    }
+    this.onRamoChange();
+  }
+  validarRangoFechas(control: AbstractControl): ValidationErrors | null {
+    const inicio = control.get('inicioVigencia')?.value;
+    const fin = control.get('finVigencia')?.value;
+    return inicio && fin && fin <= inicio ? { fechaInvalida: true } : null;
   }
 }

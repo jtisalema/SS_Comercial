@@ -1,124 +1,241 @@
-.is-invalid {
-    border: 1px solid red;
+/* Seguros Suárez | Acuerdos de servicio | Azul vivo + turquesa, sin ruido visual */
+:host {
+  --ss-primary: #1857c6;
+  --ss-primary-dark: #103c88;
+  --ss-primary-soft: #eaf2ff;
+  --ss-teal: #059b95;
+  --ss-teal-dark: #087d7c;
+  --ss-teal-soft: #e5f8f5;
+  --ss-ink: #192e4a;
+  --ss-muted: #667b91;
+  --ss-bg: #f1f6fc;
+  --ss-white: #fff;
+  --ss-border: #dce7f3;
+  display: block;
+  color: var(--ss-ink);
 }
+.acuerdo-page { background: var(--ss-bg); min-height: 100vh; }
+.acuerdo-content { padding: 19px 0 40px; }
+.acuerdo-container { max-width: 1620px; padding: 0 24px; }
+.acuerdo-heading {
+  display: flex; align-items: center; gap: 13px;
+  margin-bottom: 18px; padding: 17px 21px;
+  background: linear-gradient(110deg,#123e88 0%,#1b61bf 100%);
+  color: white; border-radius: 12px; box-shadow: 0 5px 16px rgba(32,84,160,.15);
+}
+.acuerdo-heading__mark {
+  flex: 0 0 42px; display: flex; align-items: center; justify-content: center;
+  width: 42px; height: 42px; font-size: 18px;
+  background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.22);
+  border-radius: 10px;
+}
+.acuerdo-heading h1 { color: #fff; font-weight: 750; margin: 0; font-size: 21px; letter-spacing: -.02em; }
+.acuerdo-heading p { color: #e0efff; font-size: 12px; line-height: 1.5; margin: 3px 0 0; }
+.acuerdo-panel {
+  margin-bottom: 15px; background: #fff; overflow: hidden;
+  border: 1px solid var(--ss-border); border-radius: 11px;
+  box-shadow: 0 3px 13px rgba(24,67,113,.045);
+}
+.acuerdo-panel--client { border-top: 3px solid var(--ss-primary); }
+.acuerdo-panel--teal { border-top: 2px solid #20aaac; }
+.acuerdo-panel--blue { border-top: 2px solid #317bd4; }
+.acuerdo-panel__heading {
+  display: flex; justify-content: space-between; align-items: center;
+  min-height: 62px; padding: 13px 20px; border-bottom: 1px solid #e7eef7;
+}
+.acuerdo-panel__heading--toggle { padding: 0; border-bottom: 0; }
+.acuerdo-panel__identity { display: flex; align-items: center; gap: 11px; text-align: left; min-width: 0; }
+.acuerdo-panel__icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  flex: 0 0 37px; width: 37px; height: 37px;
+  background: var(--ss-primary-soft); color: var(--ss-primary);
+  border-radius: 10px; font-size: 15px;
+}
+.acuerdo-panel--teal .acuerdo-panel__icon { background: var(--ss-teal-soft); color: var(--ss-teal-dark); }
+.acuerdo-panel h2, .acuerdo-title { font-size: 15px; color: var(--ss-ink); font-weight: 750; line-height: 1.3; margin: 0; }
+.acuerdo-panel__body { padding: 19px 20px 20px; }
+.acuerdo-toggle {
+  width: 100%; border: none; display: flex; align-items: center; justify-content: space-between;
+  background: #fff; color: var(--ss-ink); cursor: pointer; padding: 13px 20px;
+  transition: background-color .15s;
+}
+.acuerdo-toggle:hover { background: #f4f9ff; }
+.acuerdo-toggle:focus-visible { outline: 2px solid var(--ss-primary); outline-offset: -2px; }
+.acuerdo-chevron { color: #3677c2; font-size: 13px; transition: transform .16s; }
+.acuerdo-toggle[aria-expanded="true"] .acuerdo-chevron { transform: rotate(180deg); }
+.acuerdo-panel__heading--toggle + .collapse.show { border-top: 1px solid #e6eef7; }
 
-.invalid-feedback {
-    color: red;
-    font-size: 0.875em;
+/* Formularios y validación */
+.acuerdo-field { margin-bottom: 15px; }
+.acuerdo-field .form-label {
+  display: block; margin: 0 0 6px;
+  font-size: 12px; font-weight: 700; color: #294462;
 }
-
-.list-group {
-    position: absolute;
-    z-index: 1000;
-    width: 100%;
-    max-height: 200px;
-    overflow-y: auto;
-    background-color: white;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+.acuerdo-field .required { color: #d54e6c; }
+.acuerdo-field .form-control {
+  display: block; width: 100%; height: auto; min-height: 40px;
+  padding: 9px 11px; border: 1px solid #cfdced; border-radius: 7px;
+  background: #fff; color: var(--ss-ink); font-size: 12px;
+  line-height: 1.45; box-shadow: none;
+  transition: box-shadow .15s, border-color .15s;
 }
-
-.list-group-item {
-    padding: 10px;
-    cursor: pointer;
+.acuerdo-field .form-control:focus {
+  border-color: #4e8ee2; box-shadow: 0 0 0 3px rgba(44,115,216,.12);
 }
-
-.list-group-item:hover {
-    background-color: #f1f1f1;
-}
-form {
-  font-size: 12px; /* aplica a todo dentro del form */
-}
-
-form input.form-control {
-  font-size: 12px; /* asegura que los inputs también tengan 10px */
-}
-form select.form-control {
-  font-size: 12px; /* asegura que los inputs también tengan 10px */
-}
-
-/* opcional: placeholder más pequeño */
-form input::placeholder {
+.acuerdo-field .form-control::placeholder { color: #9aaabc; }
+.acuerdo-field textarea.form-control { min-height: 80px; resize: vertical; }
+.acuerdo-field .form-control.is-invalid { border-color: #df6070; }
+.acuerdo-field .invalid-feedback { color: #bf344c; font-size: 11px; margin-top: 4px; }
+.acuerdo-hint { font-size: 11px; color: var(--ss-muted); }
+/* Ambos ng-select se ven iguales a los input/select del formulario */
+:host ::ng-deep .acuerdo-field .acuerdo-select.ng-select {
+  display: block;
+  width: 100%;
   font-size: 12px;
 }
-.titulo-sobre-borde {
-    position: absolute;
-    top: 0;
-    left: 0rem; /* Ajusta la distancia del borde derecho */
-    transform: translateY(-50%);
-    background-color: white; /* Fondo blanco para que sobresalga del card */
-    padding: 0 10px; /* Espaciado horizontal */
-    font-size: 15px;
-    font-weight: bold;
-}
-.titulo-sobre-borde-medio {
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: white;
-    padding: 0 10px;
-    font-size: 15px;
-    font-weight: bold;
-}
-.ng-select-bootstrap {
+:host ::ng-deep .acuerdo-field .acuerdo-select.ng-select .ng-select-container {
   width: 100%;
-  border-radius: 0.25rem;
-  border: 1px solid #ced4da;
-  min-height: 38px;
-  font-size: 13px;
-  background-color: #fff;
+  height: 40px;
+  min-height: 40px;
+  padding: 0 11px;
+  box-sizing: border-box;
+  background: #fff;
+  border: 1px solid #cfdced;
+  border-radius: 7px;
+  box-shadow: none;
+  color: var(--ss-ink);
+  font-size: 12px;
+  line-height: 1.45;
+  transition: box-shadow .15s, border-color .15s;
+}
+:host ::ng-deep .acuerdo-field .acuerdo-select .ng-value-container {
+  padding-left: 0;
+  font-size: 12px;
+}
+:host ::ng-deep .acuerdo-field .acuerdo-select .ng-placeholder {
+  color: #9aaabc;
+  font-size: 12px;
+}
+:host ::ng-deep .acuerdo-field .acuerdo-select .ng-input input {
+  font-size: 12px;
+  color: var(--ss-ink);
+}
+:host ::ng-deep .acuerdo-field .acuerdo-select.ng-select.ng-select-focused .ng-select-container,
+:host ::ng-deep .acuerdo-field .acuerdo-select.ng-select.ng-select-opened .ng-select-container {
+  border-color: #4e8ee2;
+  box-shadow: 0 0 0 3px rgba(44,115,216,.12);
+}
+:host ::ng-deep .acuerdo-field .acuerdo-select.ng-select.is-invalid .ng-select-container {
+  border-color: #df6070;
 }
 
-.ng-select-bootstrap .ng-value-container {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  min-height: 38px;
-  padding: 0.25rem 0.5rem;
+/* Lista: vista completa. Alta y edición únicamente mediante modal. */
+.acuerdo-tablebar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin-bottom: 13px;
 }
+.acuerdo-tablebar h3 { margin: 0; font-size: 13px; font-weight: 750; color: #29496d; }
+.acuerdo-btn-primary, .acuerdo-btn-generate {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  background: var(--ss-primary); border: 1px solid var(--ss-primary);
+  color: #fff; font-size: 12px; font-weight: 750; padding: 9px 14px;
+  border-radius: 7px; white-space: nowrap; box-shadow: none;
+}
+.acuerdo-btn-primary:hover, .acuerdo-btn-generate:hover { color: #fff; background: var(--ss-primary-dark); border-color: var(--ss-primary-dark); }
+.acuerdo-btn-primary:focus-visible, .acuerdo-btn-generate:focus-visible { box-shadow: 0 0 0 3px rgba(24,87,198,.22); }
+.acuerdo-table-scroll { border: 1px solid #dce8f6; border-radius: 9px; overflow-x: auto; }
+.acuerdo-table { margin: 0; font-size: 12px; min-width: 620px; width: 100%; }
+.acuerdo-table thead th {
+  padding: 11px 12px; color: #234c85; background: #eaf2ff; border: none;
+  font-size: 11px; font-weight: 750; vertical-align: middle; white-space: nowrap;
+  border-bottom: 1px solid #d8e6f8;
+}
+.acuerdo-table tbody td {
+  vertical-align: middle; padding: 11px 12px; color: #4b627b;
+  border-top: 1px solid #edf2fa; line-height: 1.5;
+  overflow-wrap: anywhere; background: transparent;
+}
+.acuerdo-table tbody tr:hover { background: #f6faff; }
+.acuerdo-table .acuerdo-emphasis { font-weight: 750; color: #234b7b; }
+.acuerdo-table .acuerdo-consideraciones { white-space: pre-line; min-width: 175px; }
+.acuerdo-table .acuerdo-amount { color: #007d78; font-weight: 750; white-space: nowrap; }
+.acuerdo-table .acuerdo-empty { text-align: center; color: #637d98; padding: 32px 12px; }
+.acuerdo-table--sla th:nth-child(1) { width: 19%; }
+.acuerdo-table--sla th:nth-child(2), .acuerdo-table--sla th:nth-child(3) { width: 17%; }
+.acuerdo-table--sla th:nth-child(4) { width: 37%; }
+.sla-label { display: inline-block; padding: 5px 9px; border-radius: 6px; white-space: pre-line; font-weight: 650; }
+.sla-label--broker { background: #e8f0ff; color: #1857b4; }
+.sla-label--insurer { background: #e3f7f3; color: #007f78; }
+.acuerdo-action-column { width: 96px; text-align: center; }
+.acuerdo-table-actions { display: flex; gap: 6px; justify-content: center; }
+.acuerdo-icon-btn {
+  display: inline-flex; justify-content: center; align-items: center;
+  width: 31px; height: 31px; padding: 0; border-radius: 7px;
+  color: #2164bb; background: #f0f6ff; border: 1px solid #d6e6fc; font-size: 11px;
+}
+.acuerdo-icon-btn:hover { background: #deecff; color: #13458f; }
+.acuerdo-icon-btn--danger { color: #bb5264; border-color: #f6dbe2; background: #fff2f5; }
+.acuerdo-icon-btn--danger:hover { background: #ffe0e6; color: #96293c; }
 
-.ng-select-bootstrap .ng-value {
-  background-color: #e9ecef;
-  color: #495057;
-  border-radius: 0.25rem;
-  padding: 2px 6px;
-  margin-right: 3px;
-  font-size: 13px;
+/* Acciones principales */
+.acuerdo-footer { display: flex; justify-content: flex-end; padding: 16px 19px; background: #fff; border: 1px solid var(--ss-border); border-radius: 11px; }
+.acuerdo-footer__buttons { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+.acuerdo-btn-generate, .acuerdo-btn-complete { padding: 10px 17px; }
+.acuerdo-btn-complete {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  border: 1px solid var(--ss-teal-dark); background: var(--ss-teal); color: #fff;
+  font-size: 12px; font-weight: 750; border-radius: 7px;
 }
+.acuerdo-btn-complete:hover { color: #fff; background: var(--ss-teal-dark); }
 
-.ng-select-bootstrap .ng-placeholder {
-  color: #6c757d;
+/* Modales propios de Angular: no requieren imports de NgbModal ni jQuery. */
+.acuerdo-modal-backdrop {
+  position: fixed; z-index: 1055; inset: 0; background: rgba(11,31,61,.64);
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px; overflow-y: auto;
 }
-
-.ng-select-bootstrap .ng-input input {
-  font-size: 13px;
-  padding: 0;
+.acuerdo-modal {
+  width: min(100%, 690px); max-height: calc(100vh - 32px);
+  display: flex; flex-direction: column; background: #fff;
+  border-radius: 14px; overflow: hidden;
+  box-shadow: 0 24px 75px rgba(3,20,45,.27);
+  animation: acuerdo-modal-in .17s ease-out;
 }
-ngx-dropzone-preview {
-  width: 70px !important;
-  height: 70px !important;
-  min-width: 70px !important;
-  min-height: 70px !important;
+@keyframes acuerdo-modal-in { from { transform: translateY(9px); opacity: .9; } to { transform: translateY(0); opacity: 1; } }
+.acuerdo-modal__header {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: linear-gradient(110deg,#174b9e,#1b6acd); padding: 17px 21px;
+  color: white;
 }
-
-ngx-dropzone-preview img {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover;
+.acuerdo-modal__header h2 { color: #fff; font-weight: 750; font-size: 17px; margin: 0; }
+.acuerdo-modal__close { width: 30px; height: 30px; border-radius: 7px; background: rgba(255,255,255,.16); color: #fff; border: 0; cursor: pointer; }
+.acuerdo-modal__close:hover { background: rgba(255,255,255,.27); }
+.acuerdo-modal__body { padding: 21px 22px 7px; overflow-y: auto; min-height: 0; }
+.acuerdo-modal__footer {
+  display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 9px;
+  padding: 14px 22px; background: #f6f9fe; border-top: 1px solid #e0eaf7;
 }
-.sugerido-chip:hover {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  transform: translateY(-2px);
+.acuerdo-btn-cancel { padding: 9px 14px; background: #fff; border: 1px solid #c9d8e8; color: #38556f; font-weight: 700; font-size: 12px; border-radius: 7px; }
+.acuerdo-btn-cancel:hover { background: #eef5fc; color: #274866; }
+@media (max-width: 991px) {
+  .acuerdo-panel__body { padding: 17px; }
+  .acuerdo-content { padding-top: 13px; }
 }
-.icono-flecha::before {
-    content: "\f077"; /* flecha arriba */
-    font-family: "Font Awesome 5 Free";
-    font-weight: 900;
-}
-
-/* Cuando está abierto */
-.card-title:not(.collapsed) .icono-flecha::before {
-    content: "\f078"; /* flecha abajo */
+@media (max-width: 575px) {
+  .acuerdo-container { padding: 0 11px; }
+  .acuerdo-heading { padding: 14px 15px; margin-bottom: 12px; }
+  .acuerdo-heading h1 { font-size: 18px; }
+  .acuerdo-heading p { font-size: 11px; }
+  .acuerdo-toggle { padding: 12px 14px; }
+  .acuerdo-panel__body { padding: 13px; }
+  .acuerdo-panel__icon { flex-basis: 34px; width: 34px; height: 34px; }
+  .acuerdo-tablebar h3 { font-size: 12px; }
+  .acuerdo-tablebar .btn { padding: 9px 11px; }
+  .acuerdo-modal__header { padding: 15px 16px; }
+  .acuerdo-modal__body { padding: 16px 16px 4px; }
+  .acuerdo-modal__footer { padding: 12px 16px; }
+  .acuerdo-modal__footer .btn { flex: 1; }
+  .acuerdo-footer { padding: 12px; }
+  .acuerdo-footer__buttons { width: 100%; }
+  .acuerdo-footer__buttons .btn { flex: 1; }
 }

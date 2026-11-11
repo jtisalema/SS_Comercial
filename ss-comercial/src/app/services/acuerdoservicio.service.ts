@@ -13,12 +13,22 @@ export class AcuerdoservicioService {
     const URL_API = environment.apiUrl + "generarAcuerdoServicio";
     return this.httpClient.post(URL_API, infoIngreso).pipe(catchError(this.handleError));
   }
+
+  public getSLASRamo(idRamo: any) {
+    const URL_API = environment.apiUrl + "getSLASRamo/" + idRamo;
+    return this.httpClient.get(URL_API).pipe(catchError(this.handleError));
+  }
+  
   public completarAcuerdoServicio(infoIngreso: FormData) {
     const URL_API = environment.apiUrl + "completarAcuerdoServicio";
     return this.httpClient.post(URL_API, infoIngreso).pipe(catchError(this.handleError));
   }
   public obtenerContactosIniciales() {
     const URL_API = environment.apiUrl + "acuerdoContactoInicial";
+    return this.httpClient.get(URL_API).pipe(catchError(this.handleError));
+  }
+    public obtenerContactosInicialesRamo(ramo:any) {
+    const URL_API = environment.apiUrl + "acuerdoContactoInicialRamo/" + ramo;
     return this.httpClient.get(URL_API).pipe(catchError(this.handleError));
   }
   public obtenerAcuerdosServicio() {

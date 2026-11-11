@@ -711,27 +711,31 @@
                               <i class="fas ms-auto"
                                 [ngClass]="programa.mostrarGastos === false ? 'fa-chevron-down' : 'fa-chevron-up'"></i>
                             </div>
-                            <div class="table-responsive pyg-scroll-solo-x pyg-sin-scroll-gastos" *ngIf="programa.mostrarGastos !== false">
+                            <div class="table-responsive pyg-scroll-solo-x pyg-sin-scroll-gastos"
+                              [class.pyg-sin-scroll-gastos-con-facturas]="tieneFacturasAsignadasPrograma(programa)"
+                              *ngIf="programa.mostrarGastos !== false">
                               <table class="table table-bordered table-sm tabla-gastos tabla-gastos-facturas"
                                 [class.pyg-tabla-solo-gastos]="!tieneFacturasAsignadasPrograma(programa)"
-                                [class.pyg-tabla-con-facturas]="tieneFacturasAsignadasPrograma(programa)">
+                                [class.pyg-tabla-con-facturas]="tieneFacturasAsignadasPrograma(programa)"
+                                [class.pyg-tabla-financiera]="esFinanciero">
                                 <colgroup>
                                   <col class="pyg-col-descripcion-gasto">
                                   <col>
                                   <col>
-                                  <col>
+                                  <col class="pyg-col-valor-gasto">
                                   <col *ngIf="esFinanciero">
                                   <col *ngIf="tieneFacturasAsignadasPrograma(programa)" class="pyg-col-descripcion-factura">
+                                  <col *ngIf="tieneFacturasAsignadasPrograma(programa)" class="pyg-col-estado-factura">
                                   <col *ngIf="tieneFacturasAsignadasPrograma(programa)">
-                                  <col *ngIf="tieneFacturasAsignadasPrograma(programa)">
+                                  <col *ngIf="tieneFacturasAsignadasPrograma(programa)" class="pyg-col-valor-factura">
                                   <col *ngIf="esFinanciero && tieneFacturasAsignadasPrograma(programa)">
-                                  <col *ngIf="tieneFacturasAsignadasPrograma(programa)">
-                                  <col *ngIf="tieneFacturasAsignadasPrograma(programa)">
+                                  <col *ngIf="tieneFacturasAsignadasPrograma(programa)" class="pyg-col-total-facturas">
+                                  <col *ngIf="tieneFacturasAsignadasPrograma(programa)" class="pyg-col-restante-facturas">
                                 </colgroup>
                                 <thead>
                                   <tr>
                                     <th [attr.colspan]="esFinanciero ? 5 : 4">Gastos</th>
-                                    <th class="pyg-bloque-facturas" *ngIf="tieneFacturasAsignadasPrograma(programa)" [attr.colspan]="esFinanciero ? 6 : 5">Facturas</th>
+                                    <th class="pyg-bloque-facturas" *ngIf="tieneFacturasAsignadasPrograma(programa)" [attr.colspan]="esFinanciero ? 7 : 6">Facturas</th>
                                   </tr>
                                   <tr>
                                     <th class="pyg-descripcion-gasto">Descripción</th>
@@ -740,6 +744,7 @@
                                     <th>Valor</th>
                                     <th *ngIf="esFinanciero">Asignar</th>
                                     <th *ngIf="tieneFacturasAsignadasPrograma(programa)" class="pyg-descripcion-factura pyg-celda-factura">Descripción</th>
+                                    <th class="pyg-celda-factura pyg-estado-factura" *ngIf="tieneFacturasAsignadasPrograma(programa)">Estado</th>
                                     <th class="pyg-celda-factura" *ngIf="tieneFacturasAsignadasPrograma(programa)">Fecha</th>
                                     <th class="pyg-celda-factura" *ngIf="tieneFacturasAsignadasPrograma(programa)">Valor</th>
                                     <th class="pyg-celda-factura" *ngIf="esFinanciero && tieneFacturasAsignadasPrograma(programa)">Acción</th>
@@ -776,6 +781,9 @@
                                       <ng-container *ngIf="tieneFacturasAsignadasPrograma(programa)">
                                         <td class="fw-bold pyg-descripcion-factura pyg-celda-factura" style="font-weight: bold;">{{ fila.factura?.descripcion ||
                                           'Sin facturas' }}</td>
+                                        <td class="text-center pyg-celda-factura pyg-estado-factura">
+                                          <span *ngIf="fila.factura" class="fw-bold text-success">Devengado</span>
+                                        </td>
                                         <td class="pyg-celda-factura">{{ fila.factura?.fechaFactura | date:'yyyy-MM-dd' }}</td>
                                         <td class="text-end fw-bold pyg-celda-factura">{{ fila.factura ? (fila.factura.valor |
                                           currency:'USD':'symbol':'1.2-2') : '' }}</td>
@@ -797,7 +805,7 @@
                                     </tr>
                                   </ng-container>
                                   <tr *ngIf="gastosPrograma(programa).length === 0">
-                                    <td [attr.colspan]="tieneFacturasAsignadasPrograma(programa) ? (esFinanciero ? 11 : 9) : (esFinanciero ? 5 : 4)" class="text-center text-muted">No hay
+                                    <td [attr.colspan]="tieneFacturasAsignadasPrograma(programa) ? (esFinanciero ? 12 : 10) : (esFinanciero ? 5 : 4)" class="text-center text-muted">No hay
                                       gastos registrados</td>
                                   </tr>
                                 </tbody>
@@ -807,7 +815,7 @@
                                     <td class="text-end"><strong>{{ totalGastosPrograma(programa) |
                                         currency:'USD':'symbol':'1.2-2' }}</strong></td>
                                     <td *ngIf="esFinanciero && !tieneFacturasAsignadasPrograma(programa)"></td>
-                                    <td *ngIf="tieneFacturasAsignadasPrograma(programa)" colspan="2" class="text-end pyg-total-factura"><strong>TOTAL FACTURAS</strong></td>
+                                    <td *ngIf="tieneFacturasAsignadasPrograma(programa)" colspan="3" class="text-end pyg-total-factura"><strong>TOTAL FACTURAS</strong></td>
                                     <td *ngIf="tieneFacturasAsignadasPrograma(programa)" [attr.colspan]="esFinanciero ? 4 : 2" class="text-end pyg-total-factura"><strong>{{
                                         totalFacturasPrograma(programa) | currency:'USD':'symbol':'1.2-2' }}</strong>
                                     </td>
@@ -820,7 +828,7 @@
                                     <td class="text-end">{{ sumarCampoPrograma(programa, 'comisionAnual') ?
                                       (totalGastosPrograma(programa) / sumarCampoPrograma(programa, 'comisionAnual') |
                                       percent:'1.2-2') : '0%' }}</td>
-                                    <td *ngIf="esFinanciero || tieneFacturasAsignadasPrograma(programa)" [attr.colspan]="tieneFacturasAsignadasPrograma(programa) ? (esFinanciero ? 7 : 5) : 1"></td>
+                                    <td *ngIf="esFinanciero || tieneFacturasAsignadasPrograma(programa)" [attr.colspan]="tieneFacturasAsignadasPrograma(programa) ? (esFinanciero ? 8 : 6) : 1"></td>
                                   </tr>
                                   <tr>
                                     <td colspan="3"><strong>{{ (sumarCampoPrograma(programa, 'comisionAnual') -
@@ -828,7 +836,7 @@
                                     <td class="text-end"><strong>{{ (sumarCampoPrograma(programa, 'comisionAnual') -
                                         totalGastosPrograma(programa)) | currency:'USD':'symbol':'1.2-2' }}</strong>
                                     </td>
-                                    <td *ngIf="esFinanciero || tieneFacturasAsignadasPrograma(programa)" [attr.colspan]="tieneFacturasAsignadasPrograma(programa) ? (esFinanciero ? 7 : 5) : 1"></td>
+                                    <td *ngIf="esFinanciero || tieneFacturasAsignadasPrograma(programa)" [attr.colspan]="tieneFacturasAsignadasPrograma(programa) ? (esFinanciero ? 8 : 6) : 1"></td>
                                   </tr>
                                 </tfoot>
                               </table>
@@ -865,6 +873,15 @@
                                     <th class="text-center">Porcentaje</th>
                                   </tr>
                                 </thead>
+                                <ng-template #estadoMetaProduccion let-ramo>
+                                  <span class="pyg-produccion-estado"
+                                    [ngClass]="'pyg-produccion-estado--' + obtenerEstadoMetaProduccion(ramo)"
+                                    [attr.title]="obtenerDetalleMetaProduccion(ramo)">
+                                    <i class="fas" aria-hidden="true"
+                                      [ngClass]="obtenerEstadoMetaProduccion(ramo) === 'no-alcanzado' ? 'fa-arrow-down' : obtenerEstadoMetaProduccion(ramo) === 'superado' ? 'fa-arrow-up' : 'fa-check'"></i>
+                                    {{ obtenerEstadoMetaProduccion(ramo) === 'no-alcanzado' ? 'No alcanzado' : obtenerEstadoMetaProduccion(ramo) === 'superado' ? 'Superado' : 'Alcanzado' }}
+                                  </span>
+                                </ng-template>
                                 <tbody>
                                   <tr *ngFor="let proy of ing.proyeccion; let i = index">
                                     <td class="text-center" style="width: 10px;">{{ i + 1 }}</td>
@@ -887,15 +904,20 @@
                                       <div class="pyg-produccion-porcentaje-estado">
                                         <span>{{ proy.priNet ? (proy.valcombroker /
                                           proy.priNet | percent:'1.2-2') : '0%' }}</span>
-                                        <ng-container *ngIf="obtenerTendenciaProduccion(proy, ing) as tendencia">
-                                          <span class="pyg-produccion-estado"
-                                            [ngClass]="'pyg-produccion-estado--' + tendencia"
-                                            [attr.title]="obtenerDetalleTendenciaProduccion(proy, ing)">
-                                            <i class="fas" aria-hidden="true"
-                                              [ngClass]="tendencia === 'aumenta' ? 'fa-arrow-up' : tendencia === 'disminuye' ? 'fa-arrow-down' : 'fa-equals'"></i>
-                                            {{ tendencia === 'aumenta' ? 'Aumenta' : tendencia === 'disminuye' ? 'Disminuye' : 'Se mantiene' }}
-                                          </span>
+                                        <ng-container *ngIf="esProduccionConMeta(ing); else tendenciaMensualProduccion">
+                                          <ng-container *ngTemplateOutlet="estadoMetaProduccion; context: { $implicit: ing }"></ng-container>
                                         </ng-container>
+                                        <ng-template #tendenciaMensualProduccion>
+                                          <ng-container *ngIf="obtenerTendenciaProduccion(proy, ing) as tendencia">
+                                            <span class="pyg-produccion-estado"
+                                              [ngClass]="'pyg-produccion-estado--' + tendencia"
+                                              [attr.title]="obtenerDetalleTendenciaProduccion(proy, ing)">
+                                              <i class="fas" aria-hidden="true"
+                                                [ngClass]="tendencia === 'aumenta' ? 'fa-arrow-up' : tendencia === 'disminuye' ? 'fa-arrow-down' : 'fa-equals'"></i>
+                                              {{ tendencia === 'aumenta' ? 'Aumenta' : tendencia === 'disminuye' ? 'Disminuye' : 'Se mantiene' }}
+                                            </span>
+                                          </ng-container>
+                                        </ng-template>
                                       </div>
                                     </td>
                                   </tr>
@@ -903,36 +925,60 @@
                                 <tfoot>
                                   <tr class="fila-total">
                                     <td colspan="3"></td>
-                                    <td class="text-center"><strong>Facturado</strong><br>{{ ing.mesesFacturados }}
-                                      meses</td>
+                                    <td class="text-center">
+                                      <strong>{{ esProduccionConMeta(ing) ? 'Facturado Actual' : 'Facturado' }}</strong><br>
+                                      <ng-container *ngIf="esProduccionConMeta(ing); else mesesFacturadosProduccion">
+                                        {{ obtenerCantidadFacturasProduccion(ing) }} facturas
+                                      </ng-container>
+                                      <ng-template #mesesFacturadosProduccion>{{ ing.mesesFacturados }} meses</ng-template>
+                                    </td>
                                     <td class="text-center total-prima">{{ ing.totalPrima |
                                       currency:'USD':'symbol':'1.2-2' }}</td>
                                     <td class="text-center total-comision">{{ ing.totalComision |
                                       currency:'USD':'symbol':'1.2-2' }}</td>
-                                    <td class="text-center fw-semibold">{{ ing.totalPrima ? (ing.totalComision /
-                                      ing.totalPrima | percent:'1.2-2') : '0%' }}</td>
+                                    <td class="text-center fw-semibold">
+                                      <div class="pyg-produccion-porcentaje-estado">
+                                        <span>{{ obtenerPromedioPorcentajeFacturadoProduccion(ing) | percent:'1.2-2' }}</span>
+                                        <ng-container *ngIf="esProduccionConMeta(ing)">
+                                          <ng-container *ngTemplateOutlet="estadoMetaProduccion; context: { $implicit: ing }"></ng-container>
+                                        </ng-container>
+                                      </div>
+                                    </td>
                                   </tr>
                                   <tr class="fila-proyeccion">
                                     <td colspan="3"></td>
-                                    <td class="text-center"><strong>Proyección</strong><br>{{ ing.mesesRestantes }}
-                                      meses</td>
-                                    <td class="text-center total-prima">{{ ing.proyeccionPrima |
+                                    <td class="text-center"><strong>Proyección</strong>
+                                      <!-- Antes: se mostraban los meses restantes calculados para extrapolar la producción. -->
+                                    </td>
+                                    <td class="text-center total-prima">{{ obtenerMetaPrimaProduccion(ing) |
                                       currency:'USD':'symbol':'1.2-2' }}</td>
-                                    <td class="text-center total-comision">{{ ing.proyeccionComision |
+                                    <td class="text-center total-comision">{{ obtenerMetaComisionProduccion(ing) |
                                       currency:'USD':'symbol':'1.2-2' }}</td>
-                                    <td class="text-center fw-semibold">{{ ing.proyeccionPrima ? (ing.proyeccionComision
-                                      / ing.proyeccionPrima | percent:'1.2-2') : '0%' }}</td>
+                                    <td class="text-center fw-semibold">
+                                      <div class="pyg-produccion-porcentaje-estado">
+                                        <span>{{ obtenerMetaPrimaProduccion(ing) ? (obtenerMetaComisionProduccion(ing)
+                                          / obtenerMetaPrimaProduccion(ing) | percent:'1.2-2') : '0%' }}</span>
+                                        <ng-container *ngIf="esProduccionConMeta(ing)">
+                                          <ng-container *ngTemplateOutlet="estadoMetaProduccion; context: { $implicit: ing }"></ng-container>
+                                        </ng-container>
+                                      </div>
+                                    </td>
                                   </tr>
                                   <tr class="fila-total-general">
                                     <td colspan="3"></td>
-                                    <td class="text-center"><strong>Total</strong></td>
-                                    <td class="text-center total-prima"><strong>{{ (ing.totalPrima +
-                                        ing.proyeccionPrima) | currency:'USD':'symbol':'1.2-2' }}</strong></td>
-                                    <td class="text-center total-comision"><strong>{{ (ing.totalComision +
-                                        ing.proyeccionComision) | currency:'USD':'symbol':'1.2-2' }}</strong></td>
-                                    <td class="text-center fw-semibold">{{ (ing.totalPrima + ing.proyeccionPrima) ?
-                                      ((ing.totalComision + ing.proyeccionComision) / (ing.totalPrima +
-                                      ing.proyeccionPrima) | percent:'1.2-2') : '0%' }}</td>
+                                    <td class="text-center"><strong>Diferencia</strong></td>
+                                    <td class="text-center total-prima"><strong>{{ obtenerSaldoPrimaProduccion(ing)
+                                        | currency:'USD':'symbol':'1.2-2' }}</strong></td>
+                                    <td class="text-center total-comision"
+                                      [ngClass]="estaCumplidaComisionProduccion(ing) ? 'pyg-comision-cumplida' : 'pyg-comision-pendiente'">
+                                      <strong>{{ obtenerSaldoComisionProduccion(ing) | currency:'USD':'symbol':'1.2-2' }}</strong>
+                                    </td>
+                                    <td class="text-center fw-semibold">
+                                      <div class="pyg-produccion-porcentaje-estado">
+                                        <span>{{ obtenerComparacionPorcentajeProduccion(ing).texto }}</span>
+                                        <ng-container *ngTemplateOutlet="estadoMetaProduccion; context: { $implicit: ing }"></ng-container>
+                                      </div>
+                                    </td>
                                   </tr>
                                 </tfoot>
                               </table>
@@ -1104,7 +1150,7 @@
                       [disabled]="guardandoRevisionPYG">
                       <option value="aprobar">Aprobar</option>
                       <option value="corregir">Corregir</option>
-                      <option value="rechazar">Rechazar</option>
+                      <!-- <option value="rechazar">Rechazar</option> -->
                     </select>
                   </div>
                   <button type="button" class="btn btn-success btn-sm pyg-revision-guardar"
@@ -1222,6 +1268,7 @@
             <div class="col-md-6 col-lg-4" *ngFor="let ramo of ramosSugeridosFiltrados">
 
               <div class="card ramo-card" [class.ramo-selected]="ramo.seleccionado"
+                [class.ramo-tipo-mensual]="ramo.mensual == 1"
                 (click)="ramo.seleccionado = !ramo.seleccionado">
 
                 <!-- Header Card -->
@@ -1232,6 +1279,12 @@
                     <div class="ramo-title">
                       {{ ramo.nombreRamo }}
                     </div>
+
+                    <span *ngIf="ramo.mensual == 1" class="pyg-etiqueta-tipo-mensual"
+                      title="Ramo de tipo mensual">
+                      <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                      Fact Mensual
+                    </span>
 
                     <div class="d-flex justify-content-between align-items-center mt-1">
 

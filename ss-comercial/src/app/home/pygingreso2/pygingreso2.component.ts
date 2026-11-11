@@ -184,6 +184,9 @@ export class PygingresoComponent2 implements OnDestroy {
   dataTable: any;
   objCliente: any;
   esFinanciero: boolean = false;
+
+  // Los ramos de esta lista registran promedios de producción mensuales.
+  tipoMensual: string[] = [];
   clientess = [
     { id: null, nombre: 'Todos' },
     { id: 1, nombre: 'Juan' },
@@ -464,6 +467,11 @@ export class PygingresoComponent2 implements OnDestroy {
     });
   }
   obtenerInformacionInicial() {
+        this.pygService.ramosMensualesPYG().subscribe((res: any) => {
+      this.tipoMensual = res.ramos;
+    }, (error: any) => {
+      this.toastrService.error('ERROR', 'Error al obtener los Ramos!');
+    });
     this.loadingService.showLoading();
     this.ingresoForm = this.fb.group({
       id: [],
@@ -987,6 +995,7 @@ export class PygingresoComponent2 implements OnDestroy {
           idCliente: this.clienteSeleccionado.id,
           ramo: this.ingresoForm.value.ramo,
           nombreRamo: ramo.nmRamo,
+          mensual: this.obtenerTipoMensualPorNombre(ramo.nmRamo),
           aseguradora: this.ingresoForm.value.aseguradora,
           nombreAseguradora: aseguradora.alias,
           inicioVigencia: this.ingresoForm.value.inicioVigencia,
@@ -1590,7 +1599,6 @@ export class PygingresoComponent2 implements OnDestroy {
 
       this.pygService.obtenerPolizasSugeridas(this.clienteSeleccionado.id)
         .subscribe((res: any) => {
-          console.log('res',res);
           if (!res?.resultado || res.resultado.length === 0) {
             this.lstRamosSugeridos = [];
             this.loadingService.hideLoading();
@@ -1600,8 +1608,6 @@ export class PygingresoComponent2 implements OnDestroy {
           const hoy = new Date();
 
 const anioLimite = hoy.getFullYear() - 1;
-
-console.log('Año límite:', anioLimite);
 
 // Obtener únicamente el año de una fecha en formato YYYY-MM-DD
 const obtenerAnio = (fecha: any): number => {
@@ -1636,7 +1642,7 @@ let polizas = Object.values(
 
 
           this.lstRamosSugeridos = [];
-          console.log('polizas',polizas);
+
           polizas.forEach((element: any) => {
 
             const fechaBase = new Date(element.fcDesde);
@@ -1828,13 +1834,18 @@ let polizas = Object.values(
 
                       const ultimo = registros[registros.length - 1];
 
+                      // mensual=1: promedio de producción mensual (cálculo habitual).
+                      // mensual=0: promedio anual, dividido entre 12 para el valor mensual.
+                      const mensual = this.obtenerTipoMensualPorNombre(element.nmRamo || ultimo.nombreRamo);
+
                       const resultado = {
                         ...ultimo,
-                        primaMensual: Number(promedioPrima.toFixed(2)),
-                        primaAnual: Number((promedioPrima * 12).toFixed(2)),
+                        mensual,
+                        primaMensual: Number((mensual === 1 ? promedioPrima : promedioPrima / 12).toFixed(2)),
+                        primaAnual: Number((mensual === 1 ? promedioPrima * 12 : promedioPrima).toFixed(2)),
                         valPrima: Number(promedioPrima.toFixed(2)),
-                        comisionMensual: Number(promedioComision.toFixed(2)),
-                        comisionAnual: Number((promedioComision * 12).toFixed(2)),
+                        comisionMensual: Number((mensual === 1 ? promedioComision : promedioComision / 12).toFixed(2)),
+                        comisionAnual: Number((mensual === 1 ? promedioComision * 12 : promedioComision).toFixed(2)),
                         estadoCrecimiento: 'PROMEDIO'
                       };
 
@@ -1940,6 +1951,7 @@ let polizas = Object.values(
       ramo: this.ingresoForm.value.ramo,
       idRamo: this.idRamoSeleccionado,
       nombreRamo: ramo.nmRamo,
+      mensual: this.ingresoRamoSeleccionado?.mensual ?? this.obtenerTipoMensualPorNombre(ramo.nmRamo),
       aseguradora: aseguradora.id,
       nombreAseguradora: aseguradora.alias,
       inicioVigencia: this.ingresoForm.value.inicioVigencia,
@@ -2295,6 +2307,7 @@ let polizas = Object.values(
           nombreRamo: nombreRamo ?? '',
           inicioVigencia: element.inicioVigencia ?? '',
           finVigencia: element.finVigencia ?? '',
+          mensual: element.mensual != null ? Number(element.mensual) : this.obtenerTipoMensualPorNombre(nombreRamo),
           primaMensual: element.primaMensual ?? '',
           primaAnual: element.primaMensual
             ? element.primaMensual * 12
@@ -2327,7 +2340,8 @@ let polizas = Object.values(
             ingreso.poliza,
             ingreso.inicioVigencia,
             ingreso.finVigencia,
-            ingreso.ramo
+            ingreso.ramo,
+            ingreso.mensual
           ).subscribe((facturas: any[]) => {
             ingreso.proyeccion = facturas;
             ingreso.totalPrima = facturas.reduce(
@@ -2340,9 +2354,14 @@ let polizas = Object.values(
               0
             );
 
-            ingreso.mesesFacturados = facturas.length;
-            ingreso.mesesRestantes = 12 - ingreso.mesesFacturados;
+            // Aunque los ramos no mensuales se muestren por movimiento,
+            // mantener mesesFacturados como número de meses reales distintos.
+            ingreso.mesesFacturados = Number(ingreso.mensual) === 0
+              ? new Set(facturas.map((p: any) => p.periodo).filter((p: any) => !!p)).size
+              : facturas.length;
+            ingreso.mesesRestantes = Math.max(0, 12 - ingreso.mesesFacturados);
 
+            /* Proyección histórica por meses, conservada por si se vuelve a solicitar:
             ingreso.proyeccionPrima =
               ingreso.mesesFacturados > 0
                 ? (ingreso.totalPrima / ingreso.mesesFacturados) * ingreso.mesesRestantes
@@ -2352,6 +2371,12 @@ let polizas = Object.values(
               ingreso.mesesFacturados > 0
                 ? (ingreso.totalComision / ingreso.mesesFacturados) * ingreso.mesesRestantes
                 : 0;
+            */
+
+            // Ahora la proyección es la meta ANUAL guardada para este ramo.
+            // No depende de la primera factura, ni de los meses facturados/restantes.
+            ingreso.proyeccionPrima = this.convertirANumero(ingreso.primaAnual);
+            ingreso.proyeccionComision = this.convertirANumero(ingreso.comisionAnual);
           });
         }
         ingreso.mesRevision = this.obtenerMesVigencia(
@@ -2407,6 +2432,144 @@ let polizas = Object.values(
     }, 1000);
   }
 
+  /** Clasifica por nombre de ramo, sin importar mayúsculas o acentos. */
+  obtenerTipoMensualPorNombre(nombreRamo: any): 0 | 1 {
+    const nombre = String(nombreRamo || '')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toUpperCase();
+    return this.tipoMensual.includes(nombre) ? 1 : 0;
+  }
+
+  /**
+   * La clasificación conserva el indicador por factura: mensual=0 muestra
+   * estado contra la meta y mensual=1 conserva la tendencia de cada mes.
+   * En ambos casos la proyección de resumen usa el valor anual registrado.
+   * Si Laravel aún no devuelve la propiedad, se clasifica por nombre.
+   */
+  esProduccionConMeta(ing: any): boolean {
+    if (ing?.mensual !== undefined && ing?.mensual !== null && ing?.mensual !== '') {
+      return Number(ing.mensual) === 0;
+    }
+    return this.obtenerTipoMensualPorNombre(ing?.nombreRamo || ing?.nmRamo) === 0;
+  }
+
+  /** Número de facturas presentes en los meses de producción del ramo. */
+  obtenerCantidadFacturasProduccion(ing: any): number {
+    return (ing?.proyeccion || []).reduce((total: number, periodo: any) => {
+      return total + (Array.isArray(periodo?.facturas) ? periodo.facturas.length : 0);
+    }, 0);
+  }
+
+  /** Meta registrada por ramo para ambos tipos (mensual=0 o mensual=1). */
+  obtenerMetaPrimaProduccion(ing: any): number {
+    return this.convertirANumero(ing?.primaAnual);
+  }
+
+  obtenerMetaComisionProduccion(ing: any): number {
+    return this.convertirANumero(ing?.comisionAnual);
+  }
+
+  /** La comisión facturada alcanzó o superó la comisión registrada como meta. */
+  estaCumplidaComisionProduccion(ing: any): boolean {
+    const facturado = Math.round(this.convertirANumero(ing?.totalComision) * 100);
+    const proyectado = Math.round(this.obtenerMetaComisionProduccion(ing) * 100);
+    return facturado >= proyectado;
+  }
+
+  /** Cumplimiento con signo: negativo = falta producción; positivo = meta superada. */
+  obtenerSaldoPrimaProduccion(ing: any): number {
+    return this.convertirANumero(ing?.totalPrima) - this.obtenerMetaPrimaProduccion(ing);
+  }
+
+  obtenerSaldoComisionProduccion(ing: any): number {
+    return this.convertirANumero(ing?.totalComision) - this.obtenerMetaComisionProduccion(ing);
+  }
+
+  /**
+   * Porcentaje efectivo de comisión facturada: comisión total / prima total.
+   * Es un promedio ponderado por el valor de cada factura, no un promedio
+   * simple de los porcentajes individuales. Conservamos el nombre del método
+   * para no alterar las llamadas existentes en pantalla y exportaciones.
+   */
+  obtenerPromedioPorcentajeFacturadoProduccion(ing: any): number {
+    const primaTotal = this.convertirANumero(ing?.totalPrima);
+    const comisionTotal = this.convertirANumero(ing?.totalComision);
+    return primaTotal > 0 ? comisionTotal / primaTotal : 0;
+  }
+
+  /**
+   * Compara el porcentaje efectivo de comisión facturada (totales)
+   * contra el porcentaje de comisión proyectado del ramo. No confundir con
+   * el cumplimiento en dólares de la prima (facturado / meta).
+   *
+   * Se muestran únicamente los puntos porcentuales de diferencia:
+   * si coinciden, 0%; si pasan de 20% a 20.5%, +0,5%; si bajan, -0,5%.
+   * Pantalla y Excel conservan el mismo valor y la misma precisión.
+   */
+  obtenerComparacionPorcentajeProduccion(ing: any): {
+    valor: number; texto: string; formatoExcel: string;
+  } {
+    const tieneFacturas = (Array.isArray(ing?.proyeccion) ? ing.proyeccion : []).some((periodo: any) => {
+      const facturas = Array.isArray(periodo?.registros) && periodo.registros.length
+        ? periodo.registros : [periodo];
+      return facturas.some((factura: any) => this.convertirANumero(factura?.priNet) > 0);
+    });
+
+    const primaMeta = this.obtenerMetaPrimaProduccion(ing);
+    const comisionMeta = this.obtenerMetaComisionProduccion(ing);
+    const porcentajeProyectado = primaMeta > 0
+      ? comisionMeta / primaMeta
+      : this.convertirANumero(ing?.porcentajeComision) / 100;
+    const porcentajeFacturado = this.obtenerPromedioPorcentajeFacturadoProduccion(ing);
+    const diferencia = porcentajeFacturado - porcentajeProyectado;
+    // Centésimas de punto porcentual: evita valores -0% por redondeo.
+    const centesimas = Math.round(diferencia * 10000);
+    if (tieneFacturas && centesimas === 0) {
+      return { valor: 0, texto: '0%', formatoExcel: '0%' };
+    }
+    // Utilizar solo los decimales significativos, hasta un máximo de dos.
+    const decimales = centesimas % 100 === 0 ? 0 : centesimas % 10 === 0 ? 1 : 2;
+    const puntos = centesimas / 100;
+    const numero = puntos.toLocaleString('es-EC', {
+      minimumFractionDigits: decimales,
+      maximumFractionDigits: decimales
+    });
+    const formatoNumero = '0' + (decimales ? '.' + '0'.repeat(decimales) : '') + '%';
+    return {
+      valor: centesimas / 10000,
+      texto: `${centesimas > 0 ? '+' : ''}${numero}%`,
+      formatoExcel: `"+"${formatoNumero};"-"${formatoNumero};0%`
+    };
+  }
+
+  /** Porcentaje de cumplimiento de la prima, compartido por la pantalla y el Excel. */
+  obtenerPorcentajeCumplimientoProduccion(ing: any): number {
+    const meta = this.obtenerMetaPrimaProduccion(ing);
+    return meta > 0 ? this.convertirANumero(ing?.totalPrima) / meta : 0;
+  }
+
+  /** Estado común de todas las facturas: se mide la prima neta acumulada. */
+  obtenerEstadoMetaProduccion(ing: any): 'no-alcanzado' | 'alcanzado' | 'superado' {
+    const meta = Math.round(this.obtenerMetaPrimaProduccion(ing) * 100);
+    const facturado = Math.round(this.convertirANumero(ing?.totalPrima) * 100);
+    if (facturado < meta) return 'no-alcanzado';
+    if (facturado > meta) return 'superado';
+    return 'alcanzado';
+  }
+
+  obtenerDetalleMetaProduccion(ing: any): string {
+    const moneda = (n: number) => '$' + n.toLocaleString('es-EC', {
+      minimumFractionDigits: 2, maximumFractionDigits: 2
+    });
+    return [
+      'Meta de prima neta: ' + moneda(this.obtenerMetaPrimaProduccion(ing)),
+      'Prima facturada acumulada: ' + moneda(this.convertirANumero(ing?.totalPrima)),
+      'Diferencia de prima (facturado - meta): ' + moneda(this.obtenerSaldoPrimaProduccion(ing)),
+      'Meta de comisión: ' + moneda(this.obtenerMetaComisionProduccion(ing)),
+      'Comisión facturada acumulada: ' + moneda(this.convertirANumero(ing?.totalComision)),
+      'Diferencia de comisión (facturado - meta): ' + moneda(this.obtenerSaldoComisionProduccion(ing))
+    ].join('\n');
+  }
+
   /**
    * Compara la producción de cada mes con los valores mensuales del ramo.
    * El ingreso del PYG depende de la comisión: se toma como referencia
@@ -2450,7 +2613,8 @@ let polizas = Object.values(
     poliza: any,
     fcDesde: any,
     fcHasta: any,
-    cdRamo:any
+    cdRamo:any,
+    mensual: number = 1
   ) {
     return this.pygService
       .obtenerFacturasProdPagada(idCliente, poliza, fcDesde, fcHasta, cdRamo)
@@ -2467,8 +2631,32 @@ let polizas = Object.values(
             (item: any) =>
               item && !tiposExcluir.includes(item.tipo) && item.priNet!=0
           );
-          console.log('facturasFiltradas',facturasFiltradas);
-          // Agrupar por año y mes
+
+          // Los ramos NO mensuales representan facturación contra una meta
+          // anual; cada movimiento debe figurar de forma independiente,
+          // incluso si varios tienen el mismo mes o número de factura.
+          // Se conserva `registros: [item]` para la exportación de datos brutos.
+          if (Number(mensual) === 0) {
+            return facturasFiltradas.map((item: any) => {
+              const fecha = item.fcDesde ? new Date(item.fcDesde) : null;
+              const periodo = fecha && !isNaN(fecha.getTime())
+                ? `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`
+                : '';
+              return {
+                periodo,
+                nmRamo: item.nmRamo,
+                fcdesde: item.fcDesde,
+                fchasta: item.fcHasta,
+                priNet: Number(item.priNet) || 0,
+                valcombroker: Number(item.valComBroker) || 0,
+                registros: [item],
+                facturas: item.factAseg != null && String(item.factAseg).trim()
+                  ? [String(item.factAseg)] : []
+              };
+            });
+          }
+
+          // El agrupamiento por año y mes se mantiene SOLO para los ramos mensuales.
           const agrupadas = facturasFiltradas.reduce(
             (acc: any, item: any) => {
 
@@ -2500,11 +2688,6 @@ let polizas = Object.values(
                   facturas: []
                 };
               }
-                            if(item.poliza == '3785-A'){
-              console.log('item',item);
-              console.log('item',item.priNet);
-                   console.log('acc[clave].priNet',acc[clave].priNet);
-              }
          
               acc[clave].priNet += Number(item.priNet) || 0;
               acc[clave].valcombroker += Number(item.valComBroker) || 0;
@@ -2512,10 +2695,10 @@ let polizas = Object.values(
 
               // Agregar factura evitando duplicados
               if (
-                item.numFactura &&
-                !acc[clave].facturas.includes(item.numFactura)
+                item.factAseg &&
+                !acc[clave].facturas.includes(item.factAseg)
               ) {
-                acc[clave].facturas.push(item.numFactura);
+                acc[clave].facturas.push(item.factAseg);
               }
               return acc;
             },
@@ -3278,6 +3461,23 @@ let polizas = Object.values(
       }
     });
     const encabezado = (fondo: string, texto: string, longitud: number = 10) => Array.from({ length: longitud }, () => estilo(fondo, true, texto));
+    // El bloque de facturas se distingue del bloque de gastos con bordes más marcados.
+    const estiloFactura = (fondo: string, negrita: boolean = false, color: string = '1F2937', separador: boolean = false): any => {
+      const base = estilo(fondo, negrita, color);
+      const bordeFactura = { style: 'thin', color: { rgb: '607D9C' } };
+      return {
+        ...base,
+        border: {
+          top: bordeFactura, bottom: bordeFactura, right: bordeFactura,
+          left: { style: separador ? 'medium' : 'thin', color: { rgb: '607D9C' } }
+        }
+      };
+    };
+    // Mismo formato de diferencia para pantalla y Excel: 0%, +0,5%, -0,5%.
+    const porcentajeDiferenciaVisible = (ramo: any): { valor: number; formato: string } => {
+      const comparacion = this.obtenerComparacionPorcentajeProduccion(ramo);
+      return { valor: comparacion.valor, formato: comparacion.formatoExcel };
+    };
     let fila = 0;
     escribir(fila, [`DETALLE PYG - ${this.objCliente?.nombre || this.clienteSeleccionado?.nombres || 'CLIENTE'}`], [this.estiloTituloPrincipal()]);
     this.agregarMerge(wsDetalle, fila + 1, 0, fila + 1, 10);
@@ -3318,7 +3518,10 @@ let polizas = Object.values(
       escribir(fila, ['DATOS DE GASTOS Y FACTURAS'], [estilo('FDE9D8', true, '995012')]);
       this.agregarMerge(wsDetalle, fila + 1, 0, fila + 1, 10);
       fila++;
-      escribir(fila, ['Descripción gasto', 'Cantidad', 'Tipo ingreso', 'Valor gasto', 'Fecha registro', 'Descripción factura', 'Fecha factura', 'Valor factura', 'Total facturas', 'Restante'], encabezado('FFF1DF', '8B5405'));
+      const encabezadosGastosFacturas = ['Descripción gasto', 'Cantidad', 'Tipo ingreso', 'Valor gasto', 'Fecha registro', 'Descripción factura', 'Estado', 'Fecha factura', 'Valor factura', 'Total facturas', 'Restante'];
+      const estilosEncabezadoGastos = encabezado('FFF1DF', '8B5405', 11);
+      for (let col = 5; col <= 10; col++) estilosEncabezadoGastos[col] = estiloFactura('FFF1DF', true, '8B5405', col === 5);
+      escribir(fila, encabezadosGastosFacturas, estilosEncabezadoGastos);
       fila++;
       const grupos = this.getGastosFacturasPrograma(programa);
       if (!grupos.length) {
@@ -3337,25 +3540,30 @@ let polizas = Object.values(
             grupo.mostrarGasto ? Number(gasto.valor || 0) : '',
             grupo.mostrarGasto ? (gasto.fecha || '') : '',
             grupo.factura?.descripcion || 'Sin facturas',
+            grupo.factura ? 'Devengado' : '',
             grupo.factura?.fechaFactura || '',
             grupo.factura ? Number(grupo.factura.valor || 0) : '',
             grupo.mostrarGasto ? grupo.totalFacturas : '',
             grupo.mostrarGasto ? restante : ''
           ];
-          const estilos = Array.from({ length: 10 }, () => estilo(fondo, true, esAlcance ? '594000' : '1F2937'));
-          if (grupo.mostrarGasto && restante < 0) estilos[9] = estilo(fondo, true, 'DC3545');
-          if (grupo.mostrarGasto && restante >= 0) estilos[9] = estilo(fondo, true, '008B5A');
+          const estilos = Array.from({ length: 11 }, () => estilo(fondo, true, esAlcance ? '594000' : '1F2937'));
+          // Columnas F:K delimitadas para reconocer la información de las facturas.
+          for (let col = 5; col <= 10; col++) estilos[col] = estiloFactura(fondo, true, esAlcance ? '594000' : '1F2937', col === 5);
+          if (grupo.mostrarGasto && restante < 0) estilos[10] = estiloFactura(fondo, true, 'DC3545');
+          if (grupo.mostrarGasto && restante >= 0) estilos[10] = estiloFactura(fondo, true, '008B5A');
           escribir(fila, datos, estilos, 0, { 1: entero });
           if (grupo.mostrarGasto && grupo.cantidadFilas > 1) {
-            for (const col of [0, 1, 2, 3, 4, 8, 9]) this.agregarMerge(wsDetalle, fila + 1, col, fila + grupo.cantidadFilas, col);
+            for (const col of [0, 1, 2, 3, 4, 9, 10]) this.agregarMerge(wsDetalle, fila + 1, col, fila + grupo.cantidadFilas, col);
           }
           fila++;
         });
       }
+      const estilosTotalGastosFacturas = Array.from({ length: 11 }, () => estilo('FFF0D8', true, '84510B'));
+      for (let col = 5; col <= 10; col++) estilosTotalGastosFacturas[col] = estiloFactura('FFF0D8', true, '84510B', col === 5);
       escribir(
         fila,
-        ['TOTAL GASTOS', '', '', this.totalGastosPrograma(programa), '', 'TOTAL FACTURAS', '', this.totalFacturasPrograma(programa), '', this.totalGastosPrograma(programa) - this.totalFacturasPrograma(programa)],
-        Array.from({ length: 10 }, () => estilo('FFF0D8', true, '84510B'))
+        ['TOTAL GASTOS', '', '', this.totalGastosPrograma(programa), '', 'TOTAL FACTURAS', '', '', this.totalFacturasPrograma(programa), '', this.totalGastosPrograma(programa) - this.totalFacturasPrograma(programa)],
+        estilosTotalGastosFacturas
       );
       fila++;
       escribir(
@@ -3443,36 +3651,56 @@ let polizas = Object.values(
 
         const primaFacturada = this.convertirANumero(ramo?.totalPrima);
         const comisionFacturada = this.convertirANumero(ramo?.totalComision);
-        const primaProyectada = this.convertirANumero(ramo?.proyeccionPrima);
-        const comisionProyectada = this.convertirANumero(ramo?.proyeccionComision);
-        const totalPrimaProduccion = primaFacturada + primaProyectada;
-        const totalComisionProduccion = comisionFacturada + comisionProyectada;
+        const tieneMeta = this.esProduccionConMeta(ramo);
+        const primaProyectada = this.obtenerMetaPrimaProduccion(ramo);
+        const comisionProyectada = this.obtenerMetaComisionProduccion(ramo);
+        const totalPrimaProduccion = this.obtenerSaldoPrimaProduccion(ramo);
+        const totalComisionProduccion = this.obtenerSaldoComisionProduccion(ramo);
 
         const resumenProduccion = [
           {
-            titulo: `Facturado\n${ramo?.mesesFacturados ?? facturasProduccion.length} meses`,
-            prima: primaFacturada, comision: comisionFacturada, fondo: colorRamo.fondo, color: colorRamo.texto
+            titulo: tieneMeta ? `Facturado Actual\n${this.obtenerCantidadFacturasProduccion(ramo)} facturas`
+              : `Facturado\n${ramo?.mesesFacturados ?? facturasProduccion.length} meses`,
+            prima: primaFacturada, comision: comisionFacturada, fondo: colorRamo.fondo, color: colorRamo.texto,
+            esFacturado: true
           },
           {
-            titulo: `Proyección\n${ramo?.mesesRestantes ?? 0} meses`,
+            // Antes: `Proyección\n${ramo?.mesesRestantes ?? 0} meses`
+            titulo: 'Proyección',
             prima: primaProyectada, comision: comisionProyectada, fondo: colorRamo.encabezado, color: colorRamo.texto
           },
           {
-            titulo: 'Total',
+            titulo: 'Diferencia',
             prima: totalPrimaProduccion, comision: totalComisionProduccion, fondo: colorRamo.titulo, color: colorRamo.texto
           }
         ];
 
         resumenProduccion.forEach((resumen: any) => {
+          const esFilaDiferencia = resumen.titulo === 'Diferencia';
+          // % comisión facturada efectiva menos % comisión proyectada.
+          // Se representa 0%, +4% o -4% sin ninguna frase adicional.
+          const diferenciaVisible = esFilaDiferencia
+            ? porcentajeDiferenciaVisible(ramo) : null;
+          const porcentajeProduccion = diferenciaVisible
+            ? diferenciaVisible.valor
+            : resumen.esFacturado
+              ? this.obtenerPromedioPorcentajeFacturadoProduccion(ramo)
+              : (resumen.prima ? resumen.comision / resumen.prima : 0);
+          const estilosResumen = Array.from({ length: 7 }, () => estilo(resumen.fondo, true, resumen.color));
+          if (esFilaDiferencia) {
+            estilosResumen[5] = this.estaCumplidaComisionProduccion(ramo)
+              ? estilo('EAF8F0', true, '167347')
+              : estilo('FFF0F1', true, 'BB3241');
+          }
           escribir(
             fila,
             [
               '', '', '', resumen.titulo, resumen.prima, resumen.comision,
-              resumen.prima ? resumen.comision / resumen.prima : 0
+              porcentajeProduccion
             ],
-            Array.from({ length: 7 }, () => estilo(resumen.fondo, true, resumen.color)),
+            estilosResumen,
             0,
-            { 4: moneda, 5: moneda, 6: '0.00%' }
+            { 4: moneda, 5: moneda, 6: diferenciaVisible ? diferenciaVisible.formato : '0.00%' }
           );
           this.agregarMerge(wsDetalle, fila + 1, 0, fila + 1, 2);
           fila++;
@@ -3482,8 +3710,8 @@ let polizas = Object.values(
       });
 
       // CONSOLIDADO SOLO DE GRUPOS: un ramo por fila, con el mismo color
-      // que sus facturas individuales. Las cifras son las mismas que figuran
-      // como "Total" en cada tabla (facturado + proyección).
+      // que sus facturas individuales. Todas las cifras provienen de
+      // Diferencia = facturado - meta registrada.
       // No se duplican aquí las filas de meses facturados o proyectados.
       if (ramos.length > 1 && ramos.some((ramo: any) =>
         Array.isArray(ramo?.proyeccion) && ramo.proyeccion.length > 0)) {
@@ -3493,62 +3721,49 @@ let polizas = Object.values(
           [`TOTAL FACTURAS PRODUCCIÓN DEL GRUPO — ${nombre}`],
           [estilo('DCE8F5', true, '174A78')]
         );
-        this.agregarMerge(wsDetalle, fila + 1, 0, fila + 1, 6);
-        this.aplicarEstiloRangoMerge(wsDetalle, fila + 1, 0, fila + 1, 6, estilo('DCE8F5', true, '174A78'));
+        this.agregarMerge(wsDetalle, fila + 1, 0, fila + 1, 7);
+        this.aplicarEstiloRangoMerge(wsDetalle, fila + 1, 0, fila + 1, 7, estilo('DCE8F5', true, '174A78'));
         fila++;
 
         escribir(
           fila,
-          ['Ramo', '', '', '', 'Prima Neta Total', 'Comisión Broker Total', 'Porcentaje'],
-          encabezado('E4EDF7', '174A78', 7)
+          ['Ramo', '', '', '', '', 'Comisión Proyectada', 'Comisión Real', 'Diferencia %'],
+          encabezado('E4EDF7', '174A78', 8)
         );
-        this.agregarMerge(wsDetalle, fila + 1, 0, fila + 1, 3);
-        this.aplicarEstiloRangoMerge(wsDetalle, fila + 1, 0, fila + 1, 3, estilo('E4EDF7', true, '174A78'));
+        this.agregarMerge(wsDetalle, fila + 1, 0, fila + 1, 4);
+        this.aplicarEstiloRangoMerge(wsDetalle, fila + 1, 0, fila + 1, 4, estilo('E4EDF7', true, '174A78'));
         fila++;
-
-        let sumaPrimaGrupo = 0;
-        let sumaComisionGrupo = 0;
 
         ramos.forEach((ramo: any, indiceRamo: number) => {
           const colorRamo = coloresProduccion[indiceRamo % coloresProduccion.length];
-          const primaRamo = this.convertirANumero(ramo?.totalPrima)
-            + this.convertirANumero(ramo?.proyeccionPrima);
-          const comisionRamo = this.convertirANumero(ramo?.totalComision)
-            + this.convertirANumero(ramo?.proyeccionComision);
+          const comisionProyectadaRamo = this.obtenerMetaComisionProduccion(ramo);
+          const comisionRealRamo = this.convertirANumero(ramo?.totalComision);
 
-          sumaPrimaGrupo += primaRamo;
-          sumaComisionGrupo += comisionRamo;
-
+          const diferenciaVisible = porcentajeDiferenciaVisible(ramo);
+          const porcentajeRamo = diferenciaVisible.valor;
+          const estilosRamo = Array.from({ length: 8 }, () => estilo(colorRamo.fondo, true, colorRamo.texto));
+          estilosRamo[6] = this.estaCumplidaComisionProduccion(ramo)
+            ? estilo('EAF8F0', true, '167347')
+            : estilo('FFF0F1', true, 'BB3241');
           escribir(
             fila,
-            [ramo?.nombreRamo || 'RAMO', '', '', '', primaRamo, comisionRamo,
-              primaRamo ? comisionRamo / primaRamo : 0],
-            Array.from({ length: 7 }, () => estilo(colorRamo.fondo, true, colorRamo.texto)),
+            [ramo?.nombreRamo || 'RAMO', '', '', '', '', comisionProyectadaRamo,
+              comisionRealRamo, porcentajeRamo],
+            estilosRamo,
             0,
-            { 4: moneda, 5: moneda, 6: '0.00%' }
+            { 5: moneda, 6: moneda, 7: diferenciaVisible.formato }
           );
-          this.agregarMerge(wsDetalle, fila + 1, 0, fila + 1, 3);
-          this.aplicarEstiloRangoMerge(wsDetalle, fila + 1, 0, fila + 1, 3,
+          this.agregarMerge(wsDetalle, fila + 1, 0, fila + 1, 4);
+          this.aplicarEstiloRangoMerge(wsDetalle, fila + 1, 0, fila + 1, 4,
             estilo(colorRamo.fondo, true, colorRamo.texto));
           fila++;
         });
 
-        escribir(
-          fila,
-          ['TOTAL GENERAL DEL GRUPO', '', '', '', sumaPrimaGrupo, sumaComisionGrupo,
-            sumaPrimaGrupo ? sumaComisionGrupo / sumaPrimaGrupo : 0],
-          Array.from({ length: 7 }, () => estilo('D4E6F6', true, '123E67')),
-          0,
-          { 4: moneda, 5: moneda, 6: '0.00%' }
-        );
-        this.agregarMerge(wsDetalle, fila + 1, 0, fila + 1, 3);
-        this.aplicarEstiloRangoMerge(wsDetalle, fila + 1, 0, fila + 1, 3,
-          estilo('D4E6F6', true, '123E67'));
-        fila += 2;
+        fila += 1;
       }
       fila += 1;
     });
-    wsDetalle['!cols'] = [{ wch: 30 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 19 }, { wch: 34 }, { wch: 18 }, { wch: 19 }, { wch: 20 }, { wch: 20 }, { wch: 4 }];
+    wsDetalle['!cols'] = [{ wch: 30 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 19 }, { wch: 34 }, { wch: 18 }, { wch: 19 }, { wch: 20 }, { wch: 20 }, { wch: 20 }];
     XLSX.utils.sheet_add_aoa(wsResumen, [['RESUMEN PYG']], { origin: 'A1' });
     this.agregarMerge(wsResumen, 1, 0, 1, 1);
     this.aplicarEstiloRangoMerge(wsResumen, 1, 0, 1, 1, this.estiloTituloPrincipal());
@@ -4653,19 +4868,11 @@ let polizas = Object.values(
         ing?.totalComision
       );
 
-      const proyeccionPrima = this.convertirANumero(
-        ing?.proyeccionPrima
-      );
+      const proyeccionPrima = this.obtenerMetaPrimaProduccion(ing);
+      const proyeccionComision = this.obtenerMetaComisionProduccion(ing);
 
-      const proyeccionComision = this.convertirANumero(
-        ing?.proyeccionComision
-      );
-
-      const totalPrimaGeneral =
-        totalPrima + proyeccionPrima;
-
-      const totalComisionGeneral =
-        totalComision + proyeccionComision;
+      const totalPrimaGeneral = this.obtenerSaldoPrimaProduccion(ing);
+      const totalComisionGeneral = this.obtenerSaldoComisionProduccion(ing);
 
       XLSX.utils.sheet_add_aoa(
         ws,
@@ -4679,9 +4886,7 @@ let polizas = Object.values(
             )} meses`,
             totalPrima,
             totalComision,
-            totalPrima > 0
-              ? totalComision / totalPrima
-              : 0,
+            this.obtenerPromedioPorcentajeFacturadoProduccion(ing),
             '',
             ''
           ],
@@ -4689,9 +4894,7 @@ let polizas = Object.values(
             '',
             '',
             '',
-            `Proyección\n${this.convertirANumero(
-              ing?.mesesRestantes
-            )} meses`,
+            'Proyección', // Antes: `Proyección\n${ing?.mesesRestantes} meses`
             proyeccionPrima,
             proyeccionComision,
             proyeccionPrima > 0
@@ -4704,13 +4907,10 @@ let polizas = Object.values(
             '',
             '',
             '',
-            'Total',
+            'Diferencia',
             totalPrimaGeneral,
             totalComisionGeneral,
-            totalPrimaGeneral > 0
-              ? totalComisionGeneral /
-              totalPrimaGeneral
-              : 0,
+            this.obtenerComparacionPorcentajeProduccion(ing).valor,
             '',
             ''
           ]
@@ -4765,6 +4965,14 @@ let polizas = Object.values(
           6,
           this.estiloPorcentaje()
         );
+        if (filaActual === fila + 2) {
+          // En la fila final mostrar tasa común o diferencia firmada,
+          // exactamente igual al HTML y al Excel general.
+          const ref = XLSX.utils.encode_cell({ r: filaActual - 1, c: 6 });
+          if (ws[ref]) {
+            ws[ref].z = this.obtenerComparacionPorcentajeProduccion(ing).formatoExcel;
+          }
+        }
       }
 
       fila += 4;
@@ -5023,6 +5231,8 @@ let polizas = Object.values(
         nombreAseguradora: element.nombreAseguradora ?? '',
         inicioVigencia,
         finVigencia,
+        mensual: element.mensual != null ? Number(element.mensual)
+          : this.obtenerTipoMensualPorNombre(element.nombreRamo),
         primaMensual: element.primaMensual ?? '',
         primaAnual: element.primaAnual ?? '',
         porcentajeComision: element.porcCom ?? 0,

@@ -4074,3 +4074,207 @@ ngx-dropzone-preview {
   flex: 0 0 auto;
   font-size: 9px;
 }
+
+/* Cumplimiento de meta para ramos anual=1 en Facturas Producción. */
+.seccion-tabla .pyg-produccion-tabla .pyg-produccion-estado--no-alcanzado {
+  color: #bb3241;
+  background: #fff0f1;
+  border-color: #f4c5cb;
+}
+.seccion-tabla .pyg-produccion-tabla .pyg-produccion-estado--alcanzado {
+  color: #167347;
+  background: #eaf8f0;
+  border-color: #bee7cc;
+}
+.seccion-tabla .pyg-produccion-tabla .pyg-produccion-estado--superado {
+  color: #174ea6;
+  background: #eaf3ff;
+  border-color: #bdd6f6;
+}
+
+/* Identificación visual de los ramos Tipo mensual en Ramos sugeridos. */
+.ramo-card.ramo-tipo-mensual {
+  border: 2px solid #159269 !important;
+}
+
+.ramo-card.ramo-tipo-mensual:hover {
+  border-color: #0f7a57 !important;
+}
+
+/* La selección conserva una señal azul, sin perder el borde verde. */
+.ramo-card.ramo-tipo-mensual.ramo-selected {
+  border-color: #159269 !important;
+  box-shadow: 0 0 0 3px rgba(23, 105, 255, 0.16),
+              0 15px 34px rgba(23, 105, 255, 0.12) !important;
+}
+
+.pyg-etiqueta-tipo-mensual {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 7px;
+  padding: 3px 9px;
+  border: 1px solid #b7e5d0;
+  border-radius: 999px;
+  background: #eaf9f3;
+  color: #136e50;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.pyg-etiqueta-tipo-mensual i {
+  font-size: 10px;
+}
+
+
+/* Bordes completos de asignación de gastos/facturas, como en Excel (B7C7D9).
+   No toca la tabla independiente de facturas de producción ni otros módulos. */
+.seccion-tabla table.tabla-gastos.tabla-gastos-facturas {
+  border-collapse: collapse !important;
+  border: 1px solid #B7C7D9 !important;
+}
+.seccion-tabla table.tabla-gastos.tabla-gastos-facturas th,
+.seccion-tabla table.tabla-gastos.tabla-gastos-facturas td {
+  border: 1px solid #B7C7D9 !important;
+}
+
+/* Cumplimiento de comisión: la diferencia es facturada menos meta registrada. */
+.seccion-tabla .pyg-produccion-tabla tfoot td.pyg-comision-cumplida {
+  color: #167347 !important;
+  background-color: #EAF8F0 !important;
+}
+.seccion-tabla .pyg-produccion-tabla tfoot td.pyg-comision-pendiente {
+  color: #BB3241 !important;
+  background-color: #FFF0F1 !important;
+}
+
+/* Estado de devengo: columna adicional en Gastos y Facturas. */
+.table-responsive.pyg-scroll-solo-x > table.tabla-gastos.tabla-gastos-facturas col.pyg-col-estado-factura {
+  width: 9% !important;
+}
+.tabla-gastos.tabla-gastos-facturas th.pyg-estado-factura,
+.tabla-gastos.tabla-gastos-facturas td.pyg-estado-factura {
+  font-size: 10px;
+  text-align: center;
+}
+
+
+/* Valores monetarios completos en Gastos y Facturas (evita $2,498.4 / 1).
+   Solo esta tabla con facturas puede desplazarse si el card es estrecho. */
+.table-responsive.pyg-scroll-solo-x.pyg-sin-scroll-gastos.pyg-sin-scroll-gastos-con-facturas {
+  overflow-x: auto !important;
+}
+.table-responsive.pyg-scroll-solo-x.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas {
+  width: 100% !important;
+  min-width: 1120px !important;
+  max-width: none !important;
+  table-layout: auto !important;
+}
+.table-responsive.pyg-scroll-solo-x > table.tabla-gastos.tabla-gastos-facturas col.pyg-col-valor-gasto,
+.table-responsive.pyg-scroll-solo-x > table.tabla-gastos.tabla-gastos-facturas col.pyg-col-valor-factura,
+.table-responsive.pyg-scroll-solo-x > table.tabla-gastos.tabla-gastos-facturas col.pyg-col-total-facturas,
+.table-responsive.pyg-scroll-solo-x > table.tabla-gastos.tabla-gastos-facturas col.pyg-col-restante-facturas {
+  width: 115px !important;
+}
+/* Valor de gasto ocupa la columna 4; los importes se muestran de una pieza. */
+.seccion-tabla table.tabla-gastos.tabla-gastos-facturas th:nth-child(4),
+.seccion-tabla table.tabla-gastos.tabla-gastos-facturas td:nth-child(4),
+.seccion-tabla table.tabla-gastos.tabla-gastos-facturas td.text-end.fw-bold.pyg-celda-factura,
+.seccion-tabla table.tabla-gastos.tabla-gastos-facturas td.text-end.fw-bold.pyg-total-factura {
+  white-space: nowrap !important;
+  overflow-wrap: normal !important;
+  word-break: keep-all !important;
+}
+/* No forzar desplazamiento para tablas que no tienen facturas. */
+
+
+/* ========================================================================
+   Gastos y Facturas: distribución adaptable sin desplazamiento horizontal.
+   Corrige exclusivamente la tabla de gastos CUANDO tiene facturas asignadas.
+   Sustituye los anchos fijos anteriores (min-width:1120px y col:115px),
+   sin intervenir en Facturas Producción, Detalle de Ramos ni en los modales.
+   ======================================================================== */
+.table-responsive.pyg-scroll-solo-x.pyg-sin-scroll-gastos.pyg-sin-scroll-gastos-con-facturas {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+}
+.table-responsive.pyg-scroll-solo-x.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  table-layout: fixed !important;
+  box-sizing: border-box;
+}
+/* Modo financiero: Gastos (5 columnas) + Facturas (7 columnas). */
+.table-responsive.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas.pyg-tabla-financiera col:nth-child(1) { width: 14% !important; } /* Descripción gasto */
+.table-responsive.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas.pyg-tabla-financiera col:nth-child(2) { width: 3% !important; }  /* # */
+.table-responsive.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas.pyg-tabla-financiera col:nth-child(3) { width: 5% !important; }  /* Tipo */
+.table-responsive.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas.pyg-tabla-financiera col:nth-child(4) { width: 9% !important; }  /* Valor gasto */
+.table-responsive.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas.pyg-tabla-financiera col:nth-child(5) { width: 7% !important; }  /* Asignar */
+.table-responsive.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas.pyg-tabla-financiera col:nth-child(6) { width: 17% !important; } /* Descripción factura */
+.table-responsive.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas.pyg-tabla-financiera col:nth-child(7) { width: 7% !important; }  /* Estado */
+.table-responsive.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas.pyg-tabla-financiera col:nth-child(8) { width: 8% !important; }  /* Fecha */
+.table-responsive.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas.pyg-tabla-financiera col:nth-child(9) { width: 9% !important; }  /* Valor factura */
+.table-responsive.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas.pyg-tabla-financiera col:nth-child(10) { width: 5% !important; } /* Acción */
+.table-responsive.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas.pyg-tabla-financiera col:nth-child(11) { width: 8% !important; } /* Total */
+.table-responsive.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas.pyg-tabla-financiera col:nth-child(12) { width: 8% !important; } /* Restante */
+/* Vista no financiera: Gastos (4) + Facturas (6). */
+.table-responsive.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas:not(.pyg-tabla-financiera) col:nth-child(1) { width: 20% !important; }
+.table-responsive.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas:not(.pyg-tabla-financiera) col:nth-child(2) { width: 3% !important; }
+.table-responsive.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas:not(.pyg-tabla-financiera) col:nth-child(3) { width: 5% !important; }
+.table-responsive.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas:not(.pyg-tabla-financiera) col:nth-child(4) { width: 10% !important; }
+.table-responsive.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas:not(.pyg-tabla-financiera) col:nth-child(5) { width: 18% !important; }
+.table-responsive.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas:not(.pyg-tabla-financiera) col:nth-child(6) { width: 8% !important; }
+.table-responsive.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas:not(.pyg-tabla-financiera) col:nth-child(7) { width: 9% !important; }
+.table-responsive.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas:not(.pyg-tabla-financiera) col:nth-child(8) { width: 9% !important; }
+.table-responsive.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas:not(.pyg-tabla-financiera) col:nth-child(9) { width: 9% !important; }
+.table-responsive.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas:not(.pyg-tabla-financiera) col:nth-child(10) { width: 9% !important; }
+/* Anula los anchos previos en px y deja que los <col> gobiernen toda la tabla. */
+.table-responsive.pyg-scroll-solo-x.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas th,
+.table-responsive.pyg-scroll-solo-x.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas td,
+.table-responsive.pyg-scroll-solo-x.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas th.pyg-descripcion-gasto,
+.table-responsive.pyg-scroll-solo-x.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas td.pyg-descripcion-gasto,
+.table-responsive.pyg-scroll-solo-x.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas th.pyg-descripcion-factura,
+.table-responsive.pyg-scroll-solo-x.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas td.pyg-descripcion-factura {
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  white-space: normal !important;
+  overflow-wrap: break-word !important;
+  word-break: normal !important;
+  padding: 6px 4px !important;
+  line-height: 1.3;
+  vertical-align: middle;
+}
+/* Importes en una sola línea sin deformar otras columnas. */
+.table-responsive.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas tbody td.text-end,
+.table-responsive.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas tfoot td.text-end {
+  white-space: nowrap !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  font-variant-numeric: tabular-nums;
+}
+/* Botones legibles y centrados: nunca obligan a ampliar la columna. */
+.table-responsive.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas button.btn {
+  max-width: 100%;
+  white-space: normal !important;
+  overflow-wrap: break-word;
+  word-break: normal;
+  line-height: 1.15;
+  padding: 5px 3px !important;
+}
+@media (max-width: 1100px) {
+  .table-responsive.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas {
+    font-size: 9px !important;
+  }
+  .table-responsive.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas th,
+  .table-responsive.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas td {
+    padding: 4px 2px !important;
+  }
+  .table-responsive.pyg-sin-scroll-gastos > table.tabla-gastos.tabla-gastos-facturas.pyg-tabla-con-facturas button.btn {
+    font-size: 9px !important;
+    padding: 4px 2px !important;
+  }
+}

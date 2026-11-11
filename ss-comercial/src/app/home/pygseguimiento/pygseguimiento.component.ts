@@ -168,7 +168,7 @@ export class PygseguimientoComponent {
         if (vistos.has(clave)) return false;
         vistos.add(clave);
         return true;
-      }).join('; ');
+      }).join(', ');
   }
 
   consultarRegistrosPYGDetalle(): void {

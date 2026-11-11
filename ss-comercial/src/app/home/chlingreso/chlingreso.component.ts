@@ -1,7 +1,7 @@
 import { Component, ElementRef, Renderer2, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { debounceTime, Subject, switchMap, tap ,firstValueFrom} from 'rxjs';
+import { debounceTime, Subject, switchMap, tap, firstValueFrom } from 'rxjs';
 import { AppComponent } from 'src/app/app.component';
 import { AuthService } from 'src/app/services/auth.service';
 import { ChecklistService } from 'src/app/services/checklist.service';
@@ -478,29 +478,29 @@ export class ChlingresoComponent {
 
       this.ingresoForm.get('identificacionPagador')?.disable();
       ////
-                  let contactoSugerido = {
-                    identificacion: '1804153375',
-                    cargo: 'ADMINISTRATIVO',
-                    nombre: 'SEGUSUAREZ AGENCIA ASESORA DE SEGUROS',
-                    email: 'caguilar@segurossuarez.com',
-                    //
-                    celular: '',
-                    fechaNacimiento: '1991-10-17',
-                    telefonoTrabajo: '2421800',
-                    telefonoConvencional: '',
-                    regalo: 0,
-                    usuarioWeb: 1,
-                    advertencia: 1
-                  }
-                  // Validar que no exista la misma identificación
-const existeContacto = this.lstContactos.some(
-  (contacto:any) => contacto.identificacion === contactoSugerido.identificacion
-);
+      let contactoSugerido = {
+        identificacion: '1804153375',
+        cargo: 'ADMINISTRATIVO',
+        nombre: 'SEGUSUAREZ AGENCIA ASESORA DE SEGUROS',
+        email: 'caguilar@segurossuarez.com',
+        //
+        celular: '',
+        fechaNacimiento: '1991-10-17',
+        telefonoTrabajo: '2421800',
+        telefonoConvencional: '',
+        regalo: 0,
+        usuarioWeb: 1,
+        advertencia: 1
+      }
+      // Validar que no exista la misma identificación
+      const existeContacto = this.lstContactos.some(
+        (contacto: any) => contacto.identificacion === contactoSugerido.identificacion
+      );
 
-// Agregar solo si no existe
-if (!existeContacto) {
-  this.lstContactos.push(contactoSugerido);
-}
+      // Agregar solo si no existe
+      if (!existeContacto) {
+        this.lstContactos.push(contactoSugerido);
+      }
       ////
     }
   }
@@ -582,7 +582,7 @@ if (!existeContacto) {
               direccion: res.resultado[0]?.direccion,
               ciudad: res.resultado[0]?.nombreCiudad
             });
-            let contactosAnteriores = await  this.obtenerContactosIngresados();
+            let contactosAnteriores = await this.obtenerContactosIngresados();
 
             if (contactosAnteriores < 1) {
               this.lstContactos = [];
@@ -1060,13 +1060,13 @@ if (!existeContacto) {
     });
     //obtener los ramos del area seleccionada
     // if (Number((event.target as HTMLSelectElement).value) == 3) { // si es fianzas obtengo todos los ramos
-      this.checklistService.obtenerRamos().subscribe((res: any) => {
-        this.lstRamos = res.resultado;
-        this.lstRamos.push(this.programaSeguros);
+    this.checklistService.obtenerRamos().subscribe((res: any) => {
+      this.lstRamos = res.resultado;
+      this.lstRamos.push(this.programaSeguros);
 
-      }, (error: any) => {
-        this.toastrService.error('ERROR', 'No se pudo obtener los ramos!');
-      });
+    }, (error: any) => {
+      this.toastrService.error('ERROR', 'No se pudo obtener los ramos!');
+    });
     // } else {
     //   this.checklistService.obtenerRamosbyArea(Number((event.target as HTMLSelectElement).value)).subscribe((res: any) => {
     //     this.lstRamos = res.resultado;
@@ -1085,12 +1085,12 @@ if (!existeContacto) {
     this.ingresoForm.patchValue({ subArea: "" });
     //obtener los ramos del area seleccionada
     //if (areaId == 3) {
-      this.checklistService.obtenerRamos().subscribe((res: any) => {
-        this.lstRamos = res.resultado;
-        this.lstRamos.push(this.programaSeguros);
-      }, (error: any) => {
-        this.toastrService.error('ERROR', 'No se pudo obtener los ramos!');
-      });
+    this.checklistService.obtenerRamos().subscribe((res: any) => {
+      this.lstRamos = res.resultado;
+      this.lstRamos.push(this.programaSeguros);
+    }, (error: any) => {
+      this.toastrService.error('ERROR', 'No se pudo obtener los ramos!');
+    });
     // } else {
     //   this.checklistService.obtenerRamosbyArea(areaId).subscribe((res: any) => {
     //     this.lstRamos = res.resultado;
@@ -1373,7 +1373,7 @@ if (!existeContacto) {
     this.loadingService.hideLoading();
     this.idEstado = ingreso.idEstado;
     // if (this.idEstado != 4 && this.idEstado != 9) {
-    this.lstEstados = [{ id: 1, nombre: 'Aprobar' }, { id: 2, nombre: 'Corregir' }, { id: 3, nombre: 'Rechazar' },
+    this.lstEstados = [{ id: 1, nombre: 'Aprobar' }, { id: 2, nombre: 'Corregir' }, { id: 3, nombre: 'Rechazar' }, { id: 11, nombre: 'Reasignar' },
     { id: 5, nombre: 'Ingresado a la Aseguradora' }, { id: 6, nombre: 'Pendiente Emisión' }, { id: 4, nombre: 'Ingresado Dbroker/Enviado Cliente' }];
     // } else if (this.idEstado == 4) {
     //   this.lstEstados = [{ id: 5, nombre: 'Ingresado a la Aseguradora' }];
@@ -2069,6 +2069,137 @@ if (!existeContacto) {
       });
 
     }
+
+    if (this.estadoSeleccionado == 11) { // Asignación de ejecutivo
+
+      const opcionesEjecutivos = this.lstEjecutivos.map((ejecutivo: any) => `
+    <option value="${ejecutivo.id}">
+      ${ejecutivo.nombreEjecutivo}
+    </option>
+  `).join('');
+
+      Swal.fire({
+        title: 'Asignar Ejecutivo',
+        html: `
+      <div style="text-align:left;">
+
+        <!-- OBSERVACIÓN -->
+        <label for="swal-observacion"
+          style="display:block;margin-bottom:8px;font-weight:600;">
+          Comentario u observación
+        </label>
+
+        <textarea
+          id="swal-observacion"
+          class="form-control"
+          rows="3"
+          style="resize:none;margin-bottom:20px;"
+          placeholder="Ingrese una observación (opcional)"></textarea>
+
+        <!-- SELECCIONAR EJECUTIVO -->
+        <label for="swal-ejecutivo-recibe"
+          style="display:block;margin-bottom:8px;font-weight:600;">
+          Seleccione el ejecutivo a asignar
+          <span style="color:red;">*</span>
+        </label>
+
+        <select
+          id="swal-ejecutivo-recibe"
+          class="form-control"
+          style="width:100%;height:40px;">
+
+          <option value="" selected disabled>
+            Seleccione el Ejecutivo
+          </option>
+
+          ${opcionesEjecutivos}
+
+        </select>
+
+      </div>
+    `,
+
+        showCancelButton: true,
+        confirmButtonText: 'Asignar Ejecutivo',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+
+        allowOutsideClick: false,
+
+        preConfirm: () => {
+
+          const observacion = (
+            document.getElementById('swal-observacion') as HTMLTextAreaElement
+          ).value.trim();
+
+          const ejecutivoRecibe = (
+            document.getElementById('swal-ejecutivo-recibe') as HTMLSelectElement
+          ).value;
+
+          // Validar selección obligatoria
+          if (!ejecutivoRecibe) {
+            Swal.showValidationMessage(
+              'Debe seleccionar un ejecutivo para continuar.'
+            );
+            return false;
+          }
+
+          return {
+            observacion,
+            ejecutivoRecibe
+          };
+        }
+
+      }).then((result) => {
+
+        if (result.isConfirmed) {
+
+          formd.append('observacion', result.value.observacion);
+          formd.append('idEjecutivo', this.userCurrent.id);
+          formd.append('idEjecutivoReasignado', result.value.ejecutivoRecibe);
+
+          this.loadingService.showLoading();
+
+          this.checklistService.accionEjecutivoCheckList(formd).subscribe(
+            (res: any) => {
+
+              this.loadingService.hideLoading();
+
+              Swal.fire({
+                icon: 'success',
+                title: '¡Éxito!',
+                text: 'Se ha asignado correctamente el ejecutivo.',
+                confirmButtonText: 'OK',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                allowEnterKey: true,
+                showCloseButton: false
+              }).then((result) => {
+
+                if (result.isConfirmed) {
+                  this.router.navigate(['/home/checkList/seguimiento']);
+                }
+
+              });
+
+            },
+            (error: any) => {
+
+              this.loadingService.hideLoading();
+
+              this.toastrService.error(
+                'ERROR',
+                'No se pudo asignar el ejecutivo.'
+              );
+
+            }
+          );
+        }
+      });
+
+    }
+
   }
 
   onChangeAseguradora(event: any) {
@@ -2288,69 +2419,69 @@ if (!existeContacto) {
   eliminarDetallePrima(i: any) {
     this.lstPrimasMasivos.splice(i, 1);
   }
-async obtenerContactosIngresados(): Promise<number> {
+  async obtenerContactosIngresados(): Promise<number> {
 
-  let items: any[] = [];
+    let items: any[] = [];
 
-  try {
+    try {
 
-    if (
-      this.ingresoForm.value.identificacion 
-      //&&      this.ingresoForm.value.subArea
-    ) {
+      if (
+        this.ingresoForm.value.identificacion
+        //&&      this.ingresoForm.value.subArea
+      ) {
 
-      const formd = new FormData();
-      formd.append('identificacion', this.ingresoForm.value.identificacion);
-      formd.append('subArea', this.ingresoForm.value.subArea);
+        const formd = new FormData();
+        formd.append('identificacion', this.ingresoForm.value.identificacion);
+        formd.append('subArea', this.ingresoForm.value.subArea);
 
-      const res: any = await firstValueFrom(
-        this.checklistService.obtenerContactosIngresados(formd)
-      );
-
-      items = res?.data || [];
-      if(items.length>0){
-        this.lstContactos = this.lstContactos.filter(
-  (contacto: any) => contacto.advertencia !== 1
-);
-      }
-      items.forEach((element: any) => {
-
-        const nombreContacto = this.lstTipoContacto.find(
-          (item: any) => item.id == element.tipoContacto
+        const res: any = await firstValueFrom(
+          this.checklistService.obtenerContactosIngresados(formd)
         );
 
-        const contacto = {
-          identificacion: element.identificacion,
-          cargo: element.cargo,
-          nombre: element.nombres,
-          fechaNacimiento: element.fechaNacimiento,
-          email: element.email,
-          regalo: element.regalo,
-          // tipoContacto: element.tipoContacto,
-          // nombreContacto: nombreContacto?.nombre,
-          usuarioWeb: element.usuarioWeb,
-          celular: element.celular,
-          telefonoTrabajo: element.telefonoTrabajo,
-          telefonoConvencional: element.telefonoConvencional,
-          advertencia: 1
-        };
-
-        // Validar si ya existe
-        const existe = this.lstContactos.some(
-          (c: any) => c.identificacion === contacto.identificacion
-        );
-
-        if (!existe) {
-          this.lstContactos.push(contacto);
+        items = res?.data || [];
+        if (items.length > 0) {
+          this.lstContactos = this.lstContactos.filter(
+            (contacto: any) => contacto.advertencia !== 1
+          );
         }
-      });
+        items.forEach((element: any) => {
+
+          const nombreContacto = this.lstTipoContacto.find(
+            (item: any) => item.id == element.tipoContacto
+          );
+
+          const contacto = {
+            identificacion: element.identificacion,
+            cargo: element.cargo,
+            nombre: element.nombres,
+            fechaNacimiento: element.fechaNacimiento,
+            email: element.email,
+            regalo: element.regalo,
+            // tipoContacto: element.tipoContacto,
+            // nombreContacto: nombreContacto?.nombre,
+            usuarioWeb: element.usuarioWeb,
+            celular: element.celular,
+            telefonoTrabajo: element.telefonoTrabajo,
+            telefonoConvencional: element.telefonoConvencional,
+            advertencia: 1
+          };
+
+          // Validar si ya existe
+          const existe = this.lstContactos.some(
+            (c: any) => c.identificacion === contacto.identificacion
+          );
+
+          if (!existe) {
+            this.lstContactos.push(contacto);
+          }
+        });
+      }
+
+      return items.length;
+
+    } catch (error) {
+      console.error('Error al obtener contactos ingresados:', error);
+      return 0;
     }
-
-    return items.length;
-
-  } catch (error) {
-    console.error('Error al obtener contactos ingresados:', error);
-    return 0;
   }
-}
 }
