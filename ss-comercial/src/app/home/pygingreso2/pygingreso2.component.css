@@ -4278,3 +4278,39 @@ ngx-dropzone-preview {
     padding: 4px 2px !important;
   }
 }
+
+/* Botón Excel en la esquina de las tarjetas de Ramos sugeridos.
+   No afecta la selección ni las tablas de producción o gastos. */
+.ramo-card .pyg-acciones-ramo-sugerido {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.ramo-card .pyg-btn-excel-ramo-sugerido {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: #edf9f1;
+  border: 1px solid #b8e3c6;
+  border-radius: 8px;
+  color: #17854b;
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+  transition: background .15s ease, border-color .15s ease;
+}
+.ramo-card .pyg-btn-excel-ramo-sugerido:hover,
+.ramo-card .pyg-btn-excel-ramo-sugerido:focus-visible {
+  background: #d9f3e4;
+  border-color: #6dc597;
+  color: #11733d;
+}
+.ramo-card .pyg-btn-excel-ramo-sugerido:focus-visible {
+  outline: 2px solid #17854b;
+  outline-offset: 2px;
+}

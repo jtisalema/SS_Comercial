@@ -467,7 +467,7 @@ export class PygingresoComponent2 implements OnDestroy {
     });
   }
   obtenerInformacionInicial() {
-        this.pygService.ramosMensualesPYG().subscribe((res: any) => {
+    this.pygService.ramosMensualesPYG().subscribe((res: any) => {
       this.tipoMensual = res.ramos;
     }, (error: any) => {
       this.toastrService.error('ERROR', 'Error al obtener los Ramos!');
@@ -1535,6 +1535,29 @@ export class PygingresoComponent2 implements OnDestroy {
   }
   clienteSeleccionado: any;
   lstRamosSugeridos: any = [];
+  // Los movimientos originales se conservan aparte, sin modificar los
+  // registros ni los cálculos que usa cada tarjeta de ramo sugerido.
+  private facturasBrutasPorRamoSugerido = new WeakMap<object, any[]>();
+
+  /** Exporta todas las filas originales que participaron en el cálculo del ramo. */
+  exportarFacturasBrutasRamoSugerido(ramo: any): void {
+    const movimientos = ramo && typeof ramo === 'object'
+      ? this.facturasBrutasPorRamoSugerido.get(ramo) || []
+      : [];
+
+    if (!movimientos.length) {
+      this.toastrService.warning('No existen facturas originales para este ramo.', 'Exportación');
+      return;
+    }
+
+    // Reutilizar el exportador de datos brutos existente: mantiene columnas
+    // JSON originales, identificadores con ceros iniciales y estilos Excel.
+    this.exportarFacturasProduccionRamo({
+      nombreRamo: ramo.nombreRamo,
+      poliza: ramo.poliza,
+      proyeccion: [{ registros: movimientos }]
+    });
+  }
 
   // Búsqueda local dentro del modal de ramos sugeridos.
   // No modifica el arreglo original ni la selección de las tarjetas.
@@ -1592,291 +1615,466 @@ export class PygingresoComponent2 implements OnDestroy {
     this.cargarRamosBase(1);
 
   }
-  cargarRamosBase(abrir: number) {
 
-    if (this.clienteSeleccionado?.id) {
-      this.loadingService.showLoading();
+cargarRamosBase(abrir: number) {
 
-      this.pygService.obtenerPolizasSugeridas(this.clienteSeleccionado.id)
-        .subscribe((res: any) => {
-          if (!res?.resultado || res.resultado.length === 0) {
-            this.lstRamosSugeridos = [];
-            this.loadingService.hideLoading();
-            return;
-          }
+  if (this.clienteSeleccionado?.id) {
+    this.loadingService.showLoading();
 
-          const hoy = new Date();
-
-const anioLimite = hoy.getFullYear() - 1;
-
-// Obtener únicamente el año de una fecha en formato YYYY-MM-DD
-const obtenerAnio = (fecha: any): number => {
-  return fecha ? Number(String(fecha).substring(0, 4)) : 0;
-};
-
-let polizas = Object.values(
-  res.resultado
-    .filter((item: any) =>
-      obtenerAnio(item.fcDesde) >= anioLimite ||
-      obtenerAnio(item.fcHasta) >= anioLimite
-    )
-    .reduce((acc: any, item: any) => {
-
-      // Identificar cada combinación de póliza y ramo.
-      const clave = `${item.poliza}|${item.nmRamo}`;
-
-      // Si existen duplicados, conservar el de
-      // fecha de finalización más reciente.
-      if (
-        !acc[clave] ||
-        new Date(item.fcHasta) > new Date(acc[clave].fcHasta)
-      ) {
-        acc[clave] = item;
-      }
-
-      return acc;
-
-    }, {})
-);
-
-
-
+    this.pygService.obtenerPolizasSugeridas(this.clienteSeleccionado.id)
+      .subscribe((res: any) => {
+        if (!res?.resultado || res.resultado.length === 0) {
           this.lstRamosSugeridos = [];
+          this.loadingService.hideLoading();
+          return;
+        }
 
-          polizas.forEach((element: any) => {
+        const hoy = new Date();
+        const anioLimite = hoy.getFullYear() - 1;
 
-            const fechaBase = new Date(element.fcDesde);
+        const obtenerAnio = (fecha: any): number => {
+          return fecha ? Number(String(fecha).substring(0, 4)) : 0;
+        };
 
-            const fechaDesdeFormateada = fechaBase
-              .toLocaleDateString('es-EC')
-              .split('/')
-              .reverse()
-              .join('-');
-
-            const fechaHasta = new Date(fechaBase);
-
-            fechaHasta.setMonth(fechaHasta.getMonth());
-
-            const fechaHastaFormateada = fechaHasta
-              .toLocaleDateString('es-EC')
-              .split('/')
-              .reverse()
-              .join('-');
-
-            fechaHasta.setMonth(fechaHasta.getMonth() - 3);
-
-            const fechaAtrasFormateada = fechaHasta
-              .toLocaleDateString('es-EC')
-              .split('/')
-              .reverse()
-              .join('-');
-
-            this.pygService.obtenerFacturasProdPagada(
-              this.clienteSeleccionado.id,
-              element.poliza,
-              fechaDesdeFormateada,
-              fechaHastaFormateada,
-              element.cdRamo,
+        const polizas = Object.values(
+          res.resultado
+            .filter((item: any) =>
+              obtenerAnio(item.fcDesde) >= anioLimite 
+            //||    obtenerAnio(item.fcHasta) >= anioLimite
             )
-              .subscribe((res: any) => {
-                if (res?.length > 0) {
+            .reduce((acc: any, item: any) => {
 
-                  const tiposExcluir = ['C_MAESTRA', 'RENOVACION MST'];
+              const clave = `${item.poliza}|${item.nmRamo}`;
 
-                  const facturasFiltradas = (res.resultado || []).filter(
-                    (item: any) => !tiposExcluir.includes(item.tipo)
-                  );
+              if (
+                !acc[clave] ||
+                new Date(item.fcHasta) > new Date(acc[clave].fcHasta)
+              ) {
+                acc[clave] = item;
+              }
 
-                  const mapaRamos = new Map(
-                    this.lstRamos.map((r: any) => [r.cdRamo, r.nmRamo])
-                  );
+              return acc;
+            }, {})
+        );
 
-                  const mapaAseguradoras2 = new Map(
-                    this.lstAseguradoras.map((a: any) => [a.alias, a.id])
-                  );
+        this.lstRamosSugeridos = [];
 
-                  const facturasAgrupadas = Object.values(
-                    facturasFiltradas.reduce((acc: any, item: any) => {
+        polizas.forEach((element: any) => {
 
-                      const fecha = new Date(item.fcDesde);
-                      const hasta = new Date(fecha);
-                      hasta.setFullYear(hasta.getFullYear() + 1);
+          // Consultar desde el inicio de la póliza hasta hoy
+          // o hasta su vencimiento, lo que ocurra primero.
+          const fechaDesdeFormateada =
+            String(element.fcDesde || '').substring(0, 10);
 
-                      const clave = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
+          const fechaFinVigencia =
+            String(element.fcHasta || '').substring(0, 10);
 
-                      if (!acc[clave]) {
-                        acc[clave] = {
-                          periodo: clave,
-                          fcDesde: item.fcDesde,
-                          fcHasta: hasta.toISOString(),
-                          porcCom: item.pctComBroker,
-                          primaMensual: 0,
-                          primaAnual: 0,
-                          valPrima: 0,
-                          comisionMensual: 0,
-                          comisionAnual: 0,
-                          poliza: item.poliza,
-                          registros: [],
-                          cdRamo: item.cdRamo,
-                          nombreRamo: mapaRamos.get(item.cdRamo) ?? '',
-                          nombreAseguradora: item.aseguradora,
-                          cdAseguradora: mapaAseguradoras2.get(item.aseguradora) ?? '',
-                          seleccionado: false
-                        };
-                      }
+          const hoyConsulta = new Date();
 
-                      acc[clave].primaMensual += Number(item.priNet || 0);
-                      acc[clave].primaAnual = Number((acc[clave].primaMensual * 12).toFixed(2));
-                      acc[clave].valPrima += Number(item.priNet || 0);
-                      acc[clave].registros.push(item);
-                      acc[clave].comisionMensual = Number((acc[clave].primaMensual * item.pctComBroker / 100).toFixed(2));
-                      acc[clave].comisionAnual = Number(((acc[clave].primaMensual * item.pctComBroker / 100) * 12).toFixed(2));
+          const fechaHoyFormateada = [
+            hoyConsulta.getFullYear(),
+            String(hoyConsulta.getMonth() + 1).padStart(2, '0'),
+            String(hoyConsulta.getDate()).padStart(2, '0')
+          ].join('-');
 
-                      return acc;
+          const fechaHastaFormateada =
+            fechaFinVigencia && fechaFinVigencia < fechaHoyFormateada
+              ? fechaFinVigencia
+              : fechaHoyFormateada;
 
-                    }, {})
-                  );
+          // Consulta de respaldo: tres meses anteriores
+          // al inicio de la póliza.
+          const fechaAtras = new Date(
+            fechaDesdeFormateada + 'T12:00:00'
+          );
 
-                  if (facturasAgrupadas.length > 0) {
-                    this.lstRamosSugeridos.push(facturasAgrupadas);
+          fechaAtras.setMonth(fechaAtras.getMonth() - 3);
+
+          const fechaAtrasFormateada = [
+            fechaAtras.getFullYear(),
+            String(fechaAtras.getMonth() + 1).padStart(2, '0'),
+            String(fechaAtras.getDate()).padStart(2, '0')
+          ].join('-');
+
+          this.pygService.obtenerFacturasProdPagada(
+            this.clienteSeleccionado.id,
+            element.poliza,
+            fechaDesdeFormateada,
+            fechaHastaFormateada,
+            element.cdRamo
+          ).subscribe((res: any) => {
+
+            // Soporta ambas estructuras de respuesta.
+            const facturasRespuesta = Array.isArray(res)
+              ? res
+              : (Array.isArray(res?.resultado) ? res.resultado : []);
+
+            const tiposExcluir = [
+              'C_MAESTRA',
+              'RENOVACION MST'
+            ];
+
+            const facturasFiltradas = facturasRespuesta.filter(
+              (item: any) => !tiposExcluir.includes(item.tipo)
+            );
+
+            if (facturasFiltradas.length > 0) {
+
+              const mapaRamos = new Map(
+                this.lstRamos.map((r: any) => [r.cdRamo, r.nmRamo])
+              );
+
+              const mapaAseguradoras2 = new Map(
+                this.lstAseguradoras.map((a: any) => [a.alias, a.id])
+              );
+
+              const facturasAgrupadas = Object.values(
+                facturasFiltradas.reduce((acc: any, item: any) => {
+
+                  const fecha = new Date(item.fcDesde);
+                  const hasta = new Date(fecha);
+
+                  hasta.setFullYear(hasta.getFullYear() + 1);
+
+                  const clave =
+                    `${fecha.getFullYear()}-${String(
+                      fecha.getMonth() + 1
+                    ).padStart(2, '0')}`;
+
+                  if (!acc[clave]) {
+                    acc[clave] = {
+                      periodo: clave,
+                      fcDesde: item.fcDesde,
+                      fcHasta: hasta.toISOString(),
+                      porcCom: item.pctComBroker,
+                      primaMensual: 0,
+                      primaAnual: 0,
+                      valPrima: 0,
+                      comisionMensual: 0,
+                      comisionAnual: 0,
+                      poliza: item.poliza,
+                      registros: [],
+                      cdRamo: item.cdRamo,
+                      nombreRamo:
+                        mapaRamos.get(item.cdRamo) ??
+                        element.nmRamo ??
+                        item.nmRamo ??
+                        '',
+                      nombreAseguradora: item.aseguradora,
+                      cdAseguradora:
+                        mapaAseguradoras2.get(item.aseguradora) ?? '',
+                      seleccionado: false
+                    };
                   }
 
-                  this.loadingService.hideLoading();
+                  acc[clave].primaMensual += Number(item.priNet || 0);
 
-                } else {
+                  acc[clave].primaAnual = Number(
+                    (acc[clave].primaMensual * 12).toFixed(2)
+                  );
 
-                  this.pygService.obtenerFacturasProdPagada(
-                    this.clienteSeleccionado.id,
-                    element.poliza,
-                    fechaAtrasFormateada,
-                    fechaDesdeFormateada,
-                    element.cdRamo,
-                  )
-                    .subscribe((res: any) => {
+                  acc[clave].valPrima += Number(item.priNet || 0);
+                  acc[clave].registros.push(item);
 
-                      const tiposExcluir = ['C_MAESTRA', 'RENOVACION MST'];
+                  acc[clave].comisionMensual = Number(
+                    (
+                      acc[clave].primaMensual *
+                      item.pctComBroker / 100
+                    ).toFixed(2)
+                  );
 
-                      const facturasFiltradas = (res?.resultado || []).filter(
-                        (item: any) => !tiposExcluir.includes(item.tipo)
-                      );
+                  acc[clave].comisionAnual = Number(
+                    (
+                      (
+                        acc[clave].primaMensual *
+                        item.pctComBroker / 100
+                      ) * 12
+                    ).toFixed(2)
+                  );
 
-                      if (facturasFiltradas.length === 0) {
-                        this.loadingService.hideLoading();
-                        return;
-                      }
+                  return acc;
+                }, {})
+              );
 
-                      const mapaRamos = new Map(
-                        this.lstRamos.map((r: any) => [r.cdRamo, r.nmRamo])
-                      );
+              // Generar un único objeto por tarjeta.
+              const registros = (facturasAgrupadas as any[]).sort(
+                (a, b) =>
+                  new Date(a.fcDesde).getTime() -
+                  new Date(b.fcDesde).getTime()
+              );
 
-                      const mapaAseguradoras2 = new Map(
-                        this.lstAseguradoras.map((a: any) => [a.alias, a.id])
-                      );
+              if (registros.length > 0) {
 
-                      const facturasAgrupadas = Object.values(
-                        facturasFiltradas.reduce((acc: any, item: any) => {
-                          const fecha = new Date(item.fcDesde);
-                          const hasta = new Date(fecha);
-                          hasta.setFullYear(hasta.getFullYear() + 1);
+                const promedioPrima =
+                  registros.reduce(
+                    (suma: number, r: any) =>
+                      suma + r.primaMensual, 0
+                  ) / registros.length;
 
-                          const clave = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
+                const promedioComision =
+                  registros.reduce(
+                    (suma: number, r: any) =>
+                      suma + r.comisionMensual, 0
+                  ) / registros.length;
 
-                          if (!acc[clave]) {
-                            acc[clave] = {
-                              periodo: clave,
-                              fcDesde: item.fcDesde,
-                              fcHasta: hasta.toISOString(),
-                              porcCom: item.pctComBroker,
-                              primaMensual: 0,
-                              primaAnual: 0,
-                              valPrima: 0,
-                              comisionMensual: 0,
-                              comisionAnual: 0,
-                              poliza: item.poliza,
-                              registros: [],
-                              cdRamo: item.cdRamo,
-                              nombreRamo: mapaRamos.get(item.cdRamo) ?? '',
-                              nombreAseguradora: item.aseguradora,
-                              cdAseguradora: mapaAseguradoras2.get(item.aseguradora) ?? '',
-                              seleccionado: false
-                            };
-                          }
+                const ultimo = registros[registros.length - 1];
 
-                          acc[clave].primaMensual += Number(item.priNet || 0);
-                          acc[clave].primaAnual = Number((acc[clave].primaMensual * 12).toFixed(2));
-                          acc[clave].valPrima += Number(item.priNet || 0);
-                          acc[clave].registros.push(item);
-                          acc[clave].comisionMensual = Number((acc[clave].primaMensual * item.pctComBroker / 100).toFixed(2));
-                          acc[clave].comisionAnual = Number(((acc[clave].primaMensual * item.pctComBroker / 100) * 12).toFixed(2));
+                const mensual = this.obtenerTipoMensualPorNombre(
+                  element.nmRamo || ultimo.nombreRamo
+                );
 
-                          return acc;
+                const resultado = {
+                  ...ultimo,
+                  // La vigencia corresponde a la poliza sugerida, no al ultimo mes facturado.
+                  fcDesde: element.fcDesde || ultimo.fcDesde,
+                  fcHasta: element.fcHasta || ultimo.fcHasta,
+                  mensual,
+                  primaMensual: Number(
+                    (
+                      mensual === 1
+                        ? promedioPrima
+                        : promedioPrima / 12
+                    ).toFixed(2)
+                  ),
+                  primaAnual: Number(
+                    (
+                      mensual === 1
+                        ? promedioPrima * 12
+                        : promedioPrima
+                    ).toFixed(2)
+                  ),
+                  valPrima: Number(promedioPrima.toFixed(2)),
+                  comisionMensual: Number(
+                    (
+                      mensual === 1
+                        ? promedioComision
+                        : promedioComision / 12
+                    ).toFixed(2)
+                  ),
+                  comisionAnual: Number(
+                    (
+                      mensual === 1
+                        ? promedioComision * 12
+                        : promedioComision
+                    ).toFixed(2)
+                  ),
+                  estadoCrecimiento: 'PROMEDIO'
+                };
 
-                        }, {})
-                      );
-
-                      const registros = (facturasAgrupadas as any[]).sort(
-                        (a, b) => new Date(a.fcDesde).getTime() - new Date(b.fcDesde).getTime()
-                      );
-
-                      if (registros.length === 0) {
-                        this.loadingService.hideLoading();
-                        return;
-                      }
-
-                      const primas = registros.map(x => x.primaMensual);
-
-                      const promedioPrima =
-                        primas.reduce((a, b) => a + b, 0) / primas.length;
-
-                      const promedioComision =
-                        registros.reduce((a: number, b: any) => a + b.comisionMensual, 0) /
-                        registros.length;
-
-                      const ultimo = registros[registros.length - 1];
-
-                      // mensual=1: promedio de producción mensual (cálculo habitual).
-                      // mensual=0: promedio anual, dividido entre 12 para el valor mensual.
-                      const mensual = this.obtenerTipoMensualPorNombre(element.nmRamo || ultimo.nombreRamo);
-
-                      const resultado = {
-                        ...ultimo,
-                        mensual,
-                        primaMensual: Number((mensual === 1 ? promedioPrima : promedioPrima / 12).toFixed(2)),
-                        primaAnual: Number((mensual === 1 ? promedioPrima * 12 : promedioPrima).toFixed(2)),
-                        valPrima: Number(promedioPrima.toFixed(2)),
-                        comisionMensual: Number((mensual === 1 ? promedioComision : promedioComision / 12).toFixed(2)),
-                        comisionAnual: Number((mensual === 1 ? promedioComision * 12 : promedioComision).toFixed(2)),
-                        estadoCrecimiento: 'PROMEDIO'
-                      };
-
-                      if (resultado?.registros?.length > 0) {
-                        this.lstRamosSugeridos.push(resultado);
-                      }
-
-                      this.loadingService.hideLoading();
-
-                    }, (error: any) => {
-                      this.loadingService.hideLoading();
-                    });
+                if (resultado?.registros?.length > 0) {
+                  this.lstRamosSugeridos.push(resultado);
+                  this.facturasBrutasPorRamoSugerido.set(resultado, facturasFiltradas);
                 }
+              }
+
+              this.loadingService.hideLoading();
+
+            } else {
+
+              // Búsqueda de respaldo:
+              // facturas de los tres meses anteriores.
+              this.pygService.obtenerFacturasProdPagada(
+                this.clienteSeleccionado.id,
+                element.poliza,
+                fechaAtrasFormateada,
+                fechaDesdeFormateada,
+                element.cdRamo
+              ).subscribe((res: any) => {
+
+                const tiposExcluir = [
+                  'C_MAESTRA',
+                  'RENOVACION MST'
+                ];
+
+                const facturasRespuesta = Array.isArray(res)
+                  ? res
+                  : (Array.isArray(res?.resultado) ? res.resultado : []);
+
+                const facturasFiltradas = facturasRespuesta.filter(
+                  (item: any) => !tiposExcluir.includes(item.tipo)
+                );
+
+                if (facturasFiltradas.length === 0) {
+                  this.loadingService.hideLoading();
+                  return;
+                }
+
+                const mapaRamos = new Map(
+                  this.lstRamos.map((r: any) => [r.cdRamo, r.nmRamo])
+                );
+
+                const mapaAseguradoras2 = new Map(
+                  this.lstAseguradoras.map((a: any) => [a.alias, a.id])
+                );
+
+                const facturasAgrupadas = Object.values(
+                  facturasFiltradas.reduce((acc: any, item: any) => {
+
+                    const fecha = new Date(item.fcDesde);
+                    const hasta = new Date(fecha);
+
+                    hasta.setFullYear(hasta.getFullYear() + 1);
+
+                    const clave =
+                      `${fecha.getFullYear()}-${String(
+                        fecha.getMonth() + 1
+                      ).padStart(2, '0')}`;
+
+                    if (!acc[clave]) {
+                      acc[clave] = {
+                        periodo: clave,
+                        fcDesde: item.fcDesde,
+                        fcHasta: hasta.toISOString(),
+                        porcCom: item.pctComBroker,
+                        primaMensual: 0,
+                        primaAnual: 0,
+                        valPrima: 0,
+                        comisionMensual: 0,
+                        comisionAnual: 0,
+                        poliza: item.poliza,
+                        registros: [],
+                        cdRamo: item.cdRamo,
+                        nombreRamo:
+                          mapaRamos.get(item.cdRamo) ??
+                          element.nmRamo ??
+                          item.nmRamo ??
+                          '',
+                        nombreAseguradora: item.aseguradora,
+                        cdAseguradora:
+                          mapaAseguradoras2.get(item.aseguradora) ?? '',
+                        seleccionado: false
+                      };
+                    }
+
+                    acc[clave].primaMensual += Number(item.priNet || 0);
+
+                    acc[clave].primaAnual = Number(
+                      (acc[clave].primaMensual * 12).toFixed(2)
+                    );
+
+                    acc[clave].valPrima += Number(item.priNet || 0);
+                    acc[clave].registros.push(item);
+
+                    acc[clave].comisionMensual = Number(
+                      (
+                        acc[clave].primaMensual *
+                        item.pctComBroker / 100
+                      ).toFixed(2)
+                    );
+
+                    acc[clave].comisionAnual = Number(
+                      (
+                        (
+                          acc[clave].primaMensual *
+                          item.pctComBroker / 100
+                        ) * 12
+                      ).toFixed(2)
+                    );
+
+                    return acc;
+                  }, {})
+                );
+
+                const registros = (facturasAgrupadas as any[]).sort(
+                  (a, b) =>
+                    new Date(a.fcDesde).getTime() -
+                    new Date(b.fcDesde).getTime()
+                );
+
+                if (registros.length === 0) {
+                  this.loadingService.hideLoading();
+                  return;
+                }
+
+                const primas = registros.map(
+                  x => x.primaMensual
+                );
+
+                const promedioPrima =
+                  primas.reduce((a, b) => a + b, 0) /
+                  primas.length;
+
+                const promedioComision =
+                  registros.reduce(
+                    (a: number, b: any) =>
+                      a + b.comisionMensual, 0
+                  ) / registros.length;
+
+                const ultimo = registros[registros.length - 1];
+
+                const mensual = this.obtenerTipoMensualPorNombre(
+                  element.nmRamo || ultimo.nombreRamo
+                );
+
+                const resultado = {
+                  ...ultimo,
+                  // La vigencia corresponde a la poliza sugerida, no al ultimo mes facturado.
+                  fcDesde: element.fcDesde || ultimo.fcDesde,
+                  fcHasta: element.fcHasta || ultimo.fcHasta,
+                  mensual,
+                  primaMensual: Number(
+                    (
+                      mensual === 1
+                        ? promedioPrima
+                        : promedioPrima / 12
+                    ).toFixed(2)
+                  ),
+                  primaAnual: Number(
+                    (
+                      mensual === 1
+                        ? promedioPrima * 12
+                        : promedioPrima
+                    ).toFixed(2)
+                  ),
+                  valPrima: Number(promedioPrima.toFixed(2)),
+                  comisionMensual: Number(
+                    (
+                      mensual === 1
+                        ? promedioComision
+                        : promedioComision / 12
+                    ).toFixed(2)
+                  ),
+                  comisionAnual: Number(
+                    (
+                      mensual === 1
+                        ? promedioComision * 12
+                        : promedioComision
+                    ).toFixed(2)
+                  ),
+                  estadoCrecimiento: 'PROMEDIO'
+                };
+
+                if (resultado?.registros?.length > 0) {
+                  this.lstRamosSugeridos.push(resultado);
+                  this.facturasBrutasPorRamoSugerido.set(resultado, facturasFiltradas);
+                }
+
+                this.loadingService.hideLoading();
 
               }, (error: any) => {
                 this.loadingService.hideLoading();
               });
+            }
 
-          });
-          if(polizas.length<1){
+          }, (error: any) => {
             this.loadingService.hideLoading();
-          }
-        }, (error: any) => {
-          this.loadingService.hideLoading();
+          });
         });
 
-      if (abrir == 1) {
-        $('#modalRamosEstandar').modal('show');
-      }
+        if (polizas.length < 1) {
+          this.loadingService.hideLoading();
+        }
+
+      }, (error: any) => {
+        this.loadingService.hideLoading();
+      });
+
+    if (abrir == 1) {
+      $('#modalRamosEstandar').modal('show');
     }
   }
+}
+
   eliminarIngreso(dato: number) {
 
     Swal.fire({
@@ -2613,7 +2811,7 @@ let polizas = Object.values(
     poliza: any,
     fcDesde: any,
     fcHasta: any,
-    cdRamo:any,
+    cdRamo: any,
     mensual: number = 1
   ) {
     return this.pygService
@@ -2626,10 +2824,10 @@ let polizas = Object.values(
           const resultado = Array.isArray(res?.resultado)
             ? res.resultado
             : [];
-          
+
           const facturasFiltradas = resultado.filter(
             (item: any) =>
-              item && !tiposExcluir.includes(item.tipo) && item.priNet!=0
+              item && !tiposExcluir.includes(item.tipo) && item.priNet != 0
           );
 
           // Los ramos NO mensuales representan facturación contra una meta
@@ -2688,7 +2886,7 @@ let polizas = Object.values(
                   facturas: []
                 };
               }
-         
+
               acc[clave].priNet += Number(item.priNet) || 0;
               acc[clave].valcombroker += Number(item.valComBroker) || 0;
               acc[clave].registros.push(item);
@@ -3325,7 +3523,7 @@ let polizas = Object.values(
       // Identificadores como texto para evitar pérdida de ceros a la izquierda
       // o alteraciones en los números largos al abrirlos en Excel.
       const identificadores = new Set([
-        'rucced', 'cdcliente', 'cdramo', 'numfactura', 'numprefactura',
+        'rucced', 'cdcliente', 'cdramo', 'numfactura', 'factaseg', 'numprefactura',
         'numoperacion', 'refcaremi', 'poliza', 'factref', 'numerodocumento'
       ]);
 

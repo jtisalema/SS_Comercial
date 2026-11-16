@@ -1300,8 +1300,17 @@
 
                   </div>
 
-                  <div class="check-selected ms-3" [class.visible]="ramo.seleccionado">
-                    <i class="fas fa-check"></i>
+                  <!-- Exportación de movimientos originales, sin cambiar la selección. -->
+                  <div class="pyg-acciones-ramo-sugerido ms-3">
+                    <button type="button" class="pyg-btn-excel-ramo-sugerido"
+                      title="Exportar facturas originales de este ramo a Excel"
+                      aria-label="Exportar facturas originales de este ramo a Excel"
+                      (click)="$event.stopPropagation(); exportarFacturasBrutasRamoSugerido(ramo)">
+                      <i class="fas fa-file-excel" aria-hidden="true"></i>
+                    </button>
+                    <div class="check-selected" [class.visible]="ramo.seleccionado">
+                      <i class="fas fa-check"></i>
+                    </div>
                   </div>
 
                 </div>
